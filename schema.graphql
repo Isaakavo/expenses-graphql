@@ -1,0 +1,17 @@
+type Income {
+  total: Float!
+}
+
+type Expense {
+  concept: String!
+}
+
+type Tag {
+  name: String!
+}
+
+type Query {
+  Incomes: [Income]
+  Expenses: [Expense]
+  Tags: [Tag]
+}
