@@ -1,5 +1,4 @@
 import { GraphQLResolveInfo } from 'graphql';
-import gql from 'graphql-tag';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -21,6 +20,11 @@ export type Expense = {
   concept: Scalars['String']['output'];
 };
 
+export type ExpenseTag = {
+  __typename?: 'ExpenseTag';
+  name: Scalars['String']['output'];
+};
+
 export type Income = {
   __typename?: 'Income';
   total: Scalars['Float']['output'];
@@ -28,14 +32,9 @@ export type Income = {
 
 export type Query = {
   __typename?: 'Query';
-  Expenses?: Maybe<Array<Maybe<Expense>>>;
-  Incomes?: Maybe<Array<Maybe<Income>>>;
-  Tags?: Maybe<Array<Maybe<Tag>>>;
-};
-
-export type Tag = {
-  __typename?: 'Tag';
-  name: Scalars['String']['output'];
+  expenses?: Maybe<Array<Maybe<Expense>>>;
+  incomes?: Maybe<Array<Maybe<Income>>>;
+  tags?: Maybe<Array<Maybe<ExpenseTag>>>;
 };
 
 
@@ -111,26 +110,31 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
+  ExpenseTag: ResolverTypeWrapper<ExpenseTag>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   Income: ResolverTypeWrapper<Income>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
-  Tag: ResolverTypeWrapper<Tag>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
   Expense: Expense;
+  ExpenseTag: ExpenseTag;
   Float: Scalars['Float']['output'];
   Income: Income;
   Query: {};
   String: Scalars['String']['output'];
-  Tag: Tag;
 };
 
 export type ExpenseResolvers<ContextType = any, ParentType extends ResolversParentTypes['Expense'] = ResolversParentTypes['Expense']> = {
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ExpenseTagResolvers<ContextType = any, ParentType extends ResolversParentTypes['ExpenseTag'] = ResolversParentTypes['ExpenseTag']> = {
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -140,20 +144,15 @@ export type IncomeResolvers<ContextType = any, ParentType extends ResolversParen
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  Expenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
-  Incomes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Income']>>>, ParentType, ContextType>;
-  Tags?: Resolver<Maybe<Array<Maybe<ResolversTypes['Tag']>>>, ParentType, ContextType>;
-};
-
-export type TagResolvers<ContextType = any, ParentType extends ResolversParentTypes['Tag'] = ResolversParentTypes['Tag']> = {
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+  expenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  incomes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Income']>>>, ParentType, ContextType>;
+  tags?: Resolver<Maybe<Array<Maybe<ResolversTypes['ExpenseTag']>>>, ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = any> = {
   Expense?: ExpenseResolvers<ContextType>;
+  ExpenseTag?: ExpenseTagResolvers<ContextType>;
   Income?: IncomeResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
-  Tag?: TagResolvers<ContextType>;
 };
 

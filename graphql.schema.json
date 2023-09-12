@@ -44,6 +44,33 @@
         "possibleTypes": null
       },
       {
+        "kind": "OBJECT",
+        "name": "ExpenseTag",
+        "description": null,
+        "fields": [
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "SCALAR",
         "name": "Float",
         "description": "The `Float` scalar type represents signed double-precision fractional values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_floating_point).",
@@ -86,7 +113,7 @@
         "description": null,
         "fields": [
           {
-            "name": "Expenses",
+            "name": "expenses",
             "description": null,
             "args": [],
             "type": {
@@ -102,7 +129,7 @@
             "deprecationReason": null
           },
           {
-            "name": "Incomes",
+            "name": "incomes",
             "description": null,
             "args": [],
             "type": {
@@ -118,7 +145,7 @@
             "deprecationReason": null
           },
           {
-            "name": "Tags",
+            "name": "tags",
             "description": null,
             "args": [],
             "type": {
@@ -126,7 +153,7 @@
               "name": null,
               "ofType": {
                 "kind": "OBJECT",
-                "name": "Tag",
+                "name": "ExpenseTag",
                 "ofType": null
               }
             },
@@ -146,33 +173,6 @@
         "fields": null,
         "inputFields": null,
         "interfaces": null,
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
-        "name": "Tag",
-        "description": null,
-        "fields": [
-          {
-            "name": "name",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
         "enumValues": null,
         "possibleTypes": null
       },

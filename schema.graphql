@@ -6,12 +6,12 @@ type Expense {
   concept: String!
 }
 
-type Tag {
+type ExpenseTag {
   name: String!
 }
 
 type Query {
-  Incomes: [Income]
-  Expenses: [Expense]
-  Tags: [Tag]
+  incomes: [Income]
+  expenses: [Expense]
+  tags: [ExpenseTag]
 }
