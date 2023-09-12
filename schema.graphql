@@ -1,13 +1,18 @@
+scalar Date
+
 type Income {
   total: Float!
+  dateAdded: Date
 }
 
 type Expense {
   concept: String!
+  dateAdded: Date
 }
 
 type ExpenseTag {
   name: String!
+  dateAdded: Date
 }
 
 type Query {

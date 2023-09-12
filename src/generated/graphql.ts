@@ -1,4 +1,5 @@
-import { GraphQLResolveInfo } from 'graphql';
+import { Date } from '../scalars/date';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -13,20 +14,24 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
+  Date: { input: Date; output: Date; }
 };
 
 export type Expense = {
   __typename?: 'Expense';
   concept: Scalars['String']['output'];
+  dateAdded?: Maybe<Scalars['Date']['output']>;
 };
 
 export type ExpenseTag = {
   __typename?: 'ExpenseTag';
+  dateAdded?: Maybe<Scalars['Date']['output']>;
   name: Scalars['String']['output'];
 };
 
 export type Income = {
   __typename?: 'Income';
+  dateAdded?: Maybe<Scalars['Date']['output']>;
   total: Scalars['Float']['output'];
 };
 
@@ -37,7 +42,8 @@ export type Query = {
   tags?: Maybe<Array<Maybe<ExpenseTag>>>;
 };
 
-
+export type WithIndex<TObject> = TObject & Record<string, any>;
+export type ResolversObject<TObject> = WithIndex<TObject>;
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
 
@@ -107,52 +113,62 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 
 /** Mapping between all available schema types and the resolvers types */
-export type ResolversTypes = {
+export type ResolversTypes = ResolversObject<{
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
   ExpenseTag: ResolverTypeWrapper<ExpenseTag>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   Income: ResolverTypeWrapper<Income>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
-};
+}>;
 
 /** Mapping between all available schema types and the resolvers parents */
-export type ResolversParentTypes = {
+export type ResolversParentTypes = ResolversObject<{
   Boolean: Scalars['Boolean']['output'];
+  Date: Scalars['Date']['output'];
   Expense: Expense;
   ExpenseTag: ExpenseTag;
   Float: Scalars['Float']['output'];
   Income: Income;
   Query: {};
   String: Scalars['String']['output'];
-};
+}>;
 
-export type ExpenseResolvers<ContextType = any, ParentType extends ResolversParentTypes['Expense'] = ResolversParentTypes['Expense']> = {
+export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
+  name: 'Date';
+}
+
+export type ExpenseResolvers<ContextType = any, ParentType extends ResolversParentTypes['Expense'] = ResolversParentTypes['Expense']> = ResolversObject<{
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  dateAdded?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
+}>;
 
-export type ExpenseTagResolvers<ContextType = any, ParentType extends ResolversParentTypes['ExpenseTag'] = ResolversParentTypes['ExpenseTag']> = {
+export type ExpenseTagResolvers<ContextType = any, ParentType extends ResolversParentTypes['ExpenseTag'] = ResolversParentTypes['ExpenseTag']> = ResolversObject<{
+  dateAdded?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
+}>;
 
-export type IncomeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Income'] = ResolversParentTypes['Income']> = {
+export type IncomeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Income'] = ResolversParentTypes['Income']> = ResolversObject<{
+  dateAdded?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
+}>;
 
-export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   expenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
   incomes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Income']>>>, ParentType, ContextType>;
   tags?: Resolver<Maybe<Array<Maybe<ResolversTypes['ExpenseTag']>>>, ParentType, ContextType>;
-};
+}>;
 
-export type Resolvers<ContextType = any> = {
+export type Resolvers<ContextType = any> = ResolversObject<{
+  Date?: GraphQLScalarType;
   Expense?: ExpenseResolvers<ContextType>;
   ExpenseTag?: ExpenseTagResolvers<ContextType>;
   Income?: IncomeResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
-};
+}>;
 
