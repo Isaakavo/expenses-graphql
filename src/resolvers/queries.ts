@@ -6,7 +6,8 @@ const queries: QueryResolvers = {
     return [
       {
         concept: 'hola mundo',
-        dateAdded: Date.parseValue("2023-09-22")
+        total: 500,
+        dateAdded: Date.parseValue("2023-09-01")
       },
     ];
   },

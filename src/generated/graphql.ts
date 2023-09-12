@@ -19,8 +19,11 @@ export type Scalars = {
 
 export type Expense = {
   __typename?: 'Expense';
+  comment?: Maybe<Scalars['String']['output']>;
   concept: Scalars['String']['output'];
   dateAdded?: Maybe<Scalars['Date']['output']>;
+  tags?: Maybe<Array<Maybe<ExpenseTag>>>;
+  total: Scalars['Float']['output'];
 };
 
 export type ExpenseTag = {
@@ -32,6 +35,7 @@ export type ExpenseTag = {
 export type Income = {
   __typename?: 'Income';
   dateAdded?: Maybe<Scalars['Date']['output']>;
+  paymentDate?: Maybe<Scalars['Date']['output']>;
   total: Scalars['Float']['output'];
 };
 
@@ -141,8 +145,11 @@ export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 }
 
 export type ExpenseResolvers<ContextType = any, ParentType extends ResolversParentTypes['Expense'] = ResolversParentTypes['Expense']> = ResolversObject<{
+  comment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   dateAdded?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  tags?: Resolver<Maybe<Array<Maybe<ResolversTypes['ExpenseTag']>>>, ParentType, ContextType>;
+  total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -154,6 +161,7 @@ export type ExpenseTagResolvers<ContextType = any, ParentType extends ResolversP
 
 export type IncomeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Income'] = ResolversParentTypes['Income']> = ResolversObject<{
   dateAdded?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  paymentDate?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;

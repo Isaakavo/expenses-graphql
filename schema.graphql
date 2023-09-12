@@ -3,11 +3,15 @@ scalar Date
 type Income {
   total: Float!
   dateAdded: Date
+  paymentDate: Date
 }
 
 type Expense {
   concept: String!
+  total: Float!
   dateAdded: Date
+  tags: [ExpenseTag]
+  comment: String
 }
 
 type ExpenseTag {

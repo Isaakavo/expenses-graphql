@@ -10,7 +10,8 @@
   "scripts": {
     "compile": "tsc",
     "start": "npm run compile && nodemon --esm src/index.ts",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "codegen": "graphql-codegen --watch --config codegen.ts",
+    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen\"  \"tsc -w \" \"nodemon --esm src/index.ts \""
   },
   "dependencies": {
     "@apollo/server": "^4.9.3",
@@ -26,6 +27,8 @@
     "@types/node": "^20.6.0",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "@parcel/watcher": "^2.3.0",
+    "concurrently": "^8.2.1"
   }
 }
