@@ -2,7 +2,7 @@ import { MutationResolvers } from 'generated/graphql';
 import { Date } from '../scalars/date.js';
 
 const mutations: MutationResolvers = {
-  createIncome: async (_, input) => {
+  createIncome: async (_, input, context) => {
     const { total, dateAdded, paymentDate } = input;
 
     return {
