@@ -24,3 +24,11 @@ type Query {
   expenses: [Expense]
   tags: [ExpenseTag]
 }
+
+type Mutation {
+  createIncome(
+    total: Float!,
+    dateAdded: Date!
+    paymentDate: Date!
+  ): Income
+}

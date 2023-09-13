@@ -7,6 +7,7 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: 
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = { [_ in K]?: never };
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
+export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -37,6 +38,18 @@ export type Income = {
   dateAdded?: Maybe<Scalars['Date']['output']>;
   paymentDate?: Maybe<Scalars['Date']['output']>;
   total: Scalars['Float']['output'];
+};
+
+export type Mutation = {
+  __typename?: 'Mutation';
+  createIncome?: Maybe<Income>;
+};
+
+
+export type MutationCreateIncomeArgs = {
+  dateAdded: Scalars['Date']['input'];
+  paymentDate: Scalars['Date']['input'];
+  total: Scalars['Float']['input'];
 };
 
 export type Query = {
@@ -124,6 +137,7 @@ export type ResolversTypes = ResolversObject<{
   ExpenseTag: ResolverTypeWrapper<ExpenseTag>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   Income: ResolverTypeWrapper<Income>;
+  Mutation: ResolverTypeWrapper<{}>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
 }>;
@@ -136,6 +150,7 @@ export type ResolversParentTypes = ResolversObject<{
   ExpenseTag: ExpenseTag;
   Float: Scalars['Float']['output'];
   Income: Income;
+  Mutation: {};
   Query: {};
   String: Scalars['String']['output'];
 }>;
@@ -166,6 +181,10 @@ export type IncomeResolvers<ContextType = any, ParentType extends ResolversParen
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
+  createIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'dateAdded' | 'paymentDate' | 'total'>>;
+}>;
+
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   expenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
   incomes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Income']>>>, ParentType, ContextType>;
@@ -177,6 +196,7 @@ export type Resolvers<ContextType = any> = ResolversObject<{
   Expense?: ExpenseResolvers<ContextType>;
   ExpenseTag?: ExpenseTagResolvers<ContextType>;
   Income?: IncomeResolvers<ContextType>;
+  Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
 }>;
 
