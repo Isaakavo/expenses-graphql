@@ -1,0 +1,6 @@
+{
+  "files.insertFinalNewline": true,
+  "[javascript]": {
+    "files.insertFinalNewline": true
+  }
+}
