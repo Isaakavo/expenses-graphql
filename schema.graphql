@@ -2,21 +2,29 @@ scalar Date
 
 type Income {
   total: Float!
-  dateAdded: Date
+  createdAt: Date
   paymentDate: Date
 }
 
 type Expense {
+  id: ID!
   concept: String!
   total: Float!
-  dateAdded: Date
+  createdAt: Date
+  updatedAt: Date
   tags: [ExpenseTag]
   comment: String
 }
 
 type ExpenseTag {
+  id: ID!
   name: String!
-  dateAdded: Date
+  createdAt: Date
+  updatedAt: Date
+}
+
+input ExpenseTagInput {
+  name: String
 }
 
 type Query {
@@ -28,7 +36,14 @@ type Query {
 type Mutation {
   createIncome(
     total: Float!,
-    dateAdded: Date!
+    createdAt: Date!
     paymentDate: Date!
   ): Income
+  createExpense(
+    concept: String!
+    total: Float!
+    createdAt: Date!
+    tags: [ExpenseTagInput]
+    comment: String
+  ): Expense
 }

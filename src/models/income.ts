@@ -1,13 +1,9 @@
 import { sequilize } from '../database/client.js';
 import { DataTypes } from 'sequelize';
 
-export const Income = sequilize.define('Income', {
+export const Income = sequilize.define('income', {
   total: {
     type: DataTypes.FLOAT,
-    allowNull: false,
-  },
-  dateAdded: {
-    type: DataTypes.DATE,
     allowNull: false,
   },
   paymentDate: {

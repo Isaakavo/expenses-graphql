@@ -1,4 +1,3 @@
-import { Income } from '../models/income.js';
 import { Sequelize } from 'sequelize';
 
 export const sequilize = new Sequelize({
