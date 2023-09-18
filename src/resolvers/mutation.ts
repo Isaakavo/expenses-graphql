@@ -44,10 +44,6 @@ const mutations: MutationResolvers = {
           tagId: tagFindOrCreate.id,
         });
 
-        await ExpenseTags.findAll({
-          where: { expenseId: newExpense.id },
-        });
-
         return tagFindOrCreate;
       })
     );
@@ -65,9 +61,9 @@ const mutations: MutationResolvers = {
           id: tag.id.toString(),
           name: tag.name,
           createdAt: tag.createdAt,
-          updatedAt: tag.updatedAt
-        }
-      })
+          updatedAt: tag.updatedAt,
+        };
+      }),
     };
   },
 };
