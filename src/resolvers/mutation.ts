@@ -1,29 +1,53 @@
-import { MutationResolvers } from 'generated/graphql';
+import { Fortnight, MutationResolvers } from '../generated/graphql.js';
 import { Date } from '../scalars/date.js';
 import { Tag } from '../models/tag.js';
 import { Expense } from '../models/expense.js';
 import { ExpenseTags } from '../models/expense-tags.js';
+import { Income } from '../models/income.js';
+import { calculateFortnight } from '../utils/calculate-fortnight.js';
 
 const mutations: MutationResolvers = {
   createIncome: async (_, input, context) => {
     const { total, createdAt, paymentDate } = input;
+    const { user } = context;
+    const { userId } = await user();
+
+    const parsedPaymentDay = Date.parseValue(paymentDate);
+    const parsedCreatedAt = Date.parseValue(createdAt);
+
+    console.log(parsedPaymentDay);
+
+    const newIncome = await Income.create({
+      userId,
+      total,
+      paymentDate: parsedPaymentDay,
+      createdAt: parsedCreatedAt,
+    });
 
     return {
-      total: total,
-      createdAt: Date.parseValue(createdAt),
-      paymentDate: Date.parseValue(paymentDate),
+      userId: newIncome.userId,
+      total: newIncome.total,
+      paymentDate: {
+        date: newIncome.paymentDate,
+        forthnight: calculateFortnight(parsedPaymentDay),
+      },
+      createdAt: newIncome.createdAt,
     };
   },
-  // TODO add the user id to every element in the table
   createExpense: async (_, input, context) => {
-    const { concept, createdAt, total, tags, comment } = input;
+    const { concept, createdAt, total, tags, comment, payBefore } = input;
+    const { user } = context;
+    const { userId } = await user();
 
     const parsedDate = Date.parseValue(createdAt);
+    const parsedPayBefore = Date.parseValue(payBefore);
 
     const newExpense = await Expense.create({
+      userId,
       concept,
       total,
       comments: comment,
+      payBefore: parsedPayBefore,
       createdAt: parsedDate,
       updatedAt: parsedDate,
     });
@@ -51,9 +75,11 @@ const mutations: MutationResolvers = {
     console.log({ id: newExpense.id, tags: newTags });
     return {
       id: newExpense.id.toString(),
+      userId: newExpense.userId,
       concept: newExpense.concept,
       total: newExpense.total,
       comment: newExpense.comments,
+      payBefore: newExpense.payBefore,
       createdAt: newExpense.createdAt,
       updatedAt: newExpense.updatedAt,
       tags: newTags.map((tag) => {

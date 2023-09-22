@@ -1,7 +1,21 @@
 import { sequilize } from '../database/client.js';
-import { DataTypes } from 'sequelize';
+import {
+  DataTypes,
+  InferAttributes,
+  InferCreationAttributes,
+  Model,
+} from 'sequelize';
 
-export const Income = sequilize.define('income', {
+interface Income
+  extends Model<InferAttributes<Income>, InferCreationAttributes<Income>> {
+  total: number;
+  paymentDate: Date;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export const Income = sequilize.define<Income>('income', {
   total: {
     type: DataTypes.FLOAT,
     allowNull: false,
@@ -9,5 +23,16 @@ export const Income = sequilize.define('income', {
   paymentDate: {
     type: DataTypes.DATE,
     allowNull: false,
+  },
+  userId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  },
+  updatedAt: {
+    type: DataTypes.DATE,
   },
 });

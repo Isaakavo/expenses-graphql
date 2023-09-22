@@ -1,15 +1,30 @@
 scalar Date
 
+enum Fortnight {
+  FIRST
+  SECOND
+}
+
+type PaymentDate {
+  date: Date
+  forthnight: Fortnight
+}
+
 type Income {
+  userId: String!
   total: Float!
   createdAt: Date
-  paymentDate: Date
+  # Make this an object? 
+  # paymentDate: { date, forthnight - values enum first, second }
+  paymentDate: PaymentDate
 }
 
 type Expense {
   id: ID!
+  userId: String!
   concept: String!
   total: Float!
+  payBefore: Date!
   createdAt: Date
   updatedAt: Date
   tags: [ExpenseTag]
@@ -29,7 +44,7 @@ input ExpenseTagInput {
 
 type Query {
   incomes: [Income]
-  expenses: [Expense]
+  expenses(payBefore: Date): [Expense]
   tags: [ExpenseTag]
 }
 
@@ -42,6 +57,7 @@ type Mutation {
   createExpense(
     concept: String!
     total: Float!
+    payBefore: Date!
     createdAt: Date!
     tags: [ExpenseTagInput]
     comment: String

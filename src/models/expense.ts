@@ -9,9 +9,11 @@ import { sequilize } from '../database/client.js';
 interface Expense
   extends Model<InferAttributes<Expense>, InferCreationAttributes<Expense>> {
   id: number;
+  userId: string;
   concept: string;
   total: number;
   comments: string;
+  payBefore: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +23,10 @@ export const Expense = sequilize.define<Expense>('expense', {
     type: DataTypes.BIGINT,
     primaryKey: true,
     autoIncrement: true,
+  },
+  userId: {
+    type: DataTypes.STRING,
+    allowNull: false
   },
   concept: {
     type: DataTypes.STRING,
@@ -33,6 +39,10 @@ export const Expense = sequilize.define<Expense>('expense', {
   comments: {
     type: DataTypes.STRING,
     allowNull: true,
+  },
+  payBefore: {
+    type: DataTypes.DATE,
+    allowNull: false,
   },
   createdAt: {
     type: DataTypes.DATE,

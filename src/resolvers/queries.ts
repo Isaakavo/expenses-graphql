@@ -1,21 +1,48 @@
-import { Date } from '../scalars/date.js';
-import { QueryResolvers } from '../generated/graphql';
-import { Expense } from '../models/expense.js';
+import {
+  calculateFortnight,
+  fifteenthDayOfMonth,
+} from '../utils/calculate-fortnight.js';
+import { Fortnight, QueryResolvers } from '../generated/graphql.js';
 import { ExpenseTags } from '../models/expense-tags.js';
+import { Expense } from '../models/expense.js';
+import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
+import { Op, WhereAttributeHashValue } from 'sequelize';
+import { Date } from '../scalars/date.js';
+import { endOfMonth, startOfMonth } from 'date-fns';
 
 const queries: QueryResolvers = {
-  expenses: async (_, __, context) => {
+  expenses: async (_, input, context) => {
+    const { payBefore } = input;
     const { user } = context;
-    // const  {username}  = await user();
-    //console.log({username});
+    const { userId } = await user();
 
-    const allExpenses = await Expense.findAll();
+    const parsedBeforeDate = Date.parseValue(payBefore);
+    const fortnight = calculateFortnight(parsedBeforeDate);
+    const whereStatement: WhereAttributeHashValue<Date> =
+      fortnight === Fortnight.First
+        ? {
+            [Op.gte]: startOfMonth(parsedBeforeDate),
+            [Op.lte]: fifteenthDayOfMonth(parsedBeforeDate),
+          }
+        : {
+            [Op.gte]: fifteenthDayOfMonth(parsedBeforeDate),
+            [Op.lte]: endOfMonth(parsedBeforeDate),
+          };
+
+    const allExpenses = await Expense.findAll({
+      where: {
+        userId,
+        payBefore: whereStatement,
+      },
+    });
 
     const result = await Promise.all(
       allExpenses.map(async (expense) => {
         const expensesTags = await ExpenseTags.findAll({
-          where: { expenseId: expense.id },
+          where: {
+            expenseId: expense.id,
+          },
         });
 
         const tags = await Promise.all(
@@ -26,9 +53,11 @@ const queries: QueryResolvers = {
 
         return {
           id: expense.id.toString(),
+          userId: expense.userId,
           concept: expense.concept,
           total: expense.total,
           comment: expense.comments,
+          payBefore: expense.payBefore,
           createdAt: expense.createdAt,
           updatedAt: expense.updatedAt,
           tags: tags.map((tag) => {
@@ -43,9 +72,29 @@ const queries: QueryResolvers = {
       })
     );
 
-    console.log({ allExpenses, result });
-
     return result;
+  },
+  incomes: async (_, __, context) => {
+    const { user } = context;
+    const { userId } = await user();
+
+    const allIncomes = await Income.findAll({
+      where: {
+        userId,
+      },
+    });
+
+    const response = allIncomes.map((x) => ({
+      userId: x.userId,
+      total: x.total,
+      paymentDate: {
+        date: x.paymentDate,
+        forthnight: calculateFortnight(x.paymentDate),
+      },
+      createdAt: x.createdAt,
+    }));
+
+    return response;
   },
 };
 
