@@ -6,17 +6,18 @@ import { Sequelize } from 'sequelize';
 import { connectDatabase, sequilize } from './database/client.js';
 import { syncTables } from './database/sync-database.js';
 import { verifyJwt } from './auth/verify-jwt.js';
+import { GraphQLError } from 'graphql';
 
 export interface User {
-  username: string;
+  userId: string;
   exp: number;
   tokenUse: string;
   authTime: string;
 }
 
-interface Context {
+export interface Context {
   sequilizeClient: Sequelize;
-  user: any;
+  user: () => Promise<User>;
 }
 
 await connectDatabase();
@@ -39,7 +40,12 @@ const { url } = await startStandaloneServer(server, {
         const decodedUser = await verifyJwt(token as string);
         return decodedUser;
       } catch (error) {
-        return null;
+        throw new GraphQLError(error, {
+          extensions: {
+            code: 'UNAUTHENTICATED',
+            http: { status: 401 },
+          },
+        });
       }
     },
   }),

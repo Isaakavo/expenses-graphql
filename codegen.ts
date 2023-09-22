@@ -10,7 +10,8 @@ const config: CodegenConfig = {
         useIndexSignature: true,
         scalars: {
           Date: '../scalars/date#Date'
-        }
+        },
+        contextType: '../index#Context'
       }
     },
     './graphql.schema.json': {

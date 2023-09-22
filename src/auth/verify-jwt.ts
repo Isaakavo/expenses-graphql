@@ -34,7 +34,7 @@ export async function verifyJwt(token: string): Promise<User> {
       }
     );
     return {
-      username: decodedToken.username,
+      userId: decodedToken.username,
       exp: decodedToken.exp,
       tokenUse: decodedToken.token_use,
       authTime: decodedToken.auth_time,
