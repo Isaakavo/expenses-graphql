@@ -88,14 +88,15 @@ export type PaymentDate = {
 
 export type Query = {
   __typename?: 'Query';
-  expenses?: Maybe<Array<Maybe<Expense>>>;
+  allExpenses?: Maybe<Array<Maybe<Expense>>>;
+  expensesByDate?: Maybe<Array<Maybe<Expense>>>;
   incomes?: Maybe<Array<Maybe<Income>>>;
   tags?: Maybe<Array<Maybe<ExpenseTag>>>;
 };
 
 
-export type QueryExpensesArgs = {
-  payBefore?: InputMaybe<Scalars['Date']['input']>;
+export type QueryExpensesByDateArgs = {
+  payBefore: Scalars['Date']['input'];
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -246,7 +247,8 @@ export type PaymentDateResolvers<ContextType = Context, ParentType extends Resol
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  expenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<QueryExpensesArgs>>;
+  allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  expensesByDate?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByDateArgs, 'payBefore'>>;
   incomes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Income']>>>, ParentType, ContextType>;
   tags?: Resolver<Maybe<Array<Maybe<ResolversTypes['ExpenseTag']>>>, ParentType, ContextType>;
 }>;

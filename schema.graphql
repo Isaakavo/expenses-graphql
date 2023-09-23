@@ -44,7 +44,8 @@ input ExpenseTagInput {
 
 type Query {
   incomes: [Income]
-  expenses(payBefore: Date): [Expense]
+  expensesByDate(payBefore: Date!): [Expense]
+  allExpenses: [Expense]
   tags: [ExpenseTag]
 }
 
