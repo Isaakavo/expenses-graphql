@@ -44,6 +44,12 @@ export type ExpenseTagInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type FinancialBalance = {
+  __typename?: 'FinancialBalance';
+  debts: Scalars['Float']['output'];
+  remaining: Scalars['Float']['output'];
+};
+
 export enum Fortnight {
   First = 'FIRST',
   Second = 'SECOND'
@@ -89,13 +95,19 @@ export type PaymentDate = {
 export type Query = {
   __typename?: 'Query';
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
-  expensesByDate?: Maybe<Array<Maybe<Expense>>>;
+  expensesByFortnight?: Maybe<Array<Maybe<Expense>>>;
+  financialBalanceByFortnight?: Maybe<FinancialBalance>;
   incomes?: Maybe<Array<Maybe<Income>>>;
   tags?: Maybe<Array<Maybe<ExpenseTag>>>;
 };
 
 
-export type QueryExpensesByDateArgs = {
+export type QueryExpensesByFortnightArgs = {
+  payBefore: Scalars['Date']['input'];
+};
+
+
+export type QueryFinancialBalanceByFortnightArgs = {
   payBefore: Scalars['Date']['input'];
 };
 
@@ -176,6 +188,7 @@ export type ResolversTypes = ResolversObject<{
   Expense: ResolverTypeWrapper<Expense>;
   ExpenseTag: ResolverTypeWrapper<ExpenseTag>;
   ExpenseTagInput: ExpenseTagInput;
+  FinancialBalance: ResolverTypeWrapper<FinancialBalance>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   Fortnight: Fortnight;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
@@ -193,6 +206,7 @@ export type ResolversParentTypes = ResolversObject<{
   Expense: Expense;
   ExpenseTag: ExpenseTag;
   ExpenseTagInput: ExpenseTagInput;
+  FinancialBalance: FinancialBalance;
   Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
   Income: Income;
@@ -227,6 +241,12 @@ export type ExpenseTagResolvers<ContextType = Context, ParentType extends Resolv
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type FinancialBalanceResolvers<ContextType = Context, ParentType extends ResolversParentTypes['FinancialBalance'] = ResolversParentTypes['FinancialBalance']> = ResolversObject<{
+  debts?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  remaining?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type IncomeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Income'] = ResolversParentTypes['Income']> = ResolversObject<{
   createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   paymentDate?: Resolver<Maybe<ResolversTypes['PaymentDate']>, ParentType, ContextType>;
@@ -248,7 +268,8 @@ export type PaymentDateResolvers<ContextType = Context, ParentType extends Resol
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
-  expensesByDate?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByDateArgs, 'payBefore'>>;
+  expensesByFortnight?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByFortnightArgs, 'payBefore'>>;
+  financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'payBefore'>>;
   incomes?: Resolver<Maybe<Array<Maybe<ResolversTypes['Income']>>>, ParentType, ContextType>;
   tags?: Resolver<Maybe<Array<Maybe<ResolversTypes['ExpenseTag']>>>, ParentType, ContextType>;
 }>;
@@ -257,6 +278,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Date?: GraphQLScalarType;
   Expense?: ExpenseResolvers<ContextType>;
   ExpenseTag?: ExpenseTagResolvers<ContextType>;
+  FinancialBalance?: FinancialBalanceResolvers<ContextType>;
   Income?: IncomeResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   PaymentDate?: PaymentDateResolvers<ContextType>;

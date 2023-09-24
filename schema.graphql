@@ -14,7 +14,7 @@ type Income {
   userId: String!
   total: Float!
   createdAt: Date
-  # Make this an object? 
+  # Make this an object?
   # paymentDate: { date, forthnight - values enum first, second }
   paymentDate: PaymentDate
 }
@@ -38,23 +38,25 @@ type ExpenseTag {
   updatedAt: Date
 }
 
+type FinancialBalance {
+  remaining: Float!
+  debts: Float!
+}
+
 input ExpenseTagInput {
   name: String
 }
 
 type Query {
   incomes: [Income]
-  expensesByDate(payBefore: Date!): [Expense]
+  expensesByFortnight(payBefore: Date!): [Expense]
   allExpenses: [Expense]
+  financialBalanceByFortnight(payBefore: Date!): FinancialBalance
   tags: [ExpenseTag]
 }
 
 type Mutation {
-  createIncome(
-    total: Float!,
-    createdAt: Date!
-    paymentDate: Date!
-  ): Income
+  createIncome(total: Float!, createdAt: Date!, paymentDate: Date!): Income
   createExpense(
     concept: String!
     total: Float!
