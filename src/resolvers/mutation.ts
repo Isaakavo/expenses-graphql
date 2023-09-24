@@ -1,9 +1,10 @@
-import { Fortnight, MutationResolvers } from '../generated/graphql.js';
-import { Date } from '../scalars/date.js';
-import { Tag } from '../models/tag.js';
-import { Expense } from '../models/expense.js';
+import { GraphQLError } from 'graphql';
+import { MutationResolvers } from '../generated/graphql.js';
 import { ExpenseTags } from '../models/expense-tags.js';
+import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
+import { Tag } from '../models/tag.js';
+import { Date } from '../scalars/date.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 
 const mutations: MutationResolvers = {
@@ -14,8 +15,6 @@ const mutations: MutationResolvers = {
 
     const parsedPaymentDay = Date.parseValue(paymentDate);
     const parsedCreatedAt = Date.parseValue(createdAt);
-
-    console.log(parsedPaymentDay);
 
     const newIncome = await Income.create({
       userId,
@@ -39,6 +38,15 @@ const mutations: MutationResolvers = {
     const { user } = context;
     const { userId } = await user();
 
+    if (tags.length > 10) {
+      throw new GraphQLError('No more than 10 tags per expense', {
+        extensions: {
+          code: 'BAD REQUEST',
+          http: { status: 400 },
+        },
+      });
+    }
+
     const parsedDate = Date.parseValue(createdAt);
     const parsedPayBefore = Date.parseValue(payBefore);
 
@@ -54,7 +62,6 @@ const mutations: MutationResolvers = {
 
     const newTags = await Promise.all(
       tags.map(async (tag) => {
-        // await Tag.create({ name: tag.name, expenseId: newExpense.id });
         const [tagFindOrCreate, created] = await Tag.findOrCreate({
           where: { name: tag.name },
         });
@@ -72,7 +79,6 @@ const mutations: MutationResolvers = {
       })
     );
 
-    console.log({ id: newExpense.id, tags: newTags });
     return {
       id: newExpense.id.toString(),
       userId: newExpense.userId,
