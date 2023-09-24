@@ -3,7 +3,7 @@ import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import { findAllExpensesWithTags } from '../utils/expenses-find.js';
-import { whereByFornight } from '../utils/where-fortnight.js';
+import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -18,6 +18,15 @@ const queries: QueryResolvers = {
     const { userId } = await user();
 
     const where = whereByFornight(userId, payBefore, 'payBefore');
+
+    return findAllExpensesWithTags(where);
+  },
+  expensesByMonth: async (_, input, context) => {
+    const { date } = input;
+    const { user } = context;
+    const { userId } = await user();
+
+    const where = whereByMonth(userId, date, 'payBefore');
 
     return findAllExpensesWithTags(where);
   },
@@ -53,6 +62,25 @@ const queries: QueryResolvers = {
         userId,
       },
     });
+
+    return allIncomes.map((x) => ({
+      userId: x.userId,
+      total: x.total,
+      paymentDate: {
+        date: x.paymentDate,
+        forthnight: calculateFortnight(x.paymentDate),
+      },
+      createdAt: x.createdAt,
+    }));
+  },
+  incomesByMonth: async (_, input, context) => {
+    const { date } = input;
+    const { user } = context;
+    const { userId } = await user();
+
+    const where = whereByMonth(userId, date, 'paymentDate');
+
+    const allIncomes = await Income.findAll({ where });
 
     return allIncomes.map((x) => ({
       userId: x.userId,

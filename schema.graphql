@@ -49,7 +49,9 @@ input ExpenseTagInput {
 
 type Query {
   incomes: [Income]
+  incomesByMonth(date: Date!): [Income]
   expensesByFortnight(payBefore: Date!): [Expense]
+  expensesByMonth(date: Date!): [Expense]
   allExpenses: [Expense]
   financialBalanceByFortnight(payBefore: Date!): FinancialBalance
   tags: [ExpenseTag]
