@@ -30,6 +30,9 @@ const queries: QueryResolvers = {
 
     return findAllExpensesWithTags(where);
   },
+  // TODO add logic to return a new field called creditCardDebts
+  // if the expense contains tag "tarjeta de credito" those totals should be add
+  // to this new field.
   financialBalanceByFortnight: async (_, input, context) => {
     const { payBefore } = input;
     const { user } = context;
@@ -41,12 +44,16 @@ const queries: QueryResolvers = {
     const allExpenses = findAllExpensesWithTags(whereExpenses);
     const income = await Income.findOne({ where: whereIncome });
 
-    const debts = (await allExpenses).reduce(
-      (accumulator, currentValue) => accumulator + currentValue.total,
-      0
+    const debts = Number(
+      (await allExpenses)
+        .reduce(
+          (accumulator, currentValue) => accumulator + currentValue.total,
+          0
+        )
+        .toFixed(2)
     );
 
-    const remaining = income.total - debts;
+    const remaining = Number((income.total - debts).toFixed(2));
 
     return {
       debts,
