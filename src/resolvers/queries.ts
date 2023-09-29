@@ -1,4 +1,5 @@
-import { QueryResolvers } from '../generated/graphql.js';
+import { format } from 'date-fns';
+import { IncomeTotalByMonth, QueryResolvers } from '../generated/graphql.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
@@ -70,15 +71,50 @@ const queries: QueryResolvers = {
       },
     });
 
-    return allIncomes.map((x) => ({
-      userId: x.userId,
-      total: x.total,
-      paymentDate: {
-        date: x.paymentDate,
-        forthnight: calculateFortnight(x.paymentDate),
-      },
-      createdAt: x.createdAt,
-    }));
+    // TODO improve logic
+    const monthMap = {};
+
+    const totalByMonth = allIncomes.map((x) => {
+      const formatedMonth = format(x.paymentDate, 'LLLL');
+      monthMap[formatedMonth] = (monthMap[formatedMonth] ?? 0) + x.total;
+
+      return {
+        date: formatedMonth,
+        total: monthMap[formatedMonth],
+      };
+    });
+
+    const maxTotalByDate = {};
+
+    for (const item of totalByMonth) {
+      if (
+        !maxTotalByDate[item.date] ||
+        item.total > maxTotalByDate[item.date].total
+      ) {
+        maxTotalByDate[item.date] = item;
+      }
+    }
+
+    const result = Object.values(maxTotalByDate) as Array<IncomeTotalByMonth>;
+
+    const sumOfAll = allIncomes.reduce(
+      (acumulator, currentValue) => acumulator + currentValue.total,
+      0
+    );
+
+    return {
+      incomes: allIncomes.map((x) => ({
+        userId: x.userId,
+        total: x.total,
+        paymentDate: {
+          date: x.paymentDate,
+          forthnight: calculateFortnight(x.paymentDate),
+        },
+        createdAt: x.createdAt,
+      })),
+      totalByMonth: result,
+      total: sumOfAll,
+    };
   },
   incomesByMonth: async (_, input, context) => {
     const { date } = input;

@@ -17,7 +17,7 @@ interface Expense
   createdAt: Date;
   updatedAt: Date;
 }
-
+//TODO include a column for check (if a paymet was already done and when it was done)
 export const Expense = sequilize.define<Expense>('expense', {
   id: {
     type: DataTypes.BIGINT,

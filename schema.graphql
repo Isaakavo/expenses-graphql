@@ -6,8 +6,8 @@ enum Fortnight {
 }
 
 type PaymentDate {
-  date: Date
-  forthnight: Fortnight
+  date: Date!
+  forthnight: Fortnight!
 }
 
 type Income {
@@ -16,7 +16,18 @@ type Income {
   createdAt: Date
   # Make this an object?
   # paymentDate: { date, forthnight - values enum first, second }
-  paymentDate: PaymentDate
+  paymentDate: PaymentDate!
+}
+
+type IncomeTotalByMonth {
+  date: String!,
+  total: Float!
+}
+
+type Incomes {
+  incomes: [Income]
+  totalByMonth: [IncomeTotalByMonth]
+  total: Float!
 }
 
 type Expense {
@@ -48,7 +59,7 @@ input ExpenseTagInput {
 }
 
 type Query {
-  incomes: [Income]
+  incomes: Incomes
   incomesByMonth(date: Date!): [Income]
   expensesByFortnight(payBefore: Date!): [Expense]
   expensesByMonth(date: Date!): [Expense]
