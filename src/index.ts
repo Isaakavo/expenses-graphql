@@ -9,10 +9,11 @@ import { verifyJwt } from './auth/verify-jwt.js';
 import { GraphQLError } from 'graphql';
 
 export interface User {
-  userId: string;
-  exp: number;
-  tokenUse: string;
-  authTime: string;
+  userId?: string;
+  exp?: number;
+  tokenUse?: string;
+  authTime?: string;
+  expiredAt?: string;
 }
 
 export interface Context {
@@ -38,6 +39,16 @@ const { url } = await startStandaloneServer(server, {
       const token = req.headers['x-session-key'] || '';
       try {
         const decodedUser = await verifyJwt(token as string);
+
+        if (decodedUser.expiredAt) {
+          throw new GraphQLError(`Session expired at ${decodedUser.expiredAt}`, {
+            extensions: {
+              code: 'FORBIDDEN',
+              http: { status: 403 },
+            },
+          });
+        }
+
         return decodedUser;
       } catch (error) {
         throw new GraphQLError(error, {

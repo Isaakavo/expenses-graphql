@@ -40,6 +40,10 @@ export async function verifyJwt(token: string): Promise<User> {
       authTime: decodedToken.auth_time,
     };
   } catch (error) {
-    console.log({ error });
+    console.log(error);
+    const expiredAt = error.expiredAt;
+    return {
+      expiredAt,
+    };
   }
 }
