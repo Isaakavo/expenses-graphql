@@ -65,10 +65,14 @@ const queries: QueryResolvers = {
     const { user } = context;
     const { userId } = await user();
 
+    //TODO implement logic in the query to receive the order of filtering from the client
     const allIncomes = await Income.findAll({
       where: {
         userId,
       },
+      order: [
+        ['paymentDate', 'DESC']
+      ]
     });
 
     // TODO improve logic
