@@ -6,7 +6,7 @@ import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { Date } from '../scalars/date.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
-
+//TODO add mutation for deletion
 const mutations: MutationResolvers = {
   createIncome: async (_, input, context) => {
     const { total, createdAt, paymentDate } = input;
