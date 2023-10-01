@@ -7,6 +7,7 @@ export const sequilize = new Sequelize({
   username: 'root',
   password: 'admin',
   database: 'expenses',
+  logging: false
 });
 
 export const connectDatabase = async () => {
