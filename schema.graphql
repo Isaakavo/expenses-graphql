@@ -20,7 +20,7 @@ type Income {
 }
 
 type IncomeTotalByMonth {
-  date: String!,
+  date: String!
   total: Float!
 }
 
@@ -58,6 +58,14 @@ input ExpenseTagInput {
   name: String
 }
 
+type JwtToken {
+  accessToken: String
+  experiesIn: String
+  idToken: String
+  refreshToken: String
+  tokenType: String
+}
+
 type Query {
   incomes: Incomes
   incomesByMonth(date: Date!): [Income]
@@ -69,7 +77,12 @@ type Query {
 }
 
 type Mutation {
-  createIncome(total: Float!, createdAt: Date!, paymentDate: Date!): Income
+  createIncome(
+    total: Float!
+    comment: String
+    createdAt: Date!
+    paymentDate: Date!
+  ): Income
   createExpense(
     concept: String!
     total: Float!
@@ -78,4 +91,9 @@ type Mutation {
     tags: [ExpenseTagInput]
     comment: String
   ): Expense
+  login(
+    username: String!
+    password: String!
+    token: String
+  ): JwtToken
 }

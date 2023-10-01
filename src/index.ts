@@ -1,12 +1,14 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
+import { AxiosInstance } from 'axios';
 import { readFileSync } from 'fs';
-import resolvers from './resolvers/index.js';
+import { GraphQLError } from 'graphql';
 import { Sequelize } from 'sequelize';
+import { instance } from './auth/axios-instance.js';
+import { verifyJwt } from './auth/verify-jwt.js';
 import { connectDatabase, sequilize } from './database/client.js';
 import { syncTables } from './database/sync-database.js';
-import { verifyJwt } from './auth/verify-jwt.js';
-import { GraphQLError } from 'graphql';
+import resolvers from './resolvers/index.js';
 
 export interface User {
   userId?: string;
@@ -18,6 +20,7 @@ export interface User {
 
 export interface Context {
   sequilizeClient: Sequelize;
+  axiosClient: AxiosInstance;
   user: () => Promise<User>;
 }
 
@@ -35,18 +38,22 @@ const { url } = await startStandaloneServer(server, {
   listen: { port: 4000 },
   context: async ({ req, res }) => ({
     sequilizeClient: sequilize,
+    axiosClient: instance,
     user: async () => {
       const token = req.headers['x-session-key'] || '';
       try {
         const decodedUser = await verifyJwt(token as string);
 
         if (decodedUser.expiredAt) {
-          throw new GraphQLError(`Session expired at ${decodedUser.expiredAt}`, {
-            extensions: {
-              code: 'FORBIDDEN',
-              http: { status: 403 },
-            },
-          });
+          throw new GraphQLError(
+            `Session expired at ${decodedUser.expiredAt}`,
+            {
+              extensions: {
+                code: 'FORBIDDEN',
+                http: { status: 403 },
+              },
+            }
+          );
         }
 
         return decodedUser;
