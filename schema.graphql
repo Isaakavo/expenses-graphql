@@ -64,6 +64,7 @@ type JwtToken {
   idToken: String
   refreshToken: String
   tokenType: String
+  isExpired: Boolean
 }
 
 type Query {
@@ -94,6 +95,9 @@ type Mutation {
   login(
     username: String!
     password: String!
-    token: String
   ): JwtToken
+  validateToken(token: String!): JwtToken
+  refresh(
+    refreshToken: String!
+  ):JwtToken
 }

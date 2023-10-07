@@ -40,10 +40,12 @@ export async function verifyJwt(token: string): Promise<User> {
       authTime: decodedToken.auth_time,
     };
   } catch (error) {
-    console.log(error);
-    const expiredAt = error.expiredAt;
-    return {
-      expiredAt,
-    };
+    if (error instanceof jwt.TokenExpiredError) {
+      console.log('Token expired');
+      const expiredAt = error.expiredAt.toISOString();
+      return {
+        expiredAt,
+      };
+    }
   }
 }

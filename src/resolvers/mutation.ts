@@ -1,4 +1,4 @@
-import { CognitoRespose } from 'auth/axios-instance.js';
+import { CognitoRespose, instance } from 'auth/axios-instance.js';
 import { GraphQLError } from 'graphql';
 import { MutationResolvers } from '../generated/graphql.js';
 import { ExpenseTags } from '../models/expense-tags.js';
@@ -8,79 +8,86 @@ import { Tag } from '../models/tag.js';
 import { Date } from '../scalars/date.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import { verifyJwt } from '../auth/verify-jwt.js';
-import { AxiosInstance, AxiosResponse } from 'axios';
-
-const makeAxiosRequest = async (
-  client: AxiosInstance,
-  username: string,
-  password: string
-) => {
-  return await client.post<CognitoRespose>('/', {
-    AuthParameters: {
-      USERNAME: username,
-      PASSWORD: password,
-    },
-    AuthFlow: 'USER_PASSWORD_AUTH',
-    ClientId: '25oksgjnl258639r4cvp4nl0v2',
-  });
-};
-
-const adaptTokens = async (response: AxiosResponse<CognitoRespose, any>) => {
-  const {
-    AuthenticationResult: {
-      AccessToken,
-      ExpiresIn,
-      IdToken,
-      RefreshToken,
-      TokenType,
-    },
-  } = response.data;
-  return {
-    experiesIn: ExpiresIn,
-    accessToken: AccessToken,
-    idToken: IdToken,
-    refreshToken: RefreshToken,
-    tokenType: TokenType,
-  };
-};
+import jwt from 'jsonwebtoken';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
+  //TODO validate logic to refresh the token
   login: async (_, input, context) => {
     try {
-      const { password, username, token } = input;
+      const { password, username } = input;
       const { axiosClient } = context;
 
-      if (token) {
-        const existingToken = await verifyJwt(token as string);
-        if (existingToken.expiredAt) {
-          console.log('Token expired at ', existingToken.expiredAt);
+      const response = await axiosClient.post<CognitoRespose>('/', {
+        AuthParameters: {
+          USERNAME: username,
+          PASSWORD: password,
+        },
+        AuthFlow: 'USER_PASSWORD_AUTH',
+        ClientId: '25oksgjnl258639r4cvp4nl0v2',
+      });
 
-          const response = await makeAxiosRequest(
-            axiosClient,
-            username,
-            password
-          );
+      const {
+        AuthenticationResult: {
+          AccessToken,
+          ExpiresIn,
+          IdToken,
+          RefreshToken,
+          TokenType,
+        },
+      } = response.data;
 
-          console.log(
-            'New Token is ',
-            response.data.AuthenticationResult.AccessToken
-          );
-
-          return adaptTokens(response);
-        }
-
-        return {
-          accessToken: token,
-        };
-      }
-      return adaptTokens(
-        await makeAxiosRequest(axiosClient, username, password)
-      );
+      return {
+        experiesIn: ExpiresIn,
+        accessToken: AccessToken,
+        idToken: IdToken,
+        refreshToken: RefreshToken,
+        tokenType: TokenType,
+      };
     } catch (error) {
-      console.log('Error', error);
-      return null;
+      return error;
     }
+  },
+  validateToken: async (_, input, context) => {
+    try {
+      const { token } = input;
+      const isExpired = await verifyJwt(token);
+
+      if (isExpired.expiredAt) {
+        return {
+          isExpired: true
+        }
+      }
+
+      return {
+        accessToken: token,
+      };
+    } catch (error) {
+      return error;
+    }
+  },
+  refresh: async (_, input, context) => {
+    const { refreshToken } = input;
+    const { axiosClient } = context;
+
+    const response = await axiosClient.post<CognitoRespose>('/', {
+      AuthParameters: {
+        REFRESH_TOKEN: refreshToken,
+      },
+      AuthFlow: 'REFRESH_TOKEN_AUTH',
+      ClientId: '25oksgjnl258639r4cvp4nl0v2',
+    });
+
+    const {
+      AuthenticationResult: { AccessToken, ExpiresIn, IdToken, TokenType },
+    } = response.data;
+
+    return {
+      experiesIn: ExpiresIn,
+      accessToken: AccessToken,
+      idToken: IdToken,
+      tokenType: TokenType,
+    };
   },
   createIncome: async (_, input, context) => {
     const { total, createdAt, paymentDate } = input;

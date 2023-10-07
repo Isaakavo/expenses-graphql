@@ -44,18 +44,6 @@ const { url } = await startStandaloneServer(server, {
       try {
         const decodedUser = await verifyJwt(token as string);
 
-        if (decodedUser.expiredAt) {
-          throw new GraphQLError(
-            `Session expired at ${decodedUser.expiredAt}`,
-            {
-              extensions: {
-                code: 'FORBIDDEN',
-                http: { status: 403 },
-              },
-            }
-          );
-        }
-
         return decodedUser;
       } catch (error) {
         throw new GraphQLError(error, {
