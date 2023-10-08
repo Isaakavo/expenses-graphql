@@ -43,15 +43,14 @@ const { url } = await startStandaloneServer(server, {
       const token = req.headers['x-session-key'] || '';
       try {
         const decodedUser = await verifyJwt(token as string);
-
         return decodedUser;
       } catch (error) {
-        throw new GraphQLError(error, {
-          extensions: {
-            code: 'UNAUTHENTICATED',
-            http: { status: 401 },
-          },
-        });
+        if (error instanceof GraphQLError) {
+          console.log('Invalid token');
+          
+          throw error;
+        }
+        console.error(error);
       }
     },
   }),

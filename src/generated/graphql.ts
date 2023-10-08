@@ -76,28 +76,16 @@ export type Incomes = {
   totalByMonth?: Maybe<Array<Maybe<IncomeTotalByMonth>>>;
 };
 
-export type JwtToken = {
-  __typename?: 'JwtToken';
-  accessToken?: Maybe<Scalars['String']['output']>;
-  experiesIn?: Maybe<Scalars['String']['output']>;
-  idToken?: Maybe<Scalars['String']['output']>;
-  refreshToken?: Maybe<Scalars['String']['output']>;
-  tokenType?: Maybe<Scalars['String']['output']>;
-};
-
 export type Mutation = {
   __typename?: 'Mutation';
   createExpense?: Maybe<Expense>;
   createIncome?: Maybe<Income>;
-  login?: Maybe<JwtToken>;
-  refresh?: Maybe<JwtToken>;
 };
 
 
 export type MutationCreateExpenseArgs = {
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
-  createdAt: Scalars['Date']['input'];
   payBefore: Scalars['Date']['input'];
   tags?: InputMaybe<Array<InputMaybe<ExpenseTagInput>>>;
   total: Scalars['Float']['input'];
@@ -106,27 +94,14 @@ export type MutationCreateExpenseArgs = {
 
 export type MutationCreateIncomeArgs = {
   comment?: InputMaybe<Scalars['String']['input']>;
-  createdAt: Scalars['Date']['input'];
   paymentDate: Scalars['Date']['input'];
   total: Scalars['Float']['input'];
-};
-
-
-export type MutationLoginArgs = {
-  password: Scalars['String']['input'];
-  token?: InputMaybe<Scalars['String']['input']>;
-  username: Scalars['String']['input'];
-};
-
-
-export type MutationRefreshArgs = {
-  refreshToken: Scalars['String']['input'];
 };
 
 export type PaymentDate = {
   __typename?: 'PaymentDate';
   date: Scalars['Date']['output'];
-  forthnight: Fortnight;
+  fortnight: Fortnight;
 };
 
 export type Query = {
@@ -244,7 +219,6 @@ export type ResolversTypes = ResolversObject<{
   Income: ResolverTypeWrapper<Income>;
   IncomeTotalByMonth: ResolverTypeWrapper<IncomeTotalByMonth>;
   Incomes: ResolverTypeWrapper<Incomes>;
-  JwtToken: ResolverTypeWrapper<JwtToken>;
   Mutation: ResolverTypeWrapper<{}>;
   PaymentDate: ResolverTypeWrapper<PaymentDate>;
   Query: ResolverTypeWrapper<{}>;
@@ -264,7 +238,6 @@ export type ResolversParentTypes = ResolversObject<{
   Income: Income;
   IncomeTotalByMonth: IncomeTotalByMonth;
   Incomes: Incomes;
-  JwtToken: JwtToken;
   Mutation: {};
   PaymentDate: PaymentDate;
   Query: {};
@@ -323,25 +296,14 @@ export type IncomesResolvers<ContextType = Context, ParentType extends Resolvers
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
-export type JwtTokenResolvers<ContextType = Context, ParentType extends ResolversParentTypes['JwtToken'] = ResolversParentTypes['JwtToken']> = ResolversObject<{
-  accessToken?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  experiesIn?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  idToken?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  refreshToken?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  tokenType?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
-  createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'concept' | 'createdAt' | 'payBefore' | 'total'>>;
-  createIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'createdAt' | 'paymentDate' | 'total'>>;
-  login?: Resolver<Maybe<ResolversTypes['JwtToken']>, ParentType, ContextType, RequireFields<MutationLoginArgs, 'password' | 'username'>>;
-  refresh?: Resolver<Maybe<ResolversTypes['JwtToken']>, ParentType, ContextType, RequireFields<MutationRefreshArgs, 'refreshToken'>>;
+  createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'concept' | 'payBefore' | 'total'>>;
+  createIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'paymentDate' | 'total'>>;
 }>;
 
 export type PaymentDateResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PaymentDate'] = ResolversParentTypes['PaymentDate']> = ResolversObject<{
   date?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
-  forthnight?: Resolver<ResolversTypes['Fortnight'], ParentType, ContextType>;
+  fortnight?: Resolver<ResolversTypes['Fortnight'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -363,7 +325,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Income?: IncomeResolvers<ContextType>;
   IncomeTotalByMonth?: IncomeTotalByMonthResolvers<ContextType>;
   Incomes?: IncomesResolvers<ContextType>;
-  JwtToken?: JwtTokenResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   PaymentDate?: PaymentDateResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;

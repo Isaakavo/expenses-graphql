@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { jwksClientInstance } from './client.js';
 import { User } from '../index.js';
+import { GraphQLError } from 'graphql';
 
 export async function verifyJwt(token: string): Promise<User> {
   const { decode, verify } = jwt;
@@ -41,11 +42,12 @@ export async function verifyJwt(token: string): Promise<User> {
     };
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      console.log('Token expired');
-      const expiredAt = error.expiredAt.toISOString();
-      return {
-        expiredAt,
-      };
+      throw new GraphQLError(error.message, {
+        extensions: {
+          code: 'UNAUTHENTICATED',
+          http: { status: 401 },
+        },
+      });
     }
   }
 }

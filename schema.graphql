@@ -7,7 +7,7 @@ enum Fortnight {
 
 type PaymentDate {
   date: Date!
-  forthnight: Fortnight!
+  fortnight: Fortnight!
 }
 
 type Income {
@@ -15,7 +15,6 @@ type Income {
   total: Float!
   createdAt: Date
   # Make this an object?
-  # paymentDate: { date, forthnight - values enum first, second }
   paymentDate: PaymentDate!
 }
 
@@ -58,15 +57,6 @@ input ExpenseTagInput {
   name: String
 }
 
-type JwtToken {
-  accessToken: String
-  experiesIn: String
-  idToken: String
-  refreshToken: String
-  tokenType: String
-  isExpired: Boolean
-}
-
 type Query {
   incomes: Incomes
   incomesByMonth(date: Date!): [Income]
@@ -81,23 +71,13 @@ type Mutation {
   createIncome(
     total: Float!
     comment: String
-    createdAt: Date!
     paymentDate: Date!
   ): Income
   createExpense(
     concept: String!
     total: Float!
     payBefore: Date!
-    createdAt: Date!
     tags: [ExpenseTagInput]
     comment: String
   ): Expense
-  login(
-    username: String!
-    password: String!
-  ): JwtToken
-  validateToken(token: String!): JwtToken
-  refresh(
-    refreshToken: String!
-  ):JwtToken
 }
