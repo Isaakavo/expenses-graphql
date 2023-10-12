@@ -75,6 +75,9 @@ type Mutation {
     comment: String
     paymentDate: Date!
   ): Income!
+  deleteIncomeById(
+    id: ID!
+  ): Boolean
   createExpense(
     concept: String!
     total: Float!

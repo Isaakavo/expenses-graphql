@@ -38,6 +38,49 @@ const mutations: MutationResolvers = {
       createdAt: newIncome.createdAt,
     };
   },
+  deleteIncomeById: async (_, input, context) => {
+    try {
+      const { id } = input;
+      const { user } = context;
+      const { userId } = await user();
+
+      const incomeToDelete = await Income.findOne({
+        where: {
+          userId,
+          id,
+        },
+      });
+
+      if (!incomeToDelete) {
+        throw new GraphQLError('Income id not found', {
+          extensions: {
+            code: 'NOT_FOUND',
+            http: { status: 404 },
+          },
+        });
+      }
+
+      const isDeleted = await Income.destroy({
+        where: {
+          userId,
+          id,
+        },
+      });
+
+      console.log({ isDeleted });
+
+      if (isDeleted === 0) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      if (error instanceof GraphQLError) {
+        console.log(error);
+        return error;
+      }
+    }
+  },
   createExpense: async (_, input, context) => {
     const { concept, total, tags, comment, payBefore } = input;
     const { user } = context;
