@@ -10,7 +10,6 @@ import { calculateFortnight } from '../utils/calculate-fortnight.js';
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
   createIncome: async (_, input, context) => {
-    //TODO make createdAt set in the server
     const { total, paymentDate, comment } = input;
     const { user } = context;
     const { userId } = await user();
@@ -21,11 +20,15 @@ const mutations: MutationResolvers = {
     const newIncome = await Income.create({
       userId,
       total,
+      comment: comment.trim(),
       paymentDate: parsedPaymentDay,
       createdAt: parsedCreatedAt,
     });
 
+    console.log('Income added with id', newIncome.id);
+
     return {
+      id: newIncome.id,
       userId: newIncome.userId,
       total: newIncome.total,
       paymentDate: {

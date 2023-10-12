@@ -463,7 +463,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "Incomes",
+        "name": "IncomesList",
         "description": null,
         "fields": [
           {
@@ -471,12 +471,20 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "LIST",
+              "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "OBJECT",
-                "name": "Income",
-                "ofType": null
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "Income",
+                    "ofType": null
+                  }
+                }
               }
             },
             "isDeprecated": false,
@@ -503,12 +511,20 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "LIST",
+              "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "OBJECT",
-                "name": "IncomeTotalByMonth",
-                "ofType": null
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "IncomeTotalByMonth",
+                    "ofType": null
+                  }
+                }
               }
             },
             "isDeprecated": false,
@@ -664,9 +680,13 @@
               }
             ],
             "type": {
-              "kind": "OBJECT",
-              "name": "Income",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Income",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -837,18 +857,6 @@
             "deprecationReason": null
           },
           {
-            "name": "incomes",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "OBJECT",
-              "name": "Incomes",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "incomesByMonth",
             "description": null,
             "args": [
@@ -877,6 +885,18 @@
                 "name": "Income",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "incomesList",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "IncomesList",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

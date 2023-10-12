@@ -11,9 +11,11 @@ type PaymentDate {
 }
 
 type Income {
+  id: ID!
   userId: String!
   total: Float!
   createdAt: Date
+  comment: String
   # Make this an object?
   paymentDate: PaymentDate!
 }
@@ -23,9 +25,9 @@ type IncomeTotalByMonth {
   total: Float!
 }
 
-type Incomes {
-  incomes: [Income]
-  totalByMonth: [IncomeTotalByMonth]
+type IncomesList {
+  incomes: [Income!]!
+  totalByMonth: [IncomeTotalByMonth!]!
   total: Float!
 }
 
@@ -58,7 +60,7 @@ input ExpenseTagInput {
 }
 
 type Query {
-  incomes: Incomes
+  incomesList: IncomesList
   incomesByMonth(date: Date!): [Income]
   expensesByFortnight(payBefore: Date!): [Expense]
   expensesByMonth(date: Date!): [Expense]
@@ -72,7 +74,7 @@ type Mutation {
     total: Float!
     comment: String
     paymentDate: Date!
-  ): Income
+  ): Income!
   createExpense(
     concept: String!
     total: Float!

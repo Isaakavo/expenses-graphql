@@ -8,6 +8,7 @@ import {
 
 interface Income
   extends Model<InferAttributes<Income>, InferCreationAttributes<Income>> {
+  id: number;
   total: number;
   paymentDate: Date;
   comment: string;
@@ -17,13 +18,18 @@ interface Income
 }
 
 export const Income = sequilize.define<Income>('income', {
+  id: {
+    type: DataTypes.BIGINT,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   total: {
     type: DataTypes.FLOAT,
     allowNull: false,
   },
   comment: {
-    type: DataTypes.CHAR,
-    allowNull: true
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   paymentDate: {
     type: DataTypes.DATE,

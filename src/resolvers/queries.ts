@@ -62,7 +62,7 @@ const queries: QueryResolvers = {
       remaining,
     };
   },
-  incomes: async (_, __, context) => {
+  incomesList: async (_, __, context) => {
     try {
       const { user } = context;
       const { userId } = await user();
@@ -110,8 +110,10 @@ const queries: QueryResolvers = {
 
       return {
         incomes: allIncomes.map((x) => ({
+          id: x.id,
           userId: x.userId,
           total: x.total,
+          comment: x.comment,
           paymentDate: {
             date: x.paymentDate,
             fortnight: calculateFortnight(x.paymentDate),
