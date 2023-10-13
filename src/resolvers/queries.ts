@@ -1,17 +1,16 @@
 import { format } from 'date-fns';
+import { GraphQLError } from 'graphql';
+import { adaptSingleIncome } from '../adapters/income-adapter.js';
 import { IncomeTotalByMonth, QueryResolvers } from '../generated/graphql.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
-import { findAllExpensesWithTags } from '../utils/expenses-find.js';
-import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
-import { GraphQLError } from 'graphql';
-import { Expense } from '../models/expense.js';
 import {
-  adaptExpensesWithTags,
-  adaptSingleIncome,
-} from '../adapters/income-adapter.js';
-import { ExpenseTags } from '../models/expense-tags.js';
+  findAllExpensesWithTags,
+  findIncomeByIdWithExpenses,
+  findTags,
+} from '../utils/expenses-find.js';
+import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -30,45 +29,40 @@ const queries: QueryResolvers = {
     return findAllExpensesWithTags(where);
   },
   incomeAndExpensesByFortnight: async (_, { input }, context) => {
-    const { incomeId } = input;
-    const { user } = context;
-    const { userId } = await user();
+    try {
+      const { incomeId, payBefore } = input;
+      const { user } = context;
+      const { userId } = await user();
 
-    const incomeWithExpense = await Income.findOne({
-      where: {
-        id: incomeId,
+      const incomeWithExpense = await findIncomeByIdWithExpenses(
+        incomeId,
         userId,
-      },
-      include: [
-        {
-          model: Expense,
-          as: 'expenses',
-        },
-      ],
-    });
+        whereByFornight(userId, payBefore, 'payBefore')
+      );
 
-    const expenseListWithTags = await Promise.all(
-      incomeWithExpense.expenses.map(async (x) => {
-        const expensesTags = await ExpenseTags.findAll({
-          where: {
-            expenseId: x.id,
-          },
-        });
+      if (!incomeWithExpense?.expenses) {
+        return {
+          income: adaptSingleIncome(incomeWithExpense),
+          expenses: [],
+          expensesTotal: 0.0,
+        };
+      }
 
-        const tags = await Promise.all(
-          expensesTags.map(async (x) => {
-            return await Tag.findOne({ where: { id: x.tagId } });
-          })
-        );
+      const expenseListWithTags = await findTags(incomeWithExpense.expenses);
 
-        return adaptExpensesWithTags(x, tags);
-      })
-    );
+      const expensesTotal = incomeWithExpense.expenses.reduce(
+        (acumulator, currentValue) => acumulator + currentValue.total,
+        0
+      );
 
-    return {
-      income: adaptSingleIncome(incomeWithExpense),
-      expenses: expenseListWithTags,
-    };
+      return {
+        income: adaptSingleIncome(incomeWithExpense),
+        expenses: expenseListWithTags,
+        expensesTotal,
+      };
+    } catch (error) {
+      console.error(error);
+    }
   },
   expensesByMonth: async (_, input, context) => {
     const { date } = input;

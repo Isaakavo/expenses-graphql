@@ -25,6 +25,8 @@ type IncomeTotalByMonth {
   total: Float!
 }
 
+# Type used to display all the incomes registered and to obtain the total by month
+# and total of all
 type IncomesList {
   incomes: [Income!]!
   totalByMonth: [IncomeTotalByMonth!]!
@@ -56,9 +58,12 @@ type FinancialBalance {
   debts: Float!
 }
 
+# Type used to display the income for a given fortnight and all the related expenses
+# it also return the total of all the expenses
 type IncomeListAndExpenses {
   income: Income!
   expenses: [Expense]
+  expensesTotal: Float
 }
 
 input CreateExpenseInput {
@@ -72,6 +77,7 @@ input CreateExpenseInput {
 
 input IncomesAndExpensesByFortnightInput {
   incomeId: ID!
+  payBefore: Date!
 }
 
 input ExpenseTagInput {
@@ -83,6 +89,7 @@ type Query {
   incomesByMonth(date: Date!): [Income] # Validate if this query is necessary
   expensesByFortnight(payBefore: Date!): [Expense] # Validate if this query is necessary
   expensesByMonth(date: Date!): [Expense]
+  #TODO make this query to return the total of expenses
   incomeAndExpensesByFortnight(input: IncomesAndExpensesByFortnightInput!): IncomeListAndExpenses!
   allExpenses: [Expense]
   financialBalanceByFortnight(payBefore: Date!): FinancialBalance

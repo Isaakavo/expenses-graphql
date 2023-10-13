@@ -78,6 +78,7 @@ export type Income = {
 export type IncomeListAndExpenses = {
   __typename?: 'IncomeListAndExpenses';
   expenses?: Maybe<Array<Maybe<Expense>>>;
+  expensesTotal?: Maybe<Scalars['Float']['output']>;
   income: Income;
 };
 
@@ -89,6 +90,7 @@ export type IncomeTotalByMonth = {
 
 export type IncomesAndExpensesByFortnightInput = {
   incomeId: Scalars['ID']['input'];
+  payBefore: Scalars['Date']['input'];
 };
 
 export type IncomesList = {
@@ -324,6 +326,7 @@ export type IncomeResolvers<ContextType = Context, ParentType extends ResolversP
 
 export type IncomeListAndExpensesResolvers<ContextType = Context, ParentType extends ResolversParentTypes['IncomeListAndExpenses'] = ResolversParentTypes['IncomeListAndExpenses']> = ResolversObject<{
   expenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  expensesTotal?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   income?: Resolver<ResolversTypes['Income'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;

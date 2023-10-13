@@ -1,6 +1,30 @@
+import { Income } from '../models/income.js';
+import { adaptExpensesWithTags } from '../adapters/income-adapter.js';
 import { ExpenseTags } from '../models/expense-tags.js';
 import { Expense } from '../models/expense.js';
 import { Tag } from '../models/tag.js';
+
+export const findIncomeByIdWithExpenses = async (
+  incomeId: string,
+  userId: string,
+  where: any | {} = {}
+) => {
+  return await Income.findOne({
+    where: {
+      id: incomeId,
+      userId,
+    },
+    include: [
+      {
+        model: Expense,
+        as: 'expenses',
+        where,
+        required: false,
+      },
+    ],
+    rejectOnEmpty: true,
+  });
+};
 
 export const findAllExpensesWithTags = async (where: any | {} = {}) => {
   const allExpenses = await Expense.findAll({
@@ -21,28 +45,31 @@ export const findAllExpensesWithTags = async (where: any | {} = {}) => {
         })
       );
 
-      console.log(expense.incomeId);
-      
-
-      return {
-        id: expense.id.toString(),
-        incomeId: expense.incomeId.toString(),
-        userId: expense.userId,
-        concept: expense.concept,
-        total: expense.total,
-        comment: expense.comments,
-        payBefore: expense.payBefore,
-        createdAt: expense.createdAt,
-        updatedAt: expense.updatedAt,
-        tags: tags.map((tag) => {
-          return {
-            id: tag.id.toString(),
-            name: tag.name,
-            createdAt: tag.createdAt,
-            updatedAt: tag.updatedAt,
-          };
-        }),
-      };
+      return adaptExpensesWithTags(expense, tags);
     })
   );
+};
+
+export const findTags = async (expenses: Expense[], where: any | {} = {}) => {
+  try {
+    return await Promise.all(
+      expenses.map(async (expense) => {
+        const expensesTags = await ExpenseTags.findAll({
+          where: {
+            expenseId: expense.id,
+          },
+        });
+
+        const tags = await Promise.all(
+          expensesTags.map(async (expenseTag) => {
+            return await Tag.findOne({ where: { id: expenseTag.tagId } });
+          })
+        );
+
+        return adaptExpensesWithTags(expense, tags);
+      })
+    );
+  } catch (error) {
+    console.error(error);
+  }
 };
