@@ -1,49 +1,21 @@
-import { sequilize } from '../database/client.js';
 import {
-  DataTypes,
-  InferAttributes,
-  InferCreationAttributes,
-  Model,
+  Association,
+  Model, NonAttribute
 } from 'sequelize';
+import { Expense } from './expense';
 
-interface Income
-  extends Model<InferAttributes<Income>, InferCreationAttributes<Income>> {
-  id: number;
-  total: number;
-  paymentDate: Date;
-  comment: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
+export class Income extends Model {
+  public id!: number;
+  public total!: number;
+  public paymentDate!: Date;
+  public comment!: string;
+  public userId!: string;
+  public createdAt!: Date;
+  public updatedAt!: Date;
+
+  declare expenses?: NonAttribute<Expense[]>
+
+  declare static associations: {
+    expenses: Association<Income, Expense>
+  }
 }
-
-export const Income = sequilize.define<Income>('income', {
-  id: {
-    type: DataTypes.BIGINT,
-    primaryKey: true,
-    autoIncrement: true,
-  },
-  total: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-  },
-  comment: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  paymentDate: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  userId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  createdAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-  },
-});

@@ -6,6 +6,12 @@ import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import { findAllExpensesWithTags } from '../utils/expenses-find.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
 import { GraphQLError } from 'graphql';
+import { Expense } from '../models/expense.js';
+import {
+  adaptExpensesWithTags,
+  adaptSingleIncome,
+} from '../adapters/income-adapter.js';
+import { ExpenseTags } from '../models/expense-tags.js';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -22,6 +28,47 @@ const queries: QueryResolvers = {
     const where = whereByFornight(userId, payBefore, 'payBefore');
 
     return findAllExpensesWithTags(where);
+  },
+  incomeAndExpensesByFortnight: async (_, { input }, context) => {
+    const { incomeId } = input;
+    const { user } = context;
+    const { userId } = await user();
+
+    const incomeWithExpense = await Income.findOne({
+      where: {
+        id: incomeId,
+        userId,
+      },
+      include: [
+        {
+          model: Expense,
+          as: 'expenses',
+        },
+      ],
+    });
+
+    const expenseListWithTags = await Promise.all(
+      incomeWithExpense.expenses.map(async (x) => {
+        const expensesTags = await ExpenseTags.findAll({
+          where: {
+            expenseId: x.id,
+          },
+        });
+
+        const tags = await Promise.all(
+          expensesTags.map(async (x) => {
+            return await Tag.findOne({ where: { id: x.tagId } });
+          })
+        );
+
+        return adaptExpensesWithTags(x, tags);
+      })
+    );
+
+    return {
+      income: adaptSingleIncome(incomeWithExpense),
+      expenses: expenseListWithTags,
+    };
   },
   expensesByMonth: async (_, input, context) => {
     const { date } = input;
@@ -110,7 +157,7 @@ const queries: QueryResolvers = {
 
       return {
         incomes: allIncomes.map((x) => ({
-          id: x.id,
+          id: x.id.toString(),
           userId: x.userId,
           total: x.total,
           comment: x.comment,
@@ -140,6 +187,7 @@ const queries: QueryResolvers = {
     const allIncomes = await Income.findAll({ where });
 
     return allIncomes.map((x) => ({
+      id: x.id.toString(),
       userId: x.userId,
       total: x.total,
       paymentDate: {

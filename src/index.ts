@@ -6,7 +6,7 @@ import { GraphQLError } from 'graphql';
 import { Sequelize } from 'sequelize';
 import { instance } from './auth/axios-instance.js';
 import { verifyJwt } from './auth/verify-jwt.js';
-import { connectDatabase, sequilize } from './database/client.js';
+import { connectDatabase, sequelize } from './database/client.js';
 import { syncTables } from './database/sync-database.js';
 import resolvers from './resolvers/index.js';
 
@@ -37,7 +37,7 @@ const server = new ApolloServer<Context>({
 const { url } = await startStandaloneServer(server, {
   listen: { port: 4000 },
   context: async ({ req, res }) => ({
-    sequilizeClient: sequilize,
+    sequilizeClient: sequelize,
     axiosClient: instance,
     user: async () => {
       const token = req.headers['x-session-key'] || '';

@@ -28,7 +28,7 @@ const mutations: MutationResolvers = {
     console.log('Income added with id', newIncome.id);
 
     return {
-      id: newIncome.id,
+      id: newIncome.id.toString(),
       userId: newIncome.userId,
       total: newIncome.total,
       paymentDate: {
@@ -38,6 +38,8 @@ const mutations: MutationResolvers = {
       createdAt: newIncome.createdAt,
     };
   },
+  //TODO when deleting I need to also delete all the expenses associated to this income?
+  // think in a way of do cascading delete
   deleteIncomeById: async (_, input, context) => {
     try {
       const { id } = input;
@@ -77,12 +79,12 @@ const mutations: MutationResolvers = {
     } catch (error) {
       if (error instanceof GraphQLError) {
         console.log(error);
-        return error;
+        throw error;
       }
     }
   },
-  createExpense: async (_, input, context) => {
-    const { concept, total, tags, comment, payBefore } = input;
+  createExpense: async (_, { input }, context) => {
+    const { incomeId, concept, total, tags, comment, payBefore } = input;
     const { user } = context;
     const { userId } = await user();
 
@@ -100,6 +102,7 @@ const mutations: MutationResolvers = {
 
     const newExpense = await Expense.create({
       userId,
+      incomeId,
       concept,
       total,
       comments: comment,
@@ -127,8 +130,11 @@ const mutations: MutationResolvers = {
       })
     );
 
+    console.log({ newExpense });
+
     return {
       id: newExpense.id.toString(),
+      incomeId: newExpense.incomeId.toString(),
       userId: newExpense.userId,
       concept: newExpense.concept,
       total: newExpense.total,

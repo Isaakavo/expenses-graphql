@@ -33,6 +33,7 @@ type IncomesList {
 
 type Expense {
   id: ID!
+  incomeId: ID
   userId: String!
   concept: String!
   total: Float!
@@ -55,34 +56,41 @@ type FinancialBalance {
   debts: Float!
 }
 
+type IncomeListAndExpenses {
+  income: Income!
+  expenses: [Expense]
+}
+
+input CreateExpenseInput {
+  incomeId: ID!
+  concept: String!
+  total: Float!
+  payBefore: Date!
+  tags: [ExpenseTagInput]
+  comment: String
+}
+
+input IncomesAndExpensesByFortnightInput {
+  incomeId: ID!
+}
+
 input ExpenseTagInput {
   name: String
 }
 
 type Query {
   incomesList: IncomesList
-  incomesByMonth(date: Date!): [Income]
-  expensesByFortnight(payBefore: Date!): [Expense]
+  incomesByMonth(date: Date!): [Income] # Validate if this query is necessary
+  expensesByFortnight(payBefore: Date!): [Expense] # Validate if this query is necessary
   expensesByMonth(date: Date!): [Expense]
+  incomeAndExpensesByFortnight(input: IncomesAndExpensesByFortnightInput!): IncomeListAndExpenses!
   allExpenses: [Expense]
   financialBalanceByFortnight(payBefore: Date!): FinancialBalance
   tags: [ExpenseTag]
 }
 
 type Mutation {
-  createIncome(
-    total: Float!
-    comment: String
-    paymentDate: Date!
-  ): Income!
-  deleteIncomeById(
-    id: ID!
-  ): Boolean
-  createExpense(
-    concept: String!
-    total: Float!
-    payBefore: Date!
-    tags: [ExpenseTagInput]
-    comment: String
-  ): Expense
+  createIncome(total: Float!, comment: String, paymentDate: Date!): Income!
+  deleteIncomeById(id: ID!): Boolean
+  createExpense(input: CreateExpenseInput!): Expense
 }

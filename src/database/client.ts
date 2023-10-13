@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize';
 
-export const sequilize = new Sequelize({
+export const sequelize = new Sequelize({
   dialect: 'postgres',
   host: 'localhost',
   port: 5432,
@@ -12,7 +12,7 @@ export const sequilize = new Sequelize({
 
 export const connectDatabase = async () => {
   try {
-    await sequilize.authenticate();
+    await sequelize.authenticate();
     console.log('Connected to database');
   } catch (error) {
     console.error('Error connecting to database ', error);

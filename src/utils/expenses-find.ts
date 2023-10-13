@@ -21,8 +21,12 @@ export const findAllExpensesWithTags = async (where: any | {} = {}) => {
         })
       );
 
+      console.log(expense.incomeId);
+      
+
       return {
         id: expense.id.toString(),
+        incomeId: expense.incomeId.toString(),
         userId: expense.userId,
         concept: expense.concept,
         total: expense.total,

@@ -1,20 +1,135 @@
-import { Tag } from '../models/tag.js';
-import { Income } from '../models/income.js';
-import { Expense } from '../models/expense.js';
-import { sequilize } from './client.js';
+import { DataTypes } from 'sequelize';
 import { ExpenseTags } from '../models/expense-tags.js';
+import { Expense } from '../models/expense.js';
+import { Income } from '../models/income.js';
+import { Tag } from '../models/tag.js';
+import { sequelize } from './client.js';
 
 export const syncTables = async () => {
   try {
-    await Income.sync();
-    await Tag.sync();
-    await Expense.sync();
+    Income.init(
+      {
+        id: {
+          type: DataTypes.BIGINT,
+          primaryKey: true,
+          autoIncrement: true,
+        },
+        total: {
+          type: DataTypes.FLOAT,
+          allowNull: false,
+        },
+        comment: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        paymentDate: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        },
+        userId: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+        },
+      },
+      { sequelize, underscored: true }
+    );
+    Tag.init(
+      {
+        id: {
+          type: DataTypes.BIGINT,
+          primaryKey: true,
+          autoIncrement: true,
+        },
+        name: {
+          type: DataTypes.STRING,
+          allowNull: false,
+          unique: true,
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+        },
+      },
+      { sequelize, underscored: true }
+    );
+    Expense.init(
+      {
+        id: {
+          type: DataTypes.BIGINT,
+          primaryKey: true,
+          autoIncrement: true,
+        },
+        userId: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        concept: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        total: {
+          type: DataTypes.FLOAT,
+          allowNull: false,
+        },
+        comments: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        payBefore: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+        },
+      },
+      { sequelize, underscored: true }
+    );
 
+    ExpenseTags.init(
+      {
+        pk_expenses_tags: {
+          type: DataTypes.BIGINT,
+          primaryKey: true,
+          autoIncrement: true,
+        },
+        expenseId: {
+          type: DataTypes.BIGINT,
+          allowNull: false,
+        },
+        tagId: {
+          type: DataTypes.BIGINT,
+          allowNull: false,
+        },
+      },
+      { sequelize, timestamps: false }
+    );
+
+    Income.hasMany(Expense, {
+      onDelete: 'CASCADE',
+      foreignKey: 'incomeId',
+      as: 'expenses',
+    });
+    Expense.belongsTo(Income, { foreignKey: 'incomeId' });
     Expense.belongsToMany(Tag, { through: ExpenseTags });
     Tag.belongsToMany(Expense, { through: ExpenseTags });
 
-    await sequilize.sync();
-
+    // await sequelize.sync({force: true});
+    await sequelize.sync();
     console.log(`Synced tables ${Income.name}, ${Tag.name}, ${Expense.name}`);
   } catch (error) {
     console.error('Could not sync tables');
