@@ -59,6 +59,7 @@ const queries: QueryResolvers = {
         income: adaptSingleIncome(incomeWithExpense),
         expenses: expenseListWithTags,
         expensesTotal,
+        remaining: incomeWithExpense.total - expensesTotal
       };
     } catch (error) {
       console.error(error);

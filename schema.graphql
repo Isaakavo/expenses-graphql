@@ -16,8 +16,8 @@ type Income {
   total: Float!
   createdAt: Date
   comment: String
-  # Make this an object?
   paymentDate: PaymentDate!
+  # Add a field for "safe to spend" and maybe one for "savings"
 }
 
 type IncomeTotalByMonth {
@@ -35,14 +35,14 @@ type IncomesList {
 
 type Expense {
   id: ID!
-  incomeId: ID
-  userId: String!
+  incomeId: ID!
+  userId: String
   concept: String!
   total: Float!
   payBefore: Date!
   createdAt: Date
   updatedAt: Date
-  tags: [ExpenseTag]
+  tags: [ExpenseTag!]!
   comment: String
 }
 
@@ -59,11 +59,12 @@ type FinancialBalance {
 }
 
 # Type used to display the income for a given fortnight and all the related expenses
-# it also return the total of all the expenses
+# it also return the total of all the expenses and the remaining between income and expenses
 type IncomeListAndExpenses {
   income: Income!
-  expenses: [Expense]
+  expenses: [Expense!]
   expensesTotal: Float
+  remaining: Float
 }
 
 input CreateExpenseInput {
@@ -77,6 +78,7 @@ input CreateExpenseInput {
 
 input IncomesAndExpensesByFortnightInput {
   incomeId: ID!
+  # input used to get all the expenses matching this date (from 1st to 15th or from 15th to 30th)
   payBefore: Date!
 }
 

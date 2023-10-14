@@ -197,9 +197,13 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "SCALAR",
-              "name": "ID",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -225,12 +229,20 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "LIST",
+              "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "OBJECT",
-                "name": "ExpenseTag",
-                "ofType": null
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "ExpenseTag",
+                    "ofType": null
+                  }
+                }
               }
             },
             "isDeprecated": false,
@@ -269,13 +281,9 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -574,9 +582,13 @@
               "kind": "LIST",
               "name": null,
               "ofType": {
-                "kind": "OBJECT",
-                "name": "Expense",
-                "ofType": null
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "OBJECT",
+                  "name": "Expense",
+                  "ofType": null
+                }
               }
             },
             "isDeprecated": false,
@@ -606,6 +618,18 @@
                 "name": "Income",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "remaining",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
