@@ -33,6 +33,16 @@ type IncomesList {
   total: Float!
 }
 
+type Card {
+  id: ID!
+  userId: ID!
+  number: String
+  bank: String!
+  cutDateDay: String
+  limitPaymentDay: String
+  creditLimit: Float
+}
+
 type Expense {
   id: ID!
   incomeId: ID!
@@ -76,6 +86,14 @@ input CreateExpenseInput {
   comment: String
 }
 
+input CreateCardInput {
+  number: String
+  cutDateDay: String!
+  limitPaymentDay: String!
+  bank: String!
+  creditLimit: Float
+}
+
 input IncomesAndExpensesByFortnightInput {
   incomeId: ID!
   # input used to get all the expenses matching this date (from 1st to 15th or from 15th to 30th)
@@ -92,14 +110,18 @@ type Query {
   expensesByFortnight(payBefore: Date!): [Expense] # Validate if this query is necessary
   expensesByMonth(date: Date!): [Expense]
   #TODO make this query to return the total of expenses
-  incomeAndExpensesByFortnight(input: IncomesAndExpensesByFortnightInput!): IncomeListAndExpenses!
+  incomeAndExpensesByFortnight(
+    input: IncomesAndExpensesByFortnightInput!
+  ): IncomeListAndExpenses!
   allExpenses: [Expense]
   financialBalanceByFortnight(payBefore: Date!): FinancialBalance
   tags: [ExpenseTag]
+  cardList: [Card]
 }
 
 type Mutation {
   createIncome(total: Float!, comment: String, paymentDate: Date!): Income!
-  deleteIncomeById(id: ID!): Boolean
   createExpense(input: CreateExpenseInput!): Expense
+  createCard(input: CreateCardInput): Card
+  deleteIncomeById(id: ID!): Boolean
 }

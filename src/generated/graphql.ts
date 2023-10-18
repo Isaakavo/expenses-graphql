@@ -19,6 +19,25 @@ export type Scalars = {
   Date: { input: Date; output: Date; }
 };
 
+export type Card = {
+  __typename?: 'Card';
+  bank: Scalars['String']['output'];
+  creditLimit?: Maybe<Scalars['Float']['output']>;
+  cutDateDay?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  limitPaymentDay?: Maybe<Scalars['String']['output']>;
+  number?: Maybe<Scalars['String']['output']>;
+  userId: Scalars['ID']['output'];
+};
+
+export type CreateCardInput = {
+  bank: Scalars['String']['input'];
+  creditLimit?: InputMaybe<Scalars['Float']['input']>;
+  cutDateDay: Scalars['String']['input'];
+  limitPaymentDay: Scalars['String']['input'];
+  number?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type CreateExpenseInput = {
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
@@ -103,9 +122,15 @@ export type IncomesList = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  createCard?: Maybe<Card>;
   createExpense?: Maybe<Expense>;
   createIncome: Income;
   deleteIncomeById?: Maybe<Scalars['Boolean']['output']>;
+};
+
+
+export type MutationCreateCardArgs = {
+  input?: InputMaybe<CreateCardInput>;
 };
 
 
@@ -134,6 +159,7 @@ export type PaymentDate = {
 export type Query = {
   __typename?: 'Query';
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
+  cardList?: Maybe<Array<Maybe<Card>>>;
   expensesByFortnight?: Maybe<Array<Maybe<Expense>>>;
   expensesByMonth?: Maybe<Array<Maybe<Expense>>>;
   financialBalanceByFortnight?: Maybe<FinancialBalance>;
@@ -241,6 +267,8 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Card: ResolverTypeWrapper<Card>;
+  CreateCardInput: CreateCardInput;
   CreateExpenseInput: CreateExpenseInput;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
@@ -264,6 +292,8 @@ export type ResolversTypes = ResolversObject<{
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
   Boolean: Scalars['Boolean']['output'];
+  Card: Card;
+  CreateCardInput: CreateCardInput;
   CreateExpenseInput: CreateExpenseInput;
   Date: Scalars['Date']['output'];
   Expense: Expense;
@@ -281,6 +311,17 @@ export type ResolversParentTypes = ResolversObject<{
   PaymentDate: PaymentDate;
   Query: {};
   String: Scalars['String']['output'];
+}>;
+
+export type CardResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Card'] = ResolversParentTypes['Card']> = ResolversObject<{
+  bank?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  creditLimit?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  cutDateDay?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  limitPaymentDay?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  number?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
@@ -347,6 +388,7 @@ export type IncomesListResolvers<ContextType = Context, ParentType extends Resol
 }>;
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
+  createCard?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, Partial<MutationCreateCardArgs>>;
   createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'input'>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'paymentDate' | 'total'>>;
   deleteIncomeById?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
@@ -360,6 +402,7 @@ export type PaymentDateResolvers<ContextType = Context, ParentType extends Resol
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
   expensesByFortnight?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByFortnightArgs, 'payBefore'>>;
   expensesByMonth?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByMonthArgs, 'date'>>;
   financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'payBefore'>>;
@@ -370,6 +413,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 }>;
 
 export type Resolvers<ContextType = Context> = ResolversObject<{
+  Card?: CardResolvers<ContextType>;
   Date?: GraphQLScalarType;
   Expense?: ExpenseResolvers<ContextType>;
   ExpenseTag?: ExpenseTagResolvers<ContextType>;

@@ -11,6 +11,7 @@ import {
   findTags,
 } from '../utils/expenses-find.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
+import { Card } from '../models/card.js';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -59,7 +60,7 @@ const queries: QueryResolvers = {
         income: adaptSingleIncome(incomeWithExpense),
         expenses: expenseListWithTags,
         expensesTotal,
-        remaining: incomeWithExpense.total - expensesTotal
+        remaining: incomeWithExpense.total - expensesTotal,
       };
     } catch (error) {
       console.error(error);
@@ -200,6 +201,28 @@ const queries: QueryResolvers = {
       name: x.name,
       createdAt: x.createdAt,
       updatedAt: x.updatedAt,
+    }));
+  },
+  cardList: async (_, input, context) => {
+    const { user } = context;
+    const { userId } = await user();
+
+    const allCards = await Card.findAll({
+      where: {
+        userId,
+      },
+    });
+
+    console.log(allCards);
+
+    return allCards.map((card) => ({
+      id: card.id.toString(),
+      userId: card.userId,
+      number: card.number,
+      bank: card.bank,
+      cutDateDay: card.cutDateDay,
+      limitPaymentDay: card.limitPaymentDay,
+      creditLimit: card.creditLimit,
     }));
   },
 };

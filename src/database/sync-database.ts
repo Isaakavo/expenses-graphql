@@ -4,6 +4,7 @@ import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { sequelize } from './client.js';
+import { Card } from '../models/card.js';
 
 export const syncTables = async () => {
   try {
@@ -39,6 +40,40 @@ export const syncTables = async () => {
         },
       },
       { sequelize, underscored: true }
+    );
+    Card.init(
+      {
+        id: {
+          type: DataTypes.BIGINT,
+          primaryKey: true,
+          autoIncrement: true,
+        },
+        userId: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        number: {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        bank: {
+          type: DataTypes.STRING,
+          allowNull: false
+        },
+        cutDateDay: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        limitPaymentDay: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        creditLimit: {
+          type: DataTypes.INTEGER,
+          allowNull: true,
+        },
+      },
+      { sequelize }
     );
     Tag.init(
       {
@@ -127,11 +162,16 @@ export const syncTables = async () => {
     Expense.belongsTo(Income, { foreignKey: 'incomeId' });
     Expense.belongsToMany(Tag, { through: ExpenseTags });
     Tag.belongsToMany(Expense, { through: ExpenseTags });
+    Card.hasMany(Expense, {
+      foreignKey: 'cardId',
+      as: 'cards',
+    });
+    Expense.belongsTo(Card, { foreignKey: 'cardId' });
 
-    // await sequelize.sync({force: true});
-    await sequelize.sync();
+    const seq = await sequelize.sync({ force: true });
+    // await sequelize.sync();
     console.log(`Synced tables ${Income.name}, ${Tag.name}, ${Expense.name}`);
   } catch (error) {
-    console.error('Could not sync tables');
+    console.error('Could not sync tables', error);
   }
 };
