@@ -53,6 +53,7 @@ type Expense {
   createdAt: Date
   updatedAt: Date
   tags: [ExpenseTag!]!
+  card: Card
   comment: String
 }
 
@@ -79,6 +80,7 @@ type IncomeListAndExpenses {
 
 input CreateExpenseInput {
   incomeId: ID!
+  cardId: ID
   concept: String!
   total: Float!
   payBefore: Date!
@@ -117,6 +119,7 @@ type Query {
   financialBalanceByFortnight(payBefore: Date!): FinancialBalance
   tags: [ExpenseTag]
   cardList: [Card]
+  cardById(cardId: ID!): Card
 }
 
 type Mutation {

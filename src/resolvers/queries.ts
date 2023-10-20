@@ -1,6 +1,10 @@
 import { format } from 'date-fns';
 import { GraphQLError } from 'graphql';
-import { adaptSingleIncome } from '../adapters/income-adapter.js';
+import {
+  adaptCard,
+  adaptSingleIncome,
+  adaptTag,
+} from '../adapters/income-adapter.js';
 import { IncomeTotalByMonth, QueryResolvers } from '../generated/graphql.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
@@ -8,7 +12,7 @@ import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import {
   findAllExpensesWithTags,
   findIncomeByIdWithExpenses,
-  findTags,
+  findTagsAndCard,
 } from '../utils/expenses-find.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
 import { Card } from '../models/card.js';
@@ -49,7 +53,9 @@ const queries: QueryResolvers = {
         };
       }
 
-      const expenseListWithTags = await findTags(incomeWithExpense.expenses);
+      const expenseListWithTags = await findTagsAndCard(
+        incomeWithExpense.expenses
+      );
 
       const expensesTotal = incomeWithExpense.expenses.reduce(
         (acumulator, currentValue) => acumulator + currentValue.total,
@@ -196,12 +202,7 @@ const queries: QueryResolvers = {
   tags: async (_, __, ___) => {
     const tags = await Tag.findAll();
 
-    return tags.map((x) => ({
-      id: x.id.toString(),
-      name: x.name,
-      createdAt: x.createdAt,
-      updatedAt: x.updatedAt,
-    }));
+    return tags.map((x) => adaptTag(x));
   },
   cardList: async (_, input, context) => {
     const { user } = context;
@@ -215,15 +216,27 @@ const queries: QueryResolvers = {
 
     console.log(allCards);
 
-    return allCards.map((card) => ({
-      id: card.id.toString(),
-      userId: card.userId,
-      number: card.number,
-      bank: card.bank,
-      cutDateDay: card.cutDateDay,
-      limitPaymentDay: card.limitPaymentDay,
-      creditLimit: card.creditLimit,
-    }));
+    return allCards.map((card) => {
+      return adaptCard(card);
+    });
+  },
+  cardById: async (_, input, context) => {
+    const { cardId } = input;
+    const { user } = context;
+    const { userId } = await user();
+
+    const card = await Card.findOne({
+      where: {
+        id: cardId,
+        userId,
+      },
+    });
+
+    if (!card) {
+      throw new GraphQLError('The card id doesnt exists');
+    }
+
+    return adaptCard(card);
   },
 };
 

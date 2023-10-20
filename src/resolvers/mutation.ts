@@ -7,6 +7,7 @@ import { Tag } from '../models/tag.js';
 import { Date as CustomDate } from '../scalars/date.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import { Card } from '../models/card.js';
+import { adaptCard } from '../adapters/income-adapter.js';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
@@ -21,7 +22,7 @@ const mutations: MutationResolvers = {
     const newIncome = await Income.create({
       userId,
       total,
-      comment: comment.trim(),
+      comment: comment?.trim() ?? '',
       paymentDate: parsedPaymentDay,
       createdAt: parsedCreatedAt,
     });
@@ -40,7 +41,8 @@ const mutations: MutationResolvers = {
     };
   },
   createExpense: async (_, { input }, context) => {
-    const { incomeId, concept, total, tags, comment, payBefore } = input;
+    const { incomeId, cardId, concept, total, tags, comment, payBefore } =
+      input;
     const { user } = context;
     const { userId } = await user();
 
@@ -53,6 +55,23 @@ const mutations: MutationResolvers = {
       });
     }
 
+    const income = await Income.findOne({
+      where: {
+        id: incomeId,
+      },
+    });
+
+    if (!income) {
+      throw new GraphQLError('You need an income first');
+    }
+
+    const card = await Card.findOne({
+      where: {
+        id: cardId,
+        userId,
+      },
+    });
+
     const serverDate = CustomDate.parseValue(new Date().toISOString());
     const parsedPayBefore = CustomDate.parseValue(payBefore);
 
@@ -61,6 +80,7 @@ const mutations: MutationResolvers = {
       incomeId,
       concept,
       total,
+      cardId: card?.id,
       comments: comment,
       payBefore: parsedPayBefore,
       createdAt: serverDate,
@@ -86,8 +106,6 @@ const mutations: MutationResolvers = {
       })
     );
 
-    console.log({ newExpense });
-
     return {
       id: newExpense.id.toString(),
       incomeId: newExpense.incomeId.toString(),
@@ -98,6 +116,14 @@ const mutations: MutationResolvers = {
       payBefore: newExpense.payBefore,
       createdAt: newExpense.createdAt,
       updatedAt: newExpense.updatedAt,
+      card: {
+        id: card.id.toString(),
+        userId: card.userId,
+        bank: card.bank,
+        cutDateDay: card.cutDateDay,
+        limitPaymentDay: card.limitPaymentDay,
+        creditLimit: card.creditLimit,
+      },
       tags: newTags.map((tag) => {
         return {
           id: tag.id.toString(),
@@ -141,15 +167,7 @@ const mutations: MutationResolvers = {
         creditLimit,
       });
 
-      return {
-        id: newCard.id.toString(),
-        userId: newCard.userId,
-        number: newCard.number,
-        bank: newCard.bank,
-        cutDateDay: newCard.cutDateDay,
-        limitPaymentDay: newCard.limitPaymentDay,
-        creditLimit: newCard.creditLimit,
-      };
+      return adaptCard(newCard);
     } catch (error) {
       console.error(error);
       throw error;

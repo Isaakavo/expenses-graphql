@@ -39,6 +39,7 @@ export type CreateCardInput = {
 };
 
 export type CreateExpenseInput = {
+  cardId?: InputMaybe<Scalars['ID']['input']>;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   incomeId: Scalars['ID']['input'];
@@ -49,6 +50,7 @@ export type CreateExpenseInput = {
 
 export type Expense = {
   __typename?: 'Expense';
+  card?: Maybe<Card>;
   comment?: Maybe<Scalars['String']['output']>;
   concept: Scalars['String']['output'];
   createdAt?: Maybe<Scalars['Date']['output']>;
@@ -159,6 +161,7 @@ export type PaymentDate = {
 export type Query = {
   __typename?: 'Query';
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
+  cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
   expensesByFortnight?: Maybe<Array<Maybe<Expense>>>;
   expensesByMonth?: Maybe<Array<Maybe<Expense>>>;
@@ -167,6 +170,11 @@ export type Query = {
   incomesByMonth?: Maybe<Array<Maybe<Income>>>;
   incomesList?: Maybe<IncomesList>;
   tags?: Maybe<Array<Maybe<ExpenseTag>>>;
+};
+
+
+export type QueryCardByIdArgs = {
+  cardId: Scalars['ID']['input'];
 };
 
 
@@ -329,6 +337,7 @@ export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 }
 
 export type ExpenseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Expense'] = ResolversParentTypes['Expense']> = ResolversObject<{
+  card?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType>;
   comment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
@@ -402,6 +411,7 @@ export type PaymentDateResolvers<ContextType = Context, ParentType extends Resol
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
   expensesByFortnight?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByFortnightArgs, 'payBefore'>>;
   expensesByMonth?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByMonthArgs, 'date'>>;

@@ -6,6 +6,7 @@ import { Income } from '../models/income';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import { Expense } from '../models/expense';
 import { Tag } from 'models/tag';
+import { Card } from 'models/card';
 
 export function adaptSingleIncome(x: Income): GraphqlIncome {
   return {
@@ -21,7 +22,11 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
   };
 }
 
-export function adaptExpensesWithTags(x: Expense, tags: Tag[]): GraphqlExpense {
+export function adaptExpensesWithTagsAndCard(
+  x: Expense,
+  tags: Tag[],
+  card?: Card
+): GraphqlExpense {
   return {
     id: x.id.toString(),
     concept: x.concept,
@@ -32,11 +37,28 @@ export function adaptExpensesWithTags(x: Expense, tags: Tag[]): GraphqlExpense {
     createdAt: x.createdAt,
     incomeId: x.incomeId.toString(),
     updatedAt: x.updatedAt,
-    tags: tags.map((y) => ({
-      id: y.id.toString(),
-      name: y.name,
-      createdAt: y.createdAt,
-      updatedAt: y.updatedAt,
-    })),
+    card: adaptCard(card),
+    tags: tags.map((y) => adaptTag(y)),
+  };
+}
+
+export function adaptCard(card: Card) {
+  return {
+    id: card?.id?.toString(),
+    userId: card?.userId,
+    number: card?.number,
+    bank: card?.bank,
+    cutDateDay: card?.cutDateDay,
+    limitPaymentDay: card?.limitPaymentDay,
+    creditLimit: card?.creditLimit,
+  };
+}
+
+export function adaptTag(tag: Tag) {
+  return {
+    id: tag.id.toString(),
+    name: tag.name,
+    createdAt: tag.createdAt,
+    updatedAt: tag.updatedAt,
   };
 }
