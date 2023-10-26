@@ -48,7 +48,7 @@ const mutations: MutationResolvers = {
       user: { userId },
     } = context;
 
-    if (tags.length > 10) {
+    if (tags?.length > 10) {
       throw new GraphQLError('No more than 10 tags per expense', {
         extensions: {
           code: 'BAD REQUEST',
@@ -67,12 +67,14 @@ const mutations: MutationResolvers = {
       throw new GraphQLError('You need an income first');
     }
 
-    const card = await Card.findOne({
-      where: {
-        id: cardId,
-        userId,
-      },
-    });
+    const card =
+      cardId &&
+      (await Card.findOne({
+        where: {
+          id: cardId,
+          userId,
+        },
+      }));
 
     const serverDate = CustomDate.parseValue(new Date().toISOString());
     const parsedPayBefore = CustomDate.parseValue(payBefore);
@@ -118,7 +120,7 @@ const mutations: MutationResolvers = {
       payBefore: newExpense.payBefore,
       createdAt: newExpense.createdAt,
       updatedAt: newExpense.updatedAt,
-      card: {
+      card: card && {
         id: card.id.toString(),
         userId: card.userId,
         bank: card.bank,
@@ -126,7 +128,7 @@ const mutations: MutationResolvers = {
         limitPaymentDay: card.limitPaymentDay,
         creditLimit: card.creditLimit,
       },
-      tags: newTags.map((tag) => {
+      tags: newTags?.map((tag) => {
         return {
           id: tag.id.toString(),
           name: tag.name,

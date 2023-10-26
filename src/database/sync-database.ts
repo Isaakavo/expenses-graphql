@@ -168,8 +168,8 @@ export const syncTables = async () => {
     });
     Expense.belongsTo(Card, { foreignKey: 'cardId' });
 
-    const seq = await sequelize.sync({ force: true });
-    // await sequelize.sync();
+    // const seq = await sequelize.sync({ force: true });
+    await sequelize.sync();
     console.log(`Synced tables ${Income.name}, ${Tag.name}, ${Expense.name}`);
   } catch (error) {
     console.error('Could not sync tables', error);

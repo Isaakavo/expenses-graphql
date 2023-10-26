@@ -37,20 +37,20 @@ export function adaptExpensesWithTagsAndCard(
     createdAt: x.createdAt,
     incomeId: x.incomeId.toString(),
     updatedAt: x.updatedAt,
-    card: adaptCard(card),
+    card: card ? adaptCard(card) : null,
     tags: tags.map((y) => adaptTag(y)),
   };
 }
 
 export function adaptCard(card: Card) {
   return {
-    id: card?.id?.toString(),
-    userId: card?.userId,
-    number: card?.number,
-    bank: card?.bank,
-    cutDateDay: card?.cutDateDay,
-    limitPaymentDay: card?.limitPaymentDay,
-    creditLimit: card?.creditLimit,
+    id: card.id.toString(),
+    userId: card.userId,
+    number: card.number,
+    bank: card.bank,
+    cutDateDay: card.cutDateDay,
+    limitPaymentDay: card.limitPaymentDay,
+    creditLimit: card.creditLimit,
   };
 }
 

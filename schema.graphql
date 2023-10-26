@@ -84,7 +84,7 @@ input CreateExpenseInput {
   concept: String!
   total: Float!
   payBefore: Date!
-  tags: [ExpenseTagInput]
+  tags: [ExpenseTagInput!]!
   comment: String
 }
 
