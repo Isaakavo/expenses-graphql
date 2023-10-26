@@ -1,4 +1,4 @@
-import { DataTypes } from 'sequelize';
+import { DataTypes, Sequelize } from 'sequelize';
 import { ExpenseTags } from '../models/expense-tags.js';
 import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
@@ -11,9 +11,9 @@ export const syncTables = async () => {
     Income.init(
       {
         id: {
-          type: DataTypes.BIGINT,
+          type: DataTypes.UUIDV4,
           primaryKey: true,
-          autoIncrement: true,
+          defaultValue: Sequelize.literal('get_random_uuid()'),
         },
         total: {
           type: DataTypes.FLOAT,
@@ -58,7 +58,7 @@ export const syncTables = async () => {
         },
         bank: {
           type: DataTypes.STRING,
-          allowNull: false
+          allowNull: false,
         },
         cutDateDay: {
           type: DataTypes.STRING,

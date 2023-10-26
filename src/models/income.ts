@@ -5,7 +5,7 @@ import {
 import { Expense } from './expense';
 
 export class Income extends Model {
-  public id!: number;
+  public id!: string;
   public total!: number;
   public paymentDate!: Date;
   public comment!: string;
