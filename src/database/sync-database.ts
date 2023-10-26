@@ -44,9 +44,9 @@ export const syncTables = async () => {
     Card.init(
       {
         id: {
-          type: DataTypes.BIGINT,
+          type: DataTypes.UUID,
+          defaultValue: DataTypes.UUIDV4,
           primaryKey: true,
-          autoIncrement: true,
         },
         userId: {
           type: DataTypes.STRING,
@@ -78,9 +78,9 @@ export const syncTables = async () => {
     Tag.init(
       {
         id: {
-          type: DataTypes.BIGINT,
+          type: DataTypes.UUID,
+          defaultValue: DataTypes.UUIDV4,
           primaryKey: true,
-          autoIncrement: true,
         },
         name: {
           type: DataTypes.STRING,
@@ -100,9 +100,9 @@ export const syncTables = async () => {
     Expense.init(
       {
         id: {
-          type: DataTypes.BIGINT,
+          type: DataTypes.UUID,
+          defaultValue: DataTypes.UUIDV4,
           primaryKey: true,
-          autoIncrement: true,
         },
         userId: {
           type: DataTypes.STRING,
@@ -138,16 +138,18 @@ export const syncTables = async () => {
     ExpenseTags.init(
       {
         pk_expenses_tags: {
-          type: DataTypes.BIGINT,
+          type: DataTypes.UUID,
+          defaultValue: DataTypes.UUIDV4,
           primaryKey: true,
-          autoIncrement: true,
         },
         expenseId: {
-          type: DataTypes.BIGINT,
+          type: DataTypes.UUID,
+          defaultValue: DataTypes.UUIDV4,
           allowNull: false,
         },
         tagId: {
-          type: DataTypes.BIGINT,
+          type: DataTypes.UUID,
+          defaultValue: DataTypes.UUIDV4,
           allowNull: false,
         },
       },

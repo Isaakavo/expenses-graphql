@@ -3,7 +3,7 @@ import {
 } from 'sequelize';
 
 export class Tag extends Model {
-  public id!: number;
+  public id!: string;
   public name!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
