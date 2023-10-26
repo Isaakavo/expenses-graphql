@@ -13,8 +13,9 @@ import { adaptCard } from '../adapters/income-adapter.js';
 const mutations: MutationResolvers = {
   createIncome: async (_, input, context) => {
     const { total, paymentDate, comment } = input;
-    const { user } = context;
-    const { userId } = await user();
+    const {
+      user: { userId },
+    } = context;
 
     const parsedPaymentDay = CustomDate.parseValue(paymentDate);
     const parsedCreatedAt = CustomDate.parseValue(new Date().toISOString());
@@ -43,8 +44,9 @@ const mutations: MutationResolvers = {
   createExpense: async (_, { input }, context) => {
     const { incomeId, cardId, concept, total, tags, comment, payBefore } =
       input;
-    const { user } = context;
-    const { userId } = await user();
+    const {
+      user: { userId },
+    } = context;
 
     if (tags.length > 10) {
       throw new GraphQLError('No more than 10 tags per expense', {
@@ -137,8 +139,9 @@ const mutations: MutationResolvers = {
   createCard: async (_, { input }, context) => {
     try {
       const { cutDateDay, limitPaymentDay, creditLimit, number, bank } = input;
-      const { user } = context;
-      const { userId } = await user();
+      const {
+        user: { userId },
+      } = context;
 
       if (!bank) {
         throw new GraphQLError('You need to pass a bank value');
@@ -178,8 +181,9 @@ const mutations: MutationResolvers = {
   deleteIncomeById: async (_, input, context) => {
     try {
       const { id } = input;
-      const { user } = context;
-      const { userId } = await user();
+      const {
+        user: { userId },
+      } = context;
 
       const incomeToDelete = await Income.findOne({
         where: {

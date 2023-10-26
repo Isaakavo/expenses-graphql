@@ -19,15 +19,17 @@ import { Card } from '../models/card.js';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
-    const { user } = context;
-    const { userId } = await user();
+    const {
+      user: { userId },
+    } = context;
 
     return findAllExpensesWithTags({ userId });
   },
   expensesByFortnight: async (_, input, context) => {
     const { payBefore } = input;
-    const { user } = context;
-    const { userId } = await user();
+    const {
+      user: { userId },
+    } = context;
 
     const where = whereByFornight(userId, payBefore, 'payBefore');
 
@@ -36,8 +38,9 @@ const queries: QueryResolvers = {
   incomeAndExpensesByFortnight: async (_, { input }, context) => {
     try {
       const { incomeId, payBefore } = input;
-      const { user } = context;
-      const { userId } = await user();
+      const {
+        user: { userId },
+      } = context;
 
       const incomeWithExpense = await findIncomeByIdWithExpenses(
         incomeId,
@@ -74,8 +77,9 @@ const queries: QueryResolvers = {
   },
   expensesByMonth: async (_, input, context) => {
     const { date } = input;
-    const { user } = context;
-    const { userId } = await user();
+    const {
+      user: { userId },
+    } = context;
 
     const where = whereByMonth(userId, date, 'payBefore');
 
@@ -86,8 +90,9 @@ const queries: QueryResolvers = {
   // to this new field.
   financialBalanceByFortnight: async (_, input, context) => {
     const { payBefore } = input;
-    const { user } = context;
-    const { userId } = await user();
+    const {
+      user: { userId },
+    } = context;
 
     const whereExpenses = whereByFornight(userId, payBefore, 'payBefore');
     const whereIncome = whereByFornight(userId, payBefore, 'paymentDate');
@@ -113,8 +118,9 @@ const queries: QueryResolvers = {
   },
   incomesList: async (_, __, context) => {
     try {
-      const { user } = context;
-      const { userId } = await user();
+      const {
+        user: { userId },
+      } = context;
 
       //TODO implement logic in the query to receive the order of filtering from the client
       const allIncomes = await Income.findAll({
@@ -181,8 +187,9 @@ const queries: QueryResolvers = {
   },
   incomesByMonth: async (_, input, context) => {
     const { date } = input;
-    const { user } = context;
-    const { userId } = await user();
+    const {
+      user: { userId },
+    } = context;
 
     const where = whereByMonth(userId, date, 'paymentDate');
 
@@ -205,8 +212,9 @@ const queries: QueryResolvers = {
     return tags.map((x) => adaptTag(x));
   },
   cardList: async (_, input, context) => {
-    const { user } = context;
-    const { userId } = await user();
+    const {
+      user: { userId },
+    } = context;
 
     const allCards = await Card.findAll({
       where: {
@@ -222,8 +230,9 @@ const queries: QueryResolvers = {
   },
   cardById: async (_, input, context) => {
     const { cardId } = input;
-    const { user } = context;
-    const { userId } = await user();
+    const {
+      user: { userId },
+    } = context;
 
     const card = await Card.findOne({
       where: {
