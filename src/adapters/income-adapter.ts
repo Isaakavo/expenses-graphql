@@ -48,9 +48,7 @@ export function adaptCard(card: Card) {
     userId: card.userId,
     number: card.number,
     bank: card.bank,
-    cutDateDay: card.cutDateDay,
-    limitPaymentDay: card.limitPaymentDay,
-    creditLimit: card.creditLimit,
+    isDigital: card.isDigital.valueOf()
   };
 }
 

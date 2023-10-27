@@ -60,18 +60,9 @@ export const syncTables = async () => {
           type: DataTypes.STRING,
           allowNull: false,
         },
-        cutDateDay: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
-        limitPaymentDay: {
-          type: DataTypes.STRING,
-          allowNull: false,
-        },
-        creditLimit: {
-          type: DataTypes.INTEGER,
-          allowNull: true,
-        },
+        isDigital: {
+          type: DataTypes.BOOLEAN
+        }
       },
       { sequelize }
     );

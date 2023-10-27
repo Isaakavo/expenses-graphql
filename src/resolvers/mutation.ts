@@ -91,6 +91,7 @@ const mutations: MutationResolvers = {
       updatedAt: serverDate,
     });
 
+    //TODO rename to categories.
     const newTags = await Promise.all(
       tags.map(async (tag) => {
         const [tagFindOrCreate, created] = await Tag.findOrCreate({
@@ -124,9 +125,6 @@ const mutations: MutationResolvers = {
         id: card.id.toString(),
         userId: card.userId,
         bank: card.bank,
-        cutDateDay: card.cutDateDay,
-        limitPaymentDay: card.limitPaymentDay,
-        creditLimit: card.creditLimit,
       },
       tags: newTags?.map((tag) => {
         return {
@@ -140,7 +138,7 @@ const mutations: MutationResolvers = {
   },
   createCard: async (_, { input }, context) => {
     try {
-      const { cutDateDay, limitPaymentDay, creditLimit, number, bank } = input;
+      const { number, bank, isDigital } = input;
       const {
         user: { userId },
       } = context;
@@ -155,21 +153,11 @@ const mutations: MutationResolvers = {
         );
       }
 
-      if (Number(cutDateDay) < 1 || Number(cutDateDay) > 31) {
-        throw new GraphQLError('cutDate is not a valid date');
-      }
-
-      if (Number(limitPaymentDay) < 1 || Number(limitPaymentDay) > 31) {
-        throw new GraphQLError('limitPaymentDay is not a valid date');
-      }
-
       const newCard = await Card.create({
         userId,
         number,
         bank,
-        cutDateDay,
-        limitPaymentDay,
-        creditLimit,
+        isDigital
       });
 
       return adaptCard(newCard);

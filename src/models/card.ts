@@ -6,7 +6,5 @@ export class Card extends Model {
   public userId!: string;
   public bank!: string;
   public number!: string;
-  public cutDateDay!: string;
-  public limitPaymentDay!: string;
-  public creditLimit!: number;
+  public isDigital!: Boolean;
 }

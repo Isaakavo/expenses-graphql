@@ -22,19 +22,15 @@ export type Scalars = {
 export type Card = {
   __typename?: 'Card';
   bank: Scalars['String']['output'];
-  creditLimit?: Maybe<Scalars['Float']['output']>;
-  cutDateDay?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  limitPaymentDay?: Maybe<Scalars['String']['output']>;
+  isDigital?: Maybe<Scalars['Boolean']['output']>;
   number?: Maybe<Scalars['String']['output']>;
   userId: Scalars['ID']['output'];
 };
 
 export type CreateCardInput = {
   bank: Scalars['String']['input'];
-  creditLimit?: InputMaybe<Scalars['Float']['input']>;
-  cutDateDay: Scalars['String']['input'];
-  limitPaymentDay: Scalars['String']['input'];
+  isDigital?: InputMaybe<Scalars['Boolean']['input']>;
   number?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -44,7 +40,7 @@ export type CreateExpenseInput = {
   concept: Scalars['String']['input'];
   incomeId: Scalars['ID']['input'];
   payBefore: Scalars['Date']['input'];
-  tags?: InputMaybe<Array<InputMaybe<ExpenseTagInput>>>;
+  tags: Array<ExpenseTagInput>;
   total: Scalars['Float']['input'];
 };
 
@@ -323,10 +319,8 @@ export type ResolversParentTypes = ResolversObject<{
 
 export type CardResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Card'] = ResolversParentTypes['Card']> = ResolversObject<{
   bank?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  creditLimit?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
-  cutDateDay?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  limitPaymentDay?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  isDigital?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   number?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

@@ -38,9 +38,7 @@ type Card {
   userId: ID!
   number: String
   bank: String!
-  cutDateDay: String
-  limitPaymentDay: String
-  creditLimit: Float
+  isDigital: Boolean
 }
 
 type Expense {
@@ -57,6 +55,9 @@ type Expense {
   comment: String
 }
 
+# Rename to category
+# A category is a percentage of the income to save or expend, and should be tied to a expense
+# 
 type ExpenseTag {
   id: ID!
   name: String!
@@ -90,10 +91,8 @@ input CreateExpenseInput {
 
 input CreateCardInput {
   number: String
-  cutDateDay: String!
-  limitPaymentDay: String!
   bank: String!
-  creditLimit: Float
+  isDigital: Boolean
 }
 
 input IncomesAndExpensesByFortnightInput {
