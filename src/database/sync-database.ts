@@ -160,7 +160,7 @@ export const syncTables = async () => {
     });
     Expense.belongsTo(Card, { foreignKey: 'cardId' });
 
-    // const seq = await sequelize.sync({ force: true });
+    // await sequelize.sync({ force: true });
     await sequelize.sync();
     logger.info('Synced tables', 'syncTables');
   } catch (error) {
