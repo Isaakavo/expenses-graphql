@@ -3,28 +3,21 @@ import { GraphQLError } from 'graphql';
 import {
   adaptCard,
   adaptMultipleIncomes,
-  adaptSingleIncome,
-  adaptTag,
+  adaptTag
 } from '../adapters/income-adapter.js';
 import {
-  Fortnight,
   IncomeTotalByMonth,
-  QueryResolvers,
+  QueryResolvers
 } from '../generated/graphql.js';
+import { Card } from '../models/card.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import {
   findAllExpensesWithTagsAndCards,
-  findIncomeByIdWithExpenses,
-  findTagsAndCard,
+  findIncomeByIdWithExpenses
 } from '../utils/expenses-find.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
-import { Card } from '../models/card.js';
-import {
-  Income as GraphqlIncome,
-  Expense as GraphqlExpense,
-} from 'generated/graphql';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -212,7 +205,7 @@ const queries: QueryResolvers = {
       createdAt: x.createdAt,
     }));
   },
-  tags: async (_, __, ___) => {
+  tags: async () => {
     const tags = await Tag.findAll();
 
     return tags.map((x) => adaptTag(x));

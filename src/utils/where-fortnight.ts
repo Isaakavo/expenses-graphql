@@ -7,7 +7,11 @@ import {
   fifteenthDayOfMonth,
 } from './calculate-fortnight.js';
 
-export const whereByFornight = (userId: string, date: Date, fortnightWhere: string) => {
+export const whereByFornight = (
+  userId: string,
+  date: Date,
+  fortnightWhere: string
+) => {
   const parsedBeforeDate = Date.parseValue(date);
   const fortnight = calculateFortnight(parsedBeforeDate);
   return {
@@ -15,24 +19,28 @@ export const whereByFornight = (userId: string, date: Date, fortnightWhere: stri
     [fortnightWhere]:
       fortnight === Fortnight.First
         ? {
-            [Op.gte]: startOfMonth(parsedBeforeDate),
-            [Op.lte]: fifteenthDayOfMonth(parsedBeforeDate),
-          }
+          [Op.gte]: startOfMonth(parsedBeforeDate),
+          [Op.lte]: fifteenthDayOfMonth(parsedBeforeDate),
+        }
         : {
-            [Op.gte]: fifteenthDayOfMonth(parsedBeforeDate),
-            [Op.lte]: endOfMonth(parsedBeforeDate),
-          },
+          [Op.gte]: fifteenthDayOfMonth(parsedBeforeDate),
+          [Op.lte]: endOfMonth(parsedBeforeDate),
+        },
   };
 };
 
-export const whereByMonth = (userId: string, date: Date,  fortnightWhere: string) => {
+export const whereByMonth = (
+  userId: string,
+  date: Date,
+  fortnightWhere: string
+) => {
   const parsedBeforeDate = Date.parseValue(date);
 
   return {
     userId,
     [fortnightWhere]: {
       [Op.gte]: startOfMonth(parsedBeforeDate),
-      [Op.lte]: endOfMonth(parsedBeforeDate)
-    }
-  }
-}
+      [Op.lte]: endOfMonth(parsedBeforeDate),
+    },
+  };
+};

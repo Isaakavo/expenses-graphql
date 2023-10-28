@@ -23,23 +23,27 @@ export interface Context {
   user: User;
 }
 
-await connectDatabase();
-await syncTables();
+const startServer = async () => {
+  await connectDatabase();
+  await syncTables();
 
-const typeDefs = readFileSync('./schema.graphql', { encoding: 'utf-8' });
+  const typeDefs = readFileSync('./schema.graphql', { encoding: 'utf-8' });
 
-const server = new ApolloServer<Context>({
-  typeDefs,
-  resolvers,
+  const server = new ApolloServer<Context>({
+    typeDefs,
+    resolvers,
+  });
+
+  return await startStandaloneServer(server, {
+    listen: { port: 4000 },
+    context: async ({ req }) => ({
+      sequilizeClient: sequelize,
+      axiosClient: instance,
+      user: await resolverUser(req),
+    }),
+  });
+};
+
+startServer().then(({ url }) => {
+  console.log(`🚀  Server ready at: ${url}`);
 });
-
-const { url } = await startStandaloneServer(server, {
-  listen: { port: 4000 },
-  context: async ({ req, res }) => ({
-    sequilizeClient: sequelize,
-    axiosClient: instance,
-    user: await resolverUser(req),
-  }),
-});
-
-console.log(`🚀  Server ready at: ${url}`);

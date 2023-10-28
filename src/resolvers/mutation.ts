@@ -56,16 +56,6 @@ const mutations: MutationResolvers = {
       });
     }
 
-    // const income = await Income.findOne({
-    //   where: {
-    //     id: incomeId,
-    //   },
-    // });
-
-    // if (!income) {
-    //   throw new GraphQLError('You need an income first');
-    // }
-
     const card =
       cardId &&
       (await Card.findOne({

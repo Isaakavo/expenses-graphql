@@ -1,4 +1,4 @@
-import { DataTypes, Sequelize } from 'sequelize';
+import { DataTypes } from 'sequelize';
 import { ExpenseTags } from '../models/expense-tags.js';
 import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';

@@ -1,7 +1,6 @@
-import jwt from 'jsonwebtoken';
+import jwt, { JwtHeader } from 'jsonwebtoken';
 import { jwksClientInstance } from './client.js';
 import { User } from '../index.js';
-import { GraphQLError } from 'graphql';
 
 export async function verifyJwt(token: string): Promise<User> {
   const { decode, verify } = jwt;
@@ -11,10 +10,10 @@ export async function verifyJwt(token: string): Promise<User> {
     throw new Error('Invalid kid found');
   }
 
-  const getSigningKey = (header: any, callback: any) => {
+  const getSigningKey = (header: JwtHeader, callback: (err: Error, key: string) => void) => {
     jwksClientInstance.getSigningKey(kid, (err, key) => {
       if (err) {
-        callback(err);
+        callback(err, '');
         console.error({ err });
         return;
       }

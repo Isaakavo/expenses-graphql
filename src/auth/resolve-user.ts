@@ -1,4 +1,3 @@
-import { GraphQLError } from 'graphql';
 import { IncomingMessage } from 'http';
 import { verifyJwt } from './verify-jwt.js';
 

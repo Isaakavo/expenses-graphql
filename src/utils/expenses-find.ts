@@ -1,3 +1,4 @@
+import { WhereOptions } from 'sequelize';
 import { adaptExpensesWithTagsAndCard } from '../adapters/income-adapter.js';
 import { Card } from '../models/card.js';
 import { ExpenseTags } from '../models/expense-tags.js';
@@ -5,13 +6,13 @@ import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 
-export const findIncomeByIdWithExpenses = async (incomeExpenses: {} = {}) => {
+export const findIncomeByIdWithExpenses = async (incomeExpenses: WhereOptions = {}) => {
   return await Income.findAll({
     where: incomeExpenses,
   });
 };
 
-export const findAllExpensesWithTagsAndCards = async (where: any | {} = {}) => {
+export const findAllExpensesWithTagsAndCards = async (where: WhereOptions = {}) => {
   const allExpenses = await Expense.findAll({
     where,
   });

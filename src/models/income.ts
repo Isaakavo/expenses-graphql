@@ -1,8 +1,6 @@
 import {
-  Association,
-  Model, NonAttribute
+  Model
 } from 'sequelize';
-import { Expense } from './expense';
 
 export class Income extends Model {
   public id!: string;
