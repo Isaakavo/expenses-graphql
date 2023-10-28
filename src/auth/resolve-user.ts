@@ -8,10 +8,6 @@ export const resolverUser = async (req: IncomingMessage) => {
     const decodedUser = await verifyJwt(token as string);
     return decodedUser;
   } catch (error) {
-    if (error instanceof GraphQLError) {
-      console.log('Invalid token');
-      throw error;
-    }
     console.error(error);
   }
 };

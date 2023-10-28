@@ -6,15 +6,16 @@ import { GraphQLError } from 'graphql';
 export async function verifyJwt(token: string): Promise<User> {
   const { decode, verify } = jwt;
   const kid = decode(token, { complete: true })?.header.kid;
+
   if (!kid) {
-    throw new Error('Invalid token');
+    throw new Error('Invalid kid found');
   }
 
   const getSigningKey = (header: any, callback: any) => {
     jwksClientInstance.getSigningKey(kid, (err, key) => {
       if (err) {
         callback(err);
-        console.log({ err });
+        console.error({ err });
         return;
       }
       const signingKey = key?.getPublicKey();
@@ -42,12 +43,7 @@ export async function verifyJwt(token: string): Promise<User> {
     };
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      throw new GraphQLError(error.message, {
-        extensions: {
-          code: 'UNAUTHENTICATED',
-          http: { status: 401 },
-        },
-      });
+      throw new Error(error.message);
     }
   }
 }
