@@ -37,7 +37,6 @@ const queries: QueryResolvers = {
   },
   incomeAndExpensesByFortnight: async (_, { input }, context) => {
     try {
-      //TODO remove income id from this query input
       const { payBefore } = input;
       const {
         user: { userId },
@@ -84,7 +83,7 @@ const queries: QueryResolvers = {
     return findAllExpensesWithTagsAndCards(where);
   },
   // TODO add logic to return a new field called creditCardDebts
-  // if the expense contains tag "tarjeta de credito" those totals should be add
+  // if the expense contains tag "tarjeta de credito" those totals should be added
   // to this new field.
   financialBalanceByFortnight: async (_, { input }, context) => {
     const { payBefore } = input;

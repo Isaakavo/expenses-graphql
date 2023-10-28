@@ -81,7 +81,6 @@ const mutations: MutationResolvers = {
       updatedAt: serverDate,
     });
 
-    //TODO rename to categories.
     const newTags = await Promise.all(
       tags.map(async (tag) => {
         const [tagFindOrCreate, created] = await Tag.findOrCreate({
@@ -147,8 +146,6 @@ const mutations: MutationResolvers = {
       throw error;
     }
   },
-  //TODO when deleting I need to also delete all the expenses associated to this income?
-  // think in a way of do cascading delete
   deleteIncomeById: async (_, input, context) => {
     try {
       const { id } = input;
