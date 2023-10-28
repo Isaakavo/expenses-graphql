@@ -46,9 +46,10 @@ export function adaptCard(card: Card) {
   return {
     id: card.id.toString(),
     userId: card.userId,
-    number: card.number,
+    number: card.alias,
     bank: card.bank,
-    isDigital: card.isDigital.valueOf()
+    isDigital: card.isDigital,
+    isDebit: card.isDebit,
   };
 }
 

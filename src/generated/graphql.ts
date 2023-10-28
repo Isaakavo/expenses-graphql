@@ -23,6 +23,7 @@ export type Card = {
   __typename?: 'Card';
   bank: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  isDebit?: Maybe<Scalars['Boolean']['output']>;
   isDigital?: Maybe<Scalars['Boolean']['output']>;
   number?: Maybe<Scalars['String']['output']>;
   userId: Scalars['ID']['output'];
@@ -30,6 +31,7 @@ export type Card = {
 
 export type CreateCardInput = {
   bank: Scalars['String']['input'];
+  isDebit?: InputMaybe<Scalars['Boolean']['input']>;
   isDigital?: InputMaybe<Scalars['Boolean']['input']>;
   number?: InputMaybe<Scalars['String']['input']>;
 };
@@ -320,6 +322,7 @@ export type ResolversParentTypes = ResolversObject<{
 export type CardResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Card'] = ResolversParentTypes['Card']> = ResolversObject<{
   bank?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  isDebit?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   isDigital?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   number?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;

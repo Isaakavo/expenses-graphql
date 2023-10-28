@@ -5,6 +5,7 @@ export class Card extends Model {
   public id!: string;
   public userId!: string;
   public bank!: string;
-  public number!: string;
-  public isDigital!: Boolean;
+  public alias!: string;
+  public isDebit!: boolean
+  public isDigital!: boolean;
 }

@@ -39,6 +39,7 @@ type Card {
   number: String
   bank: String!
   isDigital: Boolean
+  isDebit: Boolean
 }
 
 type Expense {
@@ -93,6 +94,7 @@ input CreateCardInput {
   number: String
   bank: String!
   isDigital: Boolean
+  isDebit: Boolean
 }
 
 input IncomesAndExpensesByFortnightInput {

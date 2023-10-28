@@ -52,7 +52,8 @@ export const syncTables = async () => {
           type: DataTypes.STRING,
           allowNull: false,
         },
-        number: {
+        // change with alias
+        alias: {
           type: DataTypes.STRING,
           allowNull: true,
         },
@@ -61,8 +62,11 @@ export const syncTables = async () => {
           allowNull: false,
         },
         isDigital: {
-          type: DataTypes.BOOLEAN
-        }
+          type: DataTypes.BOOLEAN,
+        },
+        isDebit: {
+          type: DataTypes.BOOLEAN,
+        },
       },
       { sequelize }
     );
