@@ -8,6 +8,7 @@ import { Date as CustomDate } from '../scalars/date.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import { Card } from '../models/card.js';
 import { adaptCard } from '../adapters/income-adapter.js';
+import { logger } from '../logger.js';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
@@ -28,8 +29,7 @@ const mutations: MutationResolvers = {
       createdAt: parsedCreatedAt,
     });
 
-    console.log('Income added with id', newIncome.id);
-
+    logger.info(`Income added with id ${newIncome.id}`);
     return {
       id: newIncome.id.toString(),
       userId: newIncome.userId,
@@ -87,7 +87,7 @@ const mutations: MutationResolvers = {
         });
 
         if (created) {
-          console.log(`Find this tag ${tagFindOrCreate.name}`);
+          logger.info(`Tag already exists ${tagFindOrCreate.name}`);
         }
 
         await ExpenseTags.create({
@@ -141,7 +141,7 @@ const mutations: MutationResolvers = {
 
       return adaptCard(newCard);
     } catch (error) {
-      console.error(error);
+      logger.error(`Error creating card ${error.message}`);
       throw error;
     }
   },
@@ -177,8 +177,6 @@ const mutations: MutationResolvers = {
         },
       });
 
-      console.log({ isDeleted });
-
       if (isDeleted === 0) {
         return false;
       }
@@ -186,7 +184,7 @@ const mutations: MutationResolvers = {
       return true;
     } catch (error) {
       if (error instanceof GraphQLError) {
-        console.log(error);
+        logger.error(`Error deleting income by id ${error.message}`);
         throw error;
       }
     }

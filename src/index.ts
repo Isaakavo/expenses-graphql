@@ -8,6 +8,7 @@ import { resolverUser } from './auth/resolve-user.js';
 import { connectDatabase, sequelize } from './database/client.js';
 import { syncTables } from './database/sync-database.js';
 import resolvers from './resolvers/index.js';
+import { logger } from './logger.js';
 
 export interface User {
   userId?: string;
@@ -45,5 +46,5 @@ const startServer = async () => {
 };
 
 startServer().then(({ url }) => {
-  console.log(`🚀  Server ready at: ${url}`);
+  logger.info(`🚀 Server ready at: ${url}`);
 });

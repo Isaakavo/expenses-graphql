@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize';
+import { logger } from '../logger.js';
 
 export const sequelize = new Sequelize({
   dialect: 'postgres',
@@ -13,8 +14,8 @@ export const sequelize = new Sequelize({
 export const connectDatabase = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Connected to database');
+    logger.info('Connected to database');
   } catch (error) {
-    console.error('Error connecting to database ', error);
+    logger.error(`Error connecting to database ${error.message}`);
   }
 };

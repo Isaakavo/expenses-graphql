@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "compile": "tsc",
-    "dev": "npm run compile && nodemon --esm src/index.ts",
+    "dev": "NODE_ENV=dev npm run compile && nodemon --esm src/index.ts",
     "codegen": "graphql-codegen --watch --config codegen.ts",
     "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen\"  \"tsc -w \" \"nodemon --esm src/index.ts \"",
     "lint": "eslint . --ext .ts"
@@ -22,7 +22,8 @@
     "jsonwebtoken": "9.0.1",
     "jwks-rsa": "^3.0.1",
     "pg": "^8.11.3",
-    "sequelize": "^6.33.0"
+    "sequelize": "^6.33.0",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "5.0.0",

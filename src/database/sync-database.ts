@@ -5,6 +5,7 @@ import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { sequelize } from './client.js';
 import { Card } from '../models/card.js';
+import { logger } from '../logger.js';
 
 export const syncTables = async () => {
   try {
@@ -161,8 +162,8 @@ export const syncTables = async () => {
 
     // const seq = await sequelize.sync({ force: true });
     await sequelize.sync();
-    console.log(`Synced tables ${Income.name}, ${Tag.name}, ${Expense.name}`);
+    logger.info('Synced tables', 'syncTables');
   } catch (error) {
-    console.error('Could not sync tables', error);
+    logger.error('Failed to sync tables', error);
   }
 };

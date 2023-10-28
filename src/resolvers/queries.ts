@@ -3,21 +3,19 @@ import { GraphQLError } from 'graphql';
 import {
   adaptCard,
   adaptMultipleIncomes,
-  adaptTag
+  adaptTag,
 } from '../adapters/income-adapter.js';
-import {
-  IncomeTotalByMonth,
-  QueryResolvers
-} from '../generated/graphql.js';
+import { IncomeTotalByMonth, QueryResolvers } from '../generated/graphql.js';
 import { Card } from '../models/card.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import {
   findAllExpensesWithTagsAndCards,
-  findIncomeByIdWithExpenses
+  findIncomeByIdWithExpenses,
 } from '../utils/expenses-find.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
+import { logger } from '../logger.js';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -52,7 +50,6 @@ const queries: QueryResolvers = {
       );
 
       const expenses = await findAllExpensesWithTagsAndCards(payBeforeWhere);
-      console.log(expenses);
 
       const incomesTotal = incomesWithExpenses.reduce(
         (acc, current) => acc + current.total,
@@ -71,7 +68,9 @@ const queries: QueryResolvers = {
         remaining: incomesTotal - expensesTotal,
       };
     } catch (error) {
-      console.error(error);
+      logger.error(
+        `Error quering incomeAndExpensesByFornight ${error.message}`
+      );
     }
   },
   expensesByMonth: async (_, input, context) => {
@@ -160,7 +159,7 @@ const queries: QueryResolvers = {
         0
       );
 
-      console.log(`returning ${allIncomes.length} incomes`);
+      logger.info(`returning ${allIncomes.length} incomes`);
 
       return {
         incomes: allIncomes.map((x) => ({
@@ -179,9 +178,10 @@ const queries: QueryResolvers = {
       };
     } catch (error) {
       if (error instanceof GraphQLError) {
+        logger.error(`Graphql Error incomes list ${error.message}`);
         throw error;
       }
-      console.error(error);
+      logger.error(`Error incomes list ${error}`);
     }
   },
   incomesByMonth: async (_, input, context) => {
@@ -221,7 +221,7 @@ const queries: QueryResolvers = {
       },
     });
 
-    console.log(allCards);
+    logger.info(`returning cards ${allCards}`);
 
     return allCards.map((card) => {
       return adaptCard(card);

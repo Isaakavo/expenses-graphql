@@ -5,14 +5,19 @@ import { ExpenseTags } from '../models/expense-tags.js';
 import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
+import { logger } from '../logger.js';
 
-export const findIncomeByIdWithExpenses = async (incomeExpenses: WhereOptions = {}) => {
+export const findIncomeByIdWithExpenses = async (
+  incomeExpenses: WhereOptions = {}
+) => {
   return await Income.findAll({
     where: incomeExpenses,
   });
 };
 
-export const findAllExpensesWithTagsAndCards = async (where: WhereOptions = {}) => {
+export const findAllExpensesWithTagsAndCards = async (
+  where: WhereOptions = {}
+) => {
   const allExpenses = await Expense.findAll({
     where,
   });
@@ -47,6 +52,6 @@ export const findTagsAndCard = async (expenses: Expense[]) => {
       })
     );
   } catch (error) {
-    console.error(error);
+    logger.error(`Error finding cards and tags ${error.message}`);
   }
 };
