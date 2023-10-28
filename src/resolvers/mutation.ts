@@ -12,6 +12,8 @@ import { logger } from '../logger.js';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
+  //TODO implement logic to handle the create of incomes for 1 year
+  // add a new flag to indicate if the mutation should create 12 new incomes with the provided inputs
   createIncome: async (_, input, context) => {
     const { total, paymentDate, comment } = input;
     const {
@@ -83,11 +85,11 @@ const mutations: MutationResolvers = {
     const newTags = await Promise.all(
       tags.map(async (tag) => {
         const [tagFindOrCreate, created] = await Tag.findOrCreate({
-          where: { name: tag.name },
+          where: { name: tag.name.toLowerCase() },
         });
 
         if (created) {
-          logger.info(`Tag already exists ${tagFindOrCreate.name}`);
+          logger.info(`Tag created with name: ${tagFindOrCreate.name}`);
         }
 
         await ExpenseTags.create({
