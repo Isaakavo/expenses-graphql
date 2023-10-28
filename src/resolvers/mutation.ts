@@ -121,11 +121,7 @@ const mutations: MutationResolvers = {
       payBefore: newExpense.payBefore,
       createdAt: newExpense.createdAt,
       updatedAt: newExpense.updatedAt,
-      card: card && {
-        id: card.id.toString(),
-        userId: card.userId,
-        bank: card.bank,
-      },
+      card: card && adaptCard(card),
       tags: newTags?.map((tag) => {
         return {
           id: tag.id.toString(),
