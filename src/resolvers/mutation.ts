@@ -42,8 +42,7 @@ const mutations: MutationResolvers = {
     };
   },
   createExpense: async (_, { input }, context) => {
-    const { incomeId, cardId, concept, total, tags, comment, payBefore } =
-      input;
+    const { cardId, concept, total, tags, comment, payBefore } = input;
     const {
       user: { userId },
     } = context;
@@ -57,15 +56,15 @@ const mutations: MutationResolvers = {
       });
     }
 
-    const income = await Income.findOne({
-      where: {
-        id: incomeId,
-      },
-    });
+    // const income = await Income.findOne({
+    //   where: {
+    //     id: incomeId,
+    //   },
+    // });
 
-    if (!income) {
-      throw new GraphQLError('You need an income first');
-    }
+    // if (!income) {
+    //   throw new GraphQLError('You need an income first');
+    // }
 
     const card =
       cardId &&
@@ -81,7 +80,6 @@ const mutations: MutationResolvers = {
 
     const newExpense = await Expense.create({
       userId,
-      incomeId,
       concept,
       total,
       cardId: card?.id,
@@ -113,7 +111,7 @@ const mutations: MutationResolvers = {
 
     return {
       id: newExpense.id.toString(),
-      incomeId: newExpense.incomeId.toString(),
+      incomeId: 'pito',
       userId: newExpense.userId,
       concept: newExpense.concept,
       total: newExpense.total,
@@ -148,7 +146,7 @@ const mutations: MutationResolvers = {
         alias,
         bank,
         isDebit,
-        isDigital
+        isDigital,
       });
 
       return adaptCard(newCard);

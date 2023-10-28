@@ -15,7 +15,7 @@ import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import {
-  findAllExpensesWithTags,
+  findAllExpensesWithTagsAndCards,
   findIncomeByIdWithExpenses,
   findTagsAndCard,
 } from '../utils/expenses-find.js';
@@ -32,7 +32,7 @@ const queries: QueryResolvers = {
       user: { userId },
     } = context;
 
-    return findAllExpensesWithTags({ userId });
+    return findAllExpensesWithTagsAndCards({ userId });
   },
   expensesByFortnight: async (_, { input }, context) => {
     const { payBefore } = input;
@@ -42,7 +42,7 @@ const queries: QueryResolvers = {
 
     const where = whereByFornight(userId, payBefore, 'payBefore');
 
-    return findAllExpensesWithTags(where);
+    return findAllExpensesWithTagsAndCards(where);
   },
   incomeAndExpensesByFortnight: async (_, { input }, context) => {
     try {
@@ -52,34 +52,28 @@ const queries: QueryResolvers = {
         user: { userId },
       } = context;
 
+      const payBeforeWhere = whereByFornight(userId, payBefore, 'payBefore');
+
       const incomesWithExpenses = await findIncomeByIdWithExpenses(
-        whereByFornight(userId, payBefore, 'paymentDate'),
-        whereByFornight(userId, payBefore, 'payBefore')
+        whereByFornight(userId, payBefore, 'paymentDate')
       );
+
+      const expenses = await findAllExpensesWithTagsAndCards(payBeforeWhere);
+      console.log(expenses);
 
       const incomesTotal = incomesWithExpenses.reduce(
         (acc, current) => acc + current.total,
         0
       );
 
-      const exp = await Promise.all(
-        incomesWithExpenses.flatMap(
-          async (x) => await findTagsAndCard(x.expenses)
-        )
+      const expensesTotal = expenses.reduce(
+        (acumulator, currentValue) => acumulator + currentValue.total,
+        0
       );
-
-      const expensesTotal = incomesWithExpenses
-        .map((x) =>
-          x.expenses.reduce(
-            (acumulator, currentValue) => acumulator + currentValue.total,
-            0
-          )
-        )
-        .reduce((acc, current) => acc + current, 0);
 
       return {
         income: adaptMultipleIncomes(incomesWithExpenses),
-        expenses: exp[0],
+        expenses: expenses,
         expensesTotal,
         remaining: incomesTotal - expensesTotal,
       };
@@ -95,7 +89,7 @@ const queries: QueryResolvers = {
 
     const where = whereByMonth(userId, date, 'payBefore');
 
-    return findAllExpensesWithTags(where);
+    return findAllExpensesWithTagsAndCards(where);
   },
   // TODO add logic to return a new field called creditCardDebts
   // if the expense contains tag "tarjeta de credito" those totals should be add
@@ -109,7 +103,7 @@ const queries: QueryResolvers = {
     const whereExpenses = whereByFornight(userId, payBefore, 'payBefore');
     const whereIncome = whereByFornight(userId, payBefore, 'paymentDate');
 
-    const allExpenses = findAllExpensesWithTags(whereExpenses);
+    const allExpenses = findAllExpensesWithTagsAndCards(whereExpenses);
     const income = await Income.findOne({ where: whereIncome });
 
     const debts = Number(

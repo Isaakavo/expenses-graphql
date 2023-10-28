@@ -15,5 +15,4 @@ export class Expense extends Model {
   public createdAt!: Date;
   public updatedAt!: Date;
   declare cardId: ForeignKey<Card['id']>;
-  declare incomeId: ForeignKey<Income['id']>;
 }

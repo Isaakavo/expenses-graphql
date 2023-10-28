@@ -40,7 +40,6 @@ export type CreateExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
-  incomeId: Scalars['ID']['input'];
   payBefore: Scalars['Date']['input'];
   tags: Array<ExpenseTagInput>;
   total: Scalars['Float']['input'];
@@ -53,7 +52,6 @@ export type Expense = {
   concept: Scalars['String']['output'];
   createdAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
-  incomeId: Scalars['ID']['output'];
   payBefore: Scalars['Date']['output'];
   tags: Array<ExpenseTag>;
   total: Scalars['Float']['output'];
@@ -338,7 +336,6 @@ export type ExpenseResolvers<ContextType = Context, ParentType extends Resolvers
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  incomeId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   payBefore?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   tags?: Resolver<Array<ResolversTypes['ExpenseTag']>, ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;

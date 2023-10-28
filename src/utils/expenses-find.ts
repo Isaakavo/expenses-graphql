@@ -5,48 +5,21 @@ import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 
-export const findIncomeByIdWithExpenses = async (
-  incomeExpenses: {} = {},
-  expensesWhere: any | {} = {}
-) => {
+export const findIncomeByIdWithExpenses = async (incomeExpenses: {} = {}) => {
   return await Income.findAll({
     where: incomeExpenses,
-    include: [
-      {
-        model: Expense,
-        as: 'expenses',
-        where: expensesWhere,
-        required: false,
-      },
-    ],
   });
 };
 
-export const findAllExpensesWithTags = async (where: any | {} = {}) => {
+export const findAllExpensesWithTagsAndCards = async (where: any | {} = {}) => {
   const allExpenses = await Expense.findAll({
     where,
   });
 
-  return await Promise.all(
-    allExpenses.map(async (expense) => {
-      const expensesTags = await ExpenseTags.findAll({
-        where: {
-          expenseId: expense.id,
-        },
-      });
-
-      const tags = await Promise.all(
-        expensesTags.map(async (expenseTag) => {
-          return await Tag.findOne({ where: { id: expenseTag.tagId } });
-        })
-      );
-
-      return adaptExpensesWithTagsAndCard(expense, tags);
-    })
-  );
+  return await findTagsAndCard(allExpenses);
 };
 
-export const findTagsAndCard = async (expenses: Expense[], where: any | {} = {}) => {
+export const findTagsAndCard = async (expenses: Expense[]) => {
   try {
     return await Promise.all(
       expenses.map(async (expense) => {

@@ -45,7 +45,6 @@ type Card {
 
 type Expense {
   id: ID!
-  incomeId: ID!
   userId: String
   concept: String!
   total: Float!
@@ -82,7 +81,6 @@ type IncomeListAndExpenses {
 }
 
 input CreateExpenseInput {
-  incomeId: ID!
   cardId: ID
   concept: String!
   total: Float!

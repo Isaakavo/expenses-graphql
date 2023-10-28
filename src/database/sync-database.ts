@@ -41,6 +41,7 @@ export const syncTables = async () => {
       },
       { sequelize, underscored: true }
     );
+    // add payday limit to handle where the card should be paid
     Card.init(
       {
         id: {
@@ -150,13 +151,6 @@ export const syncTables = async () => {
       },
       { sequelize, timestamps: false }
     );
-
-    Income.hasMany(Expense, {
-      onDelete: 'CASCADE',
-      foreignKey: 'incomeId',
-      as: 'expenses',
-    });
-    Expense.belongsTo(Income, { foreignKey: 'incomeId' });
     Expense.belongsToMany(Tag, { through: ExpenseTags });
     Tag.belongsToMany(Expense, { through: ExpenseTags });
     Card.hasMany(Expense, {

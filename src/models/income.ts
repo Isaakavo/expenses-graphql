@@ -12,10 +12,4 @@ export class Income extends Model {
   public userId!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
-
-  declare expenses?: NonAttribute<Expense[]>
-
-  declare static associations: {
-    expenses: Association<Income, Expense>
-  }
 }

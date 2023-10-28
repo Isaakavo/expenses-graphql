@@ -37,7 +37,6 @@ export function adaptExpensesWithTagsAndCard(
     userId: x.userId,
     comment: x.comments,
     createdAt: x.createdAt,
-    incomeId: x.incomeId.toString(),
     updatedAt: x.updatedAt,
     card: card ? adaptCard(card) : null,
     tags: tags.map((y) => adaptTag(y)),
