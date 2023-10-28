@@ -6,24 +6,19 @@ import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 
 export const findIncomeByIdWithExpenses = async (
-  incomeId: string,
-  userId: string,
-  where: any | {} = {}
+  incomeExpenses: {} = {},
+  expensesWhere: any | {} = {}
 ) => {
-  return await Income.findOne({
-    where: {
-      id: incomeId,
-      userId,
-    },
+  return await Income.findAll({
+    where: incomeExpenses,
     include: [
       {
         model: Expense,
         as: 'expenses',
-        where,
+        where: expensesWhere,
         required: false,
       },
     ],
-    rejectOnEmpty: true,
   });
 };
 

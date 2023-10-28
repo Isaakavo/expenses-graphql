@@ -22,6 +22,8 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
   };
 }
 
+export const adaptMultipleIncomes = (incomes: Income[]) => incomes.map((x) => adaptSingleIncome(x))
+
 export function adaptExpensesWithTagsAndCard(
   x: Expense,
   tags: Tag[],
@@ -46,7 +48,7 @@ export function adaptCard(card: Card) {
   return {
     id: card.id.toString(),
     userId: card.userId,
-    number: card.alias,
+    alias: card.alias,
     bank: card.bank,
     isDigital: card.isDigital,
     isDebit: card.isDebit,

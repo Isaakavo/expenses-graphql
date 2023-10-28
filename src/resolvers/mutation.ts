@@ -134,7 +134,7 @@ const mutations: MutationResolvers = {
   },
   createCard: async (_, { input }, context) => {
     try {
-      const { number, bank, isDigital } = input;
+      const { alias, bank, isDigital, isDebit } = input;
       const {
         user: { userId },
       } = context;
@@ -143,16 +143,11 @@ const mutations: MutationResolvers = {
         throw new GraphQLError('You need to pass a bank value');
       }
 
-      if (number.length > 4) {
-        throw new GraphQLError(
-          'Should only put the last 4 numbers of the card'
-        );
-      }
-
       const newCard = await Card.create({
         userId,
-        number,
+        alias,
         bank,
+        isDebit,
         isDigital
       });
 

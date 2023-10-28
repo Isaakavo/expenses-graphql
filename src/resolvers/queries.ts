@@ -2,10 +2,15 @@ import { format } from 'date-fns';
 import { GraphQLError } from 'graphql';
 import {
   adaptCard,
+  adaptMultipleIncomes,
   adaptSingleIncome,
   adaptTag,
 } from '../adapters/income-adapter.js';
-import { IncomeTotalByMonth, QueryResolvers } from '../generated/graphql.js';
+import {
+  Fortnight,
+  IncomeTotalByMonth,
+  QueryResolvers,
+} from '../generated/graphql.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
@@ -16,6 +21,10 @@ import {
 } from '../utils/expenses-find.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
 import { Card } from '../models/card.js';
+import {
+  Income as GraphqlIncome,
+  Expense as GraphqlExpense,
+} from 'generated/graphql';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -25,7 +34,7 @@ const queries: QueryResolvers = {
 
     return findAllExpensesWithTags({ userId });
   },
-  expensesByFortnight: async (_, input, context) => {
+  expensesByFortnight: async (_, { input }, context) => {
     const { payBefore } = input;
     const {
       user: { userId },
@@ -37,39 +46,42 @@ const queries: QueryResolvers = {
   },
   incomeAndExpensesByFortnight: async (_, { input }, context) => {
     try {
-      const { incomeId, payBefore } = input;
+      //TODO remove income id from this query input
+      const { payBefore } = input;
       const {
         user: { userId },
       } = context;
 
-      const incomeWithExpense = await findIncomeByIdWithExpenses(
-        incomeId,
-        userId,
+      const incomesWithExpenses = await findIncomeByIdWithExpenses(
+        whereByFornight(userId, payBefore, 'paymentDate'),
         whereByFornight(userId, payBefore, 'payBefore')
       );
 
-      if (!incomeWithExpense?.expenses) {
-        return {
-          income: adaptSingleIncome(incomeWithExpense),
-          expenses: [],
-          expensesTotal: 0.0,
-        };
-      }
-
-      const expenseListWithTags = await findTagsAndCard(
-        incomeWithExpense.expenses
-      );
-
-      const expensesTotal = incomeWithExpense.expenses.reduce(
-        (acumulator, currentValue) => acumulator + currentValue.total,
+      const incomesTotal = incomesWithExpenses.reduce(
+        (acc, current) => acc + current.total,
         0
       );
 
+      const exp = await Promise.all(
+        incomesWithExpenses.flatMap(
+          async (x) => await findTagsAndCard(x.expenses)
+        )
+      );
+
+      const expensesTotal = incomesWithExpenses
+        .map((x) =>
+          x.expenses.reduce(
+            (acumulator, currentValue) => acumulator + currentValue.total,
+            0
+          )
+        )
+        .reduce((acc, current) => acc + current, 0);
+
       return {
-        income: adaptSingleIncome(incomeWithExpense),
-        expenses: expenseListWithTags,
+        income: adaptMultipleIncomes(incomesWithExpenses),
+        expenses: exp[0],
         expensesTotal,
-        remaining: incomeWithExpense.total - expensesTotal,
+        remaining: incomesTotal - expensesTotal,
       };
     } catch (error) {
       console.error(error);
@@ -88,7 +100,7 @@ const queries: QueryResolvers = {
   // TODO add logic to return a new field called creditCardDebts
   // if the expense contains tag "tarjeta de credito" those totals should be add
   // to this new field.
-  financialBalanceByFortnight: async (_, input, context) => {
+  financialBalanceByFortnight: async (_, { input }, context) => {
     const { payBefore } = input;
     const {
       user: { userId },
