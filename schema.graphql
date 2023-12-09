@@ -5,6 +5,11 @@ enum Fortnight {
   SECOND
 }
 
+interface Total {
+  date: String!
+  total: Float!
+}
+
 type PaymentDate {
   date: Date!
   fortnight: Fortnight!
@@ -20,8 +25,14 @@ type Income {
   # Add a field for "safe to spend" and maybe one for "savings"
 }
 
-type IncomeTotalByMonth {
+type TotalByMonth implements Total {
   date: String!
+  total: Float!
+}
+
+type TotalByFortnight implements Total {
+  date: String!
+  fortnight: String!
   total: Float!
 }
 
@@ -29,7 +40,7 @@ type IncomeTotalByMonth {
 # and total of all
 type IncomesList {
   incomes: [Income!]!
-  totalByMonth: [IncomeTotalByMonth!]!
+  totalByMonth: [TotalByMonth!]!
   total: Float!
 }
 
@@ -41,6 +52,12 @@ type Card {
   bank: String!
   isDigital: Boolean
   isDebit: Boolean
+}
+
+type CardListWithExpenses {
+  expenses: [Expense]
+  totalByMonth: [TotalByMonth]
+  totalByFortnight: [TotalByFortnight]
 }
 
 type Expense {
@@ -58,7 +75,7 @@ type Expense {
 
 # Rename to category
 # A category is a percentage of the income to save or expend, and should be tied to a expense
-# 
+#
 type ExpenseTag {
   id: ID!
   name: String!
@@ -112,14 +129,13 @@ type Query {
   expensesByFortnight(input: PayBeforeInput!): [Expense] # Validate if this query is necessary
   expensesByMonth(date: Date!): [Expense]
   #TODO make this query to return the total of expenses
-  incomesAndExpensesByFortnight(
-    input: PayBeforeInput!
-  ): IncomesListAndExpenses!
+  incomesAndExpensesByFortnight(input: PayBeforeInput!): IncomesListAndExpenses!
   allExpenses: [Expense]
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   tags: [ExpenseTag]
   cardList: [Card]
   cardById(cardId: ID!): Card
+  cardWithListExpenses(cardId: ID!): CardListWithExpenses
 }
 
 type Mutation {

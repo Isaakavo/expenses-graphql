@@ -1,21 +1,21 @@
-import { format } from 'date-fns';
 import { GraphQLError } from 'graphql';
 import {
   adaptCard,
   adaptMultipleIncomes,
   adaptTag,
 } from '../adapters/income-adapter.js';
-import { IncomeTotalByMonth, QueryResolvers } from '../generated/graphql.js';
+import { Expense, QueryResolvers, TotalByFortnight } from '../generated/graphql.js';
+import { logger } from '../logger.js';
 import { Card } from '../models/card.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
+import { calcualteTotalByMonth, calculateTotalByFortnight } from '../utils/calculate-total.js';
 import {
   findAllExpensesWithTagsAndCards,
   findIncomeByIdWithExpenses,
 } from '../utils/expenses-find.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
-import { logger } from '../logger.js';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -60,7 +60,7 @@ const queries: QueryResolvers = {
         0
       );
 
-      logger.info(`Returning ${expenses.length} expenses for incomes`)
+      logger.info(`Returning ${expenses.length} expenses for incomes`);
 
       return {
         incomes: adaptMultipleIncomes(incomesWithExpenses),
@@ -130,37 +130,6 @@ const queries: QueryResolvers = {
         order: [['paymentDate', 'DESC']],
       });
 
-      // TODO improve logic
-      const monthMap = {};
-
-      const totalByMonth = allIncomes.map((x) => {
-        const formatedMonth = format(x.paymentDate, 'LLLL');
-        monthMap[formatedMonth] = (monthMap[formatedMonth] ?? 0) + x.total;
-
-        return {
-          date: formatedMonth,
-          total: monthMap[formatedMonth],
-        };
-      });
-
-      const maxTotalByDate = {};
-
-      for (const item of totalByMonth) {
-        if (
-          !maxTotalByDate[item.date] ||
-          item.total > maxTotalByDate[item.date].total
-        ) {
-          maxTotalByDate[item.date] = item;
-        }
-      }
-
-      const result = Object.values(maxTotalByDate) as Array<IncomeTotalByMonth>;
-
-      const sumOfAll = allIncomes.reduce(
-        (acumulator, currentValue) => acumulator + currentValue.total,
-        0
-      );
-
       logger.info(`returning ${allIncomes.length} incomes`);
 
       return {
@@ -175,8 +144,11 @@ const queries: QueryResolvers = {
           },
           createdAt: x.createdAt,
         })),
-        totalByMonth: result,
-        total: sumOfAll,
+        totalByMonth: calcualteTotalByMonth(allIncomes),
+        total: allIncomes.reduce(
+          (acumulator, currentValue) => acumulator + currentValue.total,
+          0
+        ),
       };
     } catch (error) {
       if (error instanceof GraphQLError) {
@@ -247,6 +219,23 @@ const queries: QueryResolvers = {
     }
 
     return adaptCard(card);
+  },
+  cardWithListExpenses: async (_, { cardId }, context) => {
+    const {
+      user: { userId },
+    } = context;
+
+    // const payBeforeWhere = whereByFornight(userId, payBefore, 'payBefore');
+    const expenses = await findAllExpensesWithTagsAndCards({ userId, cardId });
+    const totalByMonth = calcualteTotalByMonth(expenses);
+    const totalByFortnight = calculateTotalByFortnight<Expense, TotalByFortnight>(expenses);
+    
+    logger.info(`Returning information for card ${cardId}`);
+    return {
+      expenses,
+      totalByMonth,
+      totalByFortnight
+    }
   },
 };
 
