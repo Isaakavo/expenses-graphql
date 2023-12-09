@@ -20,6 +20,7 @@ export const findAllExpensesWithTagsAndCards = async (
 ) => {
   const allExpenses = await Expense.findAll({
     where,
+    order: [['payBefore', 'DESC']]
   });
 
   return await findTagsAndCard(allExpenses);

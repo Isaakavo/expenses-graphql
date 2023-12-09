@@ -73,9 +73,10 @@ type FinancialBalance {
 
 # Type used to display the income for a given fortnight and all the related expenses
 # it also return the total of all the expenses and the remaining between income and expenses
-type IncomeListAndExpenses {
-  income: [Income!]
+type IncomesListAndExpenses {
+  incomes: [Income!]
   expenses: [Expense!]
+  incomesTotal: Float!
   expensesTotal: Float
   remaining: Float
 }
@@ -111,9 +112,9 @@ type Query {
   expensesByFortnight(input: PayBeforeInput!): [Expense] # Validate if this query is necessary
   expensesByMonth(date: Date!): [Expense]
   #TODO make this query to return the total of expenses
-  incomeAndExpensesByFortnight(
+  incomesAndExpensesByFortnight(
     input: PayBeforeInput!
-  ): IncomeListAndExpenses!
+  ): IncomesListAndExpenses!
   allExpenses: [Expense]
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   tags: [ExpenseTag]

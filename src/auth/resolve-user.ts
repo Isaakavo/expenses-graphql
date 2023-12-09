@@ -8,6 +8,6 @@ export const resolverUser = async (req: IncomingMessage) => {
     const decodedUser = await verifyJwt(token as string);
     return decodedUser;
   } catch (error) {
-    logger.error('Failed to resolve user', error);
+    logger.info('Failed to resolve user', error);
   }
 };

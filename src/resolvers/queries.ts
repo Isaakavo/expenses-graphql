@@ -35,7 +35,7 @@ const queries: QueryResolvers = {
 
     return findAllExpensesWithTagsAndCards(where);
   },
-  incomeAndExpensesByFortnight: async (_, { input }, context) => {
+  incomesAndExpensesByFortnight: async (_, { input }, context) => {
     try {
       const { payBefore } = input;
       const {
@@ -60,8 +60,11 @@ const queries: QueryResolvers = {
         0
       );
 
+      logger.info(`Returning ${expenses.length} expenses for incomes`)
+
       return {
-        income: adaptMultipleIncomes(incomesWithExpenses),
+        incomes: adaptMultipleIncomes(incomesWithExpenses),
+        incomesTotal,
         expenses: expenses,
         expensesTotal,
         remaining: incomesTotal - expensesTotal,
