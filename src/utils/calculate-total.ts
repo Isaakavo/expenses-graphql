@@ -14,11 +14,14 @@ export const calcualteTotalByMonth = <T extends ElementFields>(
   const monthMap = {};
 
   const totalByMonth = databaseList.map((x) => {
+    const date = x.paymentDate ?? x.payBefore;
     const formatedMonth = format(x.paymentDate ?? x.payBefore, 'LLLL');
+    const formatedDate = format(date, 'yyyy-MM-dd');
     monthMap[formatedMonth] = (monthMap[formatedMonth] ?? 0) + x.total;
 
     return {
-      date: formatedMonth,
+      month: formatedMonth,
+      date: formatedDate,
       total: monthMap[formatedMonth],
     };
   });
@@ -27,10 +30,10 @@ export const calcualteTotalByMonth = <T extends ElementFields>(
 
   for (const item of totalByMonth) {
     if (
-      !maxTotalByDate[item.date] ||
-      item.total > maxTotalByDate[item.date].total
+      !maxTotalByDate[item.month] ||
+      item.total > maxTotalByDate[item.month].total
     ) {
-      maxTotalByDate[item.date] = item;
+      maxTotalByDate[item.month] = item;
     }
   }
 
@@ -45,13 +48,15 @@ export const calculateTotalByFortnight = <T extends ElementFields, O>(
   const totalByFortnigth = databaseList.map((x) => {
     const date = x.paymentDate ?? x.payBefore;
     const formatedMonth = format(date, 'LLLL');
+    const formatedDate = format(date, 'yyyy-MM-dd');
     const fortnight = calculateFortnight(date);
     const monthMapKey = `${formatedMonth}-${fortnight}`;
 
     monthMap[monthMapKey] = (monthMap[monthMapKey] ?? 0) + x.total;
 
     return {
-      date: formatedMonth,
+      month: formatedMonth,
+      date: formatedDate,
       fortnight,
       total: monthMap[monthMapKey],
     };
@@ -61,10 +66,10 @@ export const calculateTotalByFortnight = <T extends ElementFields, O>(
 
   for (const item of totalByFortnigth) {
     if (
-      !maxTotalByDate[item.date] ||
-      item.total > maxTotalByDate[item.date].total
+      !maxTotalByDate[item.month] ||
+      item.total > maxTotalByDate[item.month].total
     ) {
-      maxTotalByDate[`${item.date}-${item.fortnight}`] = item;
+      maxTotalByDate[`${item.month}-${item.fortnight}`] = item;
     }
   }
 

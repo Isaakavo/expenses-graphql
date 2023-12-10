@@ -8,6 +8,7 @@ enum Fortnight {
 interface Total {
   date: String!
   total: Float!
+  month: String!
 }
 
 type PaymentDate {
@@ -28,10 +29,12 @@ type Income {
 type TotalByMonth implements Total {
   date: String!
   total: Float!
+  month: String!
 }
 
 type TotalByFortnight implements Total {
   date: String!
+  month: String!
   fortnight: Fortnight!
   total: Float!
 }
@@ -127,7 +130,7 @@ type Query {
   incomesList: IncomesList
   incomesByMonth(date: Date!): [Income] # Validate if this query is necessary
   expensesByFortnight(input: PayBeforeInput!): [Expense] # Validate if this query is necessary
-  expensesByMonth(date: Date!): [Expense]
+  expensesByMonth(input: PayBeforeInput!): [Expense]
   #TODO make this query to return the total of expenses
   incomesAndExpensesByFortnight(input: PayBeforeInput!): IncomesListAndExpenses!
   allExpenses: [Expense]

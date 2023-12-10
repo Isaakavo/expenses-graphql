@@ -176,7 +176,7 @@ export type QueryExpensesByFortnightArgs = {
 
 
 export type QueryExpensesByMonthArgs = {
-  date: Scalars['Date']['input'];
+  input: PayBeforeInput;
 };
 
 
@@ -201,6 +201,7 @@ export type QueryIncomesByMonthArgs = {
 
 export type Total = {
   date: Scalars['String']['output'];
+  month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
 };
 
@@ -214,12 +215,14 @@ export type TotalByFortnight = Total & {
   __typename?: 'TotalByFortnight';
   date: Scalars['String']['output'];
   fortnight: Fortnight;
+  month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
 };
 
 export type TotalByMonth = Total & {
   __typename?: 'TotalByMonth';
   date: Scalars['String']['output'];
+  month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
 };
 
@@ -438,7 +441,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
   expensesByFortnight?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByFortnightArgs, 'input'>>;
-  expensesByMonth?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByMonthArgs, 'date'>>;
+  expensesByMonth?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByMonthArgs, 'input'>>;
   expensesTotalByCardId?: Resolver<Maybe<ResolversTypes['TotalByCardId']>, ParentType, ContextType, RequireFields<QueryExpensesTotalByCardIdArgs, 'cardId'>>;
   financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'input'>>;
   incomesAndExpensesByFortnight?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesAndExpensesByFortnightArgs, 'input'>>;
@@ -450,6 +453,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 export type TotalResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Total'] = ResolversParentTypes['Total']> = ResolversObject<{
   __resolveType: TypeResolveFn<'TotalByFortnight' | 'TotalByMonth', ParentType, ContextType>;
   date?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  month?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
 }>;
 
@@ -462,12 +466,14 @@ export type TotalByCardIdResolvers<ContextType = Context, ParentType extends Res
 export type TotalByFortnightResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TotalByFortnight'] = ResolversParentTypes['TotalByFortnight']> = ResolversObject<{
   date?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   fortnight?: Resolver<ResolversTypes['Fortnight'], ParentType, ContextType>;
+  month?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type TotalByMonthResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TotalByMonth'] = ResolversParentTypes['TotalByMonth']> = ResolversObject<{
   date?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  month?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;

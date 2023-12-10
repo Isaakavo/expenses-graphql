@@ -18,9 +18,7 @@ export const calculateFortnight = (date: Date) => {
   return Fortnight.Second;
 };
 
-
-export const fifteenthDayOfMonth = (date: Date) => {
+export const fifteenthDayOfMonth = (date: Date | number) => {
   const fifteenthDayOfMonth = endOfMonth(date);
   return fifteenthDayOfMonth.setDate(15);
 };
-

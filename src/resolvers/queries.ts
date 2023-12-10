@@ -45,6 +45,18 @@ const queries: QueryResolvers = {
 
     return findAllExpensesWithTagsAndCards(where);
   },
+  expensesByMonth: async (_, { input }, context) => {
+    const { payBefore, cardId } = input;
+    const {
+      user: { userId },
+    } = context;
+
+    const where = !cardId
+      ? whereByMonth(userId, payBefore, 'payBefore')
+      : whereByMonth(userId, payBefore, 'payBefore', { cardId });
+
+    return findAllExpensesWithTagsAndCards(where);
+  },
   incomesAndExpensesByFortnight: async (_, { input }, context) => {
     try {
       const { payBefore } = input;
@@ -84,16 +96,6 @@ const queries: QueryResolvers = {
         `Error quering incomeAndExpensesByFornight ${error.message}`
       );
     }
-  },
-  expensesByMonth: async (_, input, context) => {
-    const { date } = input;
-    const {
-      user: { userId },
-    } = context;
-
-    const where = whereByMonth(userId, date, 'payBefore');
-
-    return findAllExpensesWithTagsAndCards(where);
   },
   // TODO add logic to return a new field called creditCardDebts
   // if the expense contains tag "tarjeta de credito" those totals should be added

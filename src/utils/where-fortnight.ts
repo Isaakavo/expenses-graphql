@@ -1,7 +1,7 @@
 import { endOfMonth, startOfMonth } from 'date-fns';
 import { Op, WhereOptions } from 'sequelize';
 import { Fortnight } from '../generated/graphql.js';
-import { Date } from '../scalars/date.js';
+import { Date as GrahpqlDate } from '../scalars/date.js';
 import {
   calculateFortnight,
   fifteenthDayOfMonth,
@@ -13,7 +13,7 @@ export const whereByFornight = (
   fortnightWhere: string,
   where: WhereOptions | undefined = undefined
 ) => {
-  const parsedBeforeDate = Date.parseValue(date);
+  const parsedBeforeDate = GrahpqlDate.parseValue(date);
   const fortnight = calculateFortnight(parsedBeforeDate);
   const definedFortnightWhere = {
     userId,
@@ -27,26 +27,34 @@ export const whereByFornight = (
           [Op.gte]: fifteenthDayOfMonth(parsedBeforeDate),
           [Op.lte]: endOfMonth(parsedBeforeDate),
         },
-
-  }
-  return !where ? definedFortnightWhere : { 
-    ...where,
-    ...definedFortnightWhere
-  }
+  };
+  return !where
+    ? definedFortnightWhere
+    : {
+      ...where,
+      ...definedFortnightWhere,
+    };
 };
 
 export const whereByMonth = (
   userId: string,
   date: Date,
-  fortnightWhere: string
+  fortnightWhere: string,
+  where: WhereOptions | undefined = undefined
 ) => {
-  const parsedBeforeDate = Date.parseValue(date);
-
-  return {
+  const parsedBeforeDate = GrahpqlDate.parseValue(date);
+  const definedFortnightWhere = {
     userId,
     [fortnightWhere]: {
       [Op.gte]: startOfMonth(parsedBeforeDate),
       [Op.lte]: endOfMonth(parsedBeforeDate),
     },
   };
+
+  return !where
+    ? definedFortnightWhere
+    : {
+      ...where,
+      ...definedFortnightWhere,
+    };
 };
