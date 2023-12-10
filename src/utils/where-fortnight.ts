@@ -1,5 +1,5 @@
 import { endOfMonth, startOfMonth } from 'date-fns';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { Fortnight } from '../generated/graphql.js';
 import { Date } from '../scalars/date.js';
 import {
@@ -10,11 +10,12 @@ import {
 export const whereByFornight = (
   userId: string,
   date: Date,
-  fortnightWhere: string
+  fortnightWhere: string,
+  where: WhereOptions | undefined = undefined
 ) => {
   const parsedBeforeDate = Date.parseValue(date);
   const fortnight = calculateFortnight(parsedBeforeDate);
-  return {
+  const definedFortnightWhere = {
     userId,
     [fortnightWhere]:
       fortnight === Fortnight.First
@@ -26,7 +27,12 @@ export const whereByFornight = (
           [Op.gte]: fifteenthDayOfMonth(parsedBeforeDate),
           [Op.lte]: endOfMonth(parsedBeforeDate),
         },
-  };
+
+  }
+  return !where ? definedFortnightWhere : { 
+    ...where,
+    ...definedFortnightWhere
+  }
 };
 
 export const whereByMonth = (

@@ -54,8 +54,7 @@ type Card {
   isDebit: Boolean
 }
 
-type CardListWithExpenses {
-  expenses: [Expense]
+type TotalByCardId {
   totalByMonth: [TotalByMonth]
   totalByFortnight: [TotalByFortnight]
 }
@@ -117,6 +116,7 @@ input CreateCardInput {
 input PayBeforeInput {
   # input used to get all the expenses matching this date (from 1st to 15th or from 15th to 30th)
   payBefore: Date!
+  cardId: ID
 }
 
 input ExpenseTagInput {
@@ -135,7 +135,7 @@ type Query {
   tags: [ExpenseTag]
   cardList: [Card]
   cardById(cardId: ID!): Card
-  cardWithListExpenses(cardId: ID!): CardListWithExpenses
+  expensesTotalByCardId(cardId: ID!): TotalByCardId
 }
 
 type Mutation {

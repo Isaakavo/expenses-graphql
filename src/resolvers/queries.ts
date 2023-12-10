@@ -4,13 +4,20 @@ import {
   adaptMultipleIncomes,
   adaptTag,
 } from '../adapters/income-adapter.js';
-import { Expense, QueryResolvers, TotalByFortnight } from '../generated/graphql.js';
+import {
+  Expense,
+  QueryResolvers,
+  TotalByFortnight,
+} from '../generated/graphql.js';
 import { logger } from '../logger.js';
 import { Card } from '../models/card.js';
 import { Income } from '../models/income.js';
 import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
-import { calcualteTotalByMonth, calculateTotalByFortnight } from '../utils/calculate-total.js';
+import {
+  calcualteTotalByMonth,
+  calculateTotalByFortnight,
+} from '../utils/calculate-total.js';
 import {
   findAllExpensesWithTagsAndCards,
   findIncomeByIdWithExpenses,
@@ -26,12 +33,15 @@ const queries: QueryResolvers = {
     return findAllExpensesWithTagsAndCards({ userId });
   },
   expensesByFortnight: async (_, { input }, context) => {
-    const { payBefore } = input;
+    const { payBefore, cardId } = input;
     const {
       user: { userId },
     } = context;
 
-    const where = whereByFornight(userId, payBefore, 'payBefore');
+    // TODO refactor this to handle undfined value un function whereByFornight
+    const where = !cardId
+      ? whereByFornight(userId, payBefore, 'payBefore')
+      : whereByFornight(userId, payBefore, 'payBefore', { cardId });
 
     return findAllExpensesWithTagsAndCards(where);
   },
@@ -220,7 +230,7 @@ const queries: QueryResolvers = {
 
     return adaptCard(card);
   },
-  cardWithListExpenses: async (_, { cardId }, context) => {
+  expensesTotalByCardId: async (_, { cardId }, context) => {
     const {
       user: { userId },
     } = context;
@@ -228,14 +238,16 @@ const queries: QueryResolvers = {
     // const payBeforeWhere = whereByFornight(userId, payBefore, 'payBefore');
     const expenses = await findAllExpensesWithTagsAndCards({ userId, cardId });
     const totalByMonth = calcualteTotalByMonth(expenses);
-    const totalByFortnight = calculateTotalByFortnight<Expense, TotalByFortnight>(expenses);
-    
+    const totalByFortnight = calculateTotalByFortnight<
+      Expense,
+      TotalByFortnight
+    >(expenses);
+
     logger.info(`Returning information for card ${cardId}`);
     return {
-      expenses,
       totalByMonth,
-      totalByFortnight
-    }
+      totalByFortnight,
+    };
   },
 };
 
