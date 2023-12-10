@@ -32,7 +32,7 @@ type TotalByMonth implements Total {
 
 type TotalByFortnight implements Total {
   date: String!
-  fortnight: String!
+  fortnight: Fortnight!
   total: Float!
 }
 

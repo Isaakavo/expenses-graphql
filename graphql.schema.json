@@ -1556,8 +1556,8 @@
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
+                "kind": "ENUM",
+                "name": "Fortnight",
                 "ofType": null
               }
             },

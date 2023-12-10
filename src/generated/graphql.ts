@@ -213,7 +213,7 @@ export type TotalByCardId = {
 export type TotalByFortnight = Total & {
   __typename?: 'TotalByFortnight';
   date: Scalars['String']['output'];
-  fortnight: Scalars['String']['output'];
+  fortnight: Fortnight;
   total: Scalars['Float']['output'];
 };
 
@@ -461,7 +461,7 @@ export type TotalByCardIdResolvers<ContextType = Context, ParentType extends Res
 
 export type TotalByFortnightResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TotalByFortnight'] = ResolversParentTypes['TotalByFortnight']> = ResolversObject<{
   date?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  fortnight?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  fortnight?: Resolver<ResolversTypes['Fortnight'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
