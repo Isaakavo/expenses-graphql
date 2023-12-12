@@ -100,6 +100,11 @@ type IncomesListAndExpenses {
   remaining: Float
 }
 
+type ExpensesBy {
+  expenses: [Expense]
+  expensesTotal: Float
+}
+
 input CreateExpenseInput {
   cardId: ID
   concept: String!
@@ -129,9 +134,8 @@ input ExpenseTagInput {
 type Query {
   incomesList: IncomesList
   incomesByMonth(date: Date!): [Income] # Validate if this query is necessary
-  expensesByFortnight(input: PayBeforeInput!): [Expense] # Validate if this query is necessary
-  expensesByMonth(input: PayBeforeInput!): [Expense]
-  #TODO make this query to return the total of expenses
+  expensesByFortnight(input: PayBeforeInput!): ExpensesBy
+  expensesByMonth(input: PayBeforeInput!): ExpensesBy
   incomesAndExpensesByFortnight(input: PayBeforeInput!): IncomesListAndExpenses!
   allExpenses: [Expense]
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance

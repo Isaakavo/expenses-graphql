@@ -544,6 +544,45 @@
       },
       {
         "kind": "OBJECT",
+        "name": "ExpensesBy",
+        "description": null,
+        "fields": [
+          {
+            "name": "expenses",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Expense",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "expensesTotal",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "Float",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "FinancialBalance",
         "description": null,
         "fields": [
@@ -1218,13 +1257,9 @@
               }
             ],
             "type": {
-              "kind": "LIST",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Expense",
-                "ofType": null
-              }
+              "kind": "OBJECT",
+              "name": "ExpensesBy",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -1251,13 +1286,9 @@
               }
             ],
             "type": {
-              "kind": "LIST",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Expense",
-                "ofType": null
-              }
+              "kind": "OBJECT",
+              "name": "ExpensesBy",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

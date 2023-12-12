@@ -71,6 +71,12 @@ export type ExpenseTagInput = {
   name?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type ExpensesBy = {
+  __typename?: 'ExpensesBy';
+  expenses?: Maybe<Array<Maybe<Expense>>>;
+  expensesTotal?: Maybe<Scalars['Float']['output']>;
+};
+
 export type FinancialBalance = {
   __typename?: 'FinancialBalance';
   debts: Scalars['Float']['output'];
@@ -154,8 +160,8 @@ export type Query = {
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
   cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
-  expensesByFortnight?: Maybe<Array<Maybe<Expense>>>;
-  expensesByMonth?: Maybe<Array<Maybe<Expense>>>;
+  expensesByFortnight?: Maybe<ExpensesBy>;
+  expensesByMonth?: Maybe<ExpensesBy>;
   expensesTotalByCardId?: Maybe<TotalByCardId>;
   financialBalanceByFortnight?: Maybe<FinancialBalance>;
   incomesAndExpensesByFortnight: IncomesListAndExpenses;
@@ -310,6 +316,7 @@ export type ResolversTypes = ResolversObject<{
   Expense: ResolverTypeWrapper<Expense>;
   ExpenseTag: ResolverTypeWrapper<ExpenseTag>;
   ExpenseTagInput: ExpenseTagInput;
+  ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
   FinancialBalance: ResolverTypeWrapper<FinancialBalance>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   Fortnight: Fortnight;
@@ -338,6 +345,7 @@ export type ResolversParentTypes = ResolversObject<{
   Expense: Expense;
   ExpenseTag: ExpenseTag;
   ExpenseTagInput: ExpenseTagInput;
+  ExpensesBy: ExpensesBy;
   FinancialBalance: FinancialBalance;
   Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
@@ -391,6 +399,12 @@ export type ExpenseTagResolvers<ContextType = Context, ParentType extends Resolv
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type ExpensesByResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ExpensesBy'] = ResolversParentTypes['ExpensesBy']> = ResolversObject<{
+  expenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  expensesTotal?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type FinancialBalanceResolvers<ContextType = Context, ParentType extends ResolversParentTypes['FinancialBalance'] = ResolversParentTypes['FinancialBalance']> = ResolversObject<{
   debts?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   remaining?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
@@ -440,8 +454,8 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
-  expensesByFortnight?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByFortnightArgs, 'input'>>;
-  expensesByMonth?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, RequireFields<QueryExpensesByMonthArgs, 'input'>>;
+  expensesByFortnight?: Resolver<Maybe<ResolversTypes['ExpensesBy']>, ParentType, ContextType, RequireFields<QueryExpensesByFortnightArgs, 'input'>>;
+  expensesByMonth?: Resolver<Maybe<ResolversTypes['ExpensesBy']>, ParentType, ContextType, RequireFields<QueryExpensesByMonthArgs, 'input'>>;
   expensesTotalByCardId?: Resolver<Maybe<ResolversTypes['TotalByCardId']>, ParentType, ContextType, RequireFields<QueryExpensesTotalByCardIdArgs, 'cardId'>>;
   financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'input'>>;
   incomesAndExpensesByFortnight?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesAndExpensesByFortnightArgs, 'input'>>;
@@ -483,6 +497,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Date?: GraphQLScalarType;
   Expense?: ExpenseResolvers<ContextType>;
   ExpenseTag?: ExpenseTagResolvers<ContextType>;
+  ExpensesBy?: ExpensesByResolvers<ContextType>;
   FinancialBalance?: FinancialBalanceResolvers<ContextType>;
   Income?: IncomeResolvers<ContextType>;
   IncomesList?: IncomesListResolvers<ContextType>;

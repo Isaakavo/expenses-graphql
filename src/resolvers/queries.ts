@@ -43,7 +43,17 @@ const queries: QueryResolvers = {
       ? whereByFornight(userId, payBefore, 'payBefore')
       : whereByFornight(userId, payBefore, 'payBefore', { cardId });
 
-    return findAllExpensesWithTagsAndCards(where);
+    const expenses = await findAllExpensesWithTagsAndCards(where);
+
+    const expensesTotal = expenses.reduce(
+      (acumulator, currentValue) => acumulator + currentValue.total,
+      0
+    );
+
+    return {
+      expenses,
+      expensesTotal,
+    };
   },
   expensesByMonth: async (_, { input }, context) => {
     const { payBefore, cardId } = input;
@@ -55,7 +65,16 @@ const queries: QueryResolvers = {
       ? whereByMonth(userId, payBefore, 'payBefore')
       : whereByMonth(userId, payBefore, 'payBefore', { cardId });
 
-    return findAllExpensesWithTagsAndCards(where);
+    const expenses = await findAllExpensesWithTagsAndCards(where);
+    const expensesTotal = expenses.reduce(
+      (acumulator, currentValue) => acumulator + currentValue.total,
+      0
+    );
+
+    return {
+      expenses,
+      expensesTotal,
+    };
   },
   incomesAndExpensesByFortnight: async (_, { input }, context) => {
     try {
