@@ -1,14 +1,13 @@
 import { GraphQLError } from 'graphql';
+import { categoryAdapter } from '../adapters/category-adapter.js';
+import { adaptCard } from '../adapters/income-adapter.js';
 import { MutationResolvers } from '../generated/graphql.js';
-import { ExpenseTags } from '../models/expense-tags.js';
+import { logger } from '../logger.js';
+import { Card } from '../models/card.js';
 import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
-import { Tag } from '../models/tag.js';
 import { Date as CustomDate } from '../scalars/date.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
-import { Card } from '../models/card.js';
-import { adaptCard } from '../adapters/income-adapter.js';
-import { logger } from '../logger.js';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
@@ -44,19 +43,10 @@ const mutations: MutationResolvers = {
     };
   },
   createExpense: async (_, { input }, context) => {
-    const { cardId, concept, total, tags, comment, payBefore } = input;
+    const { cardId, concept, total, comment, payBefore, category } = input;
     const {
       user: { userId },
     } = context;
-
-    if (tags?.length > 10) {
-      throw new GraphQLError('No more than 10 tags per expense', {
-        extensions: {
-          code: 'BAD REQUEST',
-          http: { status: 400 },
-        },
-      });
-    }
 
     const card =
       cardId &&
@@ -74,6 +64,7 @@ const mutations: MutationResolvers = {
       userId,
       concept,
       total,
+      category: categoryAdapter(category),
       cardId: card?.id,
       comments: comment,
       payBefore: parsedPayBefore,
@@ -81,44 +72,18 @@ const mutations: MutationResolvers = {
       updatedAt: serverDate,
     });
 
-    const newTags = await Promise.all(
-      tags.map(async (tag) => {
-        const [tagFindOrCreate, created] = await Tag.findOrCreate({
-          where: { name: tag.name.toLowerCase() },
-        });
-
-        if (created) {
-          logger.info(`Tag created with name: ${tagFindOrCreate.name}`);
-        }
-
-        await ExpenseTags.create({
-          expenseId: newExpense.id,
-          tagId: tagFindOrCreate.id,
-        });
-
-        return tagFindOrCreate;
-      })
-    );
-
     return {
       id: newExpense.id.toString(),
       incomeId: 'pito',
       userId: newExpense.userId,
       concept: newExpense.concept,
+      category,
       total: newExpense.total,
       comment: newExpense.comments,
       payBefore: newExpense.payBefore,
       createdAt: newExpense.createdAt,
       updatedAt: newExpense.updatedAt,
       card: card && adaptCard(card),
-      tags: newTags?.map((tag) => {
-        return {
-          id: tag.id.toString(),
-          name: tag.name,
-          createdAt: tag.createdAt,
-          updatedAt: tag.updatedAt,
-        };
-      }),
     };
   },
   createCard: async (_, { input }, context) => {

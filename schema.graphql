@@ -5,6 +5,22 @@ enum Fortnight {
   SECOND
 }
 
+enum Category {
+  BILLS
+  CAR
+  CLOTHES
+  COMMUNICATION
+  EATING_OUT
+  ENTERTAINMENT
+  FOOD
+  GIFTS
+  HEALTH
+  HOUSE
+  PETS
+  SPORTS
+  TRANSPORT
+}
+
 interface Total {
   date: String!
   total: Float!
@@ -70,19 +86,9 @@ type Expense {
   payBefore: Date!
   createdAt: Date
   updatedAt: Date
-  tags: [ExpenseTag!]!
   card: Card
   comment: String
-}
-
-# Rename to category
-# A category is a percentage of the income to save or expend, and should be tied to a expense
-#
-type ExpenseTag {
-  id: ID!
-  name: String!
-  createdAt: Date
-  updatedAt: Date
+  category: Category!
 }
 
 type FinancialBalance {
@@ -110,8 +116,8 @@ input CreateExpenseInput {
   concept: String!
   total: Float!
   payBefore: Date!
-  tags: [ExpenseTagInput!]!
   comment: String
+  category: Category!
 }
 
 input CreateCardInput {
@@ -127,10 +133,6 @@ input PayBeforeInput {
   cardId: ID
 }
 
-input ExpenseTagInput {
-  name: String
-}
-
 type Query {
   incomesList: IncomesList
   incomesByMonth(date: Date!): [Income] # Validate if this query is necessary
@@ -139,7 +141,6 @@ type Query {
   incomesAndExpensesByFortnight(input: PayBeforeInput!): IncomesListAndExpenses!
   allExpenses: [Expense]
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
-  tags: [ExpenseTag]
   cardList: [Card]
   cardById(cardId: ID!): Card
   expensesTotalByCardId(cardId: ID!): TotalByCardId

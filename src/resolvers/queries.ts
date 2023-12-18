@@ -1,9 +1,5 @@
 import { GraphQLError } from 'graphql';
-import {
-  adaptCard,
-  adaptMultipleIncomes,
-  adaptTag,
-} from '../adapters/income-adapter.js';
+import { adaptCard, adaptMultipleIncomes } from '../adapters/income-adapter.js';
 import {
   Expense,
   QueryResolvers,
@@ -12,14 +8,13 @@ import {
 import { logger } from '../logger.js';
 import { Card } from '../models/card.js';
 import { Income } from '../models/income.js';
-import { Tag } from '../models/tag.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import {
   calcualteTotalByMonth,
   calculateTotalByFortnight,
 } from '../utils/calculate-total.js';
 import {
-  findAllExpensesWithTagsAndCards,
+  findAllExpensesWithCards,
   findIncomeByIdWithExpenses,
 } from '../utils/expenses-find.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
@@ -30,7 +25,7 @@ const queries: QueryResolvers = {
       user: { userId },
     } = context;
 
-    return findAllExpensesWithTagsAndCards({ userId });
+    return findAllExpensesWithCards({ userId });
   },
   expensesByFortnight: async (_, { input }, context) => {
     const { payBefore, cardId } = input;
@@ -43,7 +38,7 @@ const queries: QueryResolvers = {
       ? whereByFornight(userId, payBefore, 'payBefore')
       : whereByFornight(userId, payBefore, 'payBefore', { cardId });
 
-    const expenses = await findAllExpensesWithTagsAndCards(where);
+    const expenses = await findAllExpensesWithCards(where);
 
     const expensesTotal = expenses.reduce(
       (acumulator, currentValue) => acumulator + currentValue.total,
@@ -65,7 +60,7 @@ const queries: QueryResolvers = {
       ? whereByMonth(userId, payBefore, 'payBefore')
       : whereByMonth(userId, payBefore, 'payBefore', { cardId });
 
-    const expenses = await findAllExpensesWithTagsAndCards(where);
+    const expenses = await findAllExpensesWithCards(where);
     const expensesTotal = expenses.reduce(
       (acumulator, currentValue) => acumulator + currentValue.total,
       0
@@ -89,7 +84,7 @@ const queries: QueryResolvers = {
         whereByFornight(userId, payBefore, 'paymentDate')
       );
 
-      const expenses = await findAllExpensesWithTagsAndCards(payBeforeWhere);
+      const expenses = await findAllExpensesWithCards(payBeforeWhere);
 
       const incomesTotal = incomesWithExpenses.reduce(
         (acc, current) => acc + current.total,
@@ -128,7 +123,7 @@ const queries: QueryResolvers = {
     const whereExpenses = whereByFornight(userId, payBefore, 'payBefore');
     const whereIncome = whereByFornight(userId, payBefore, 'paymentDate');
 
-    const allExpenses = findAllExpensesWithTagsAndCards(whereExpenses);
+    const allExpenses = findAllExpensesWithCards(whereExpenses);
     const income = await Income.findOne({ where: whereIncome });
 
     const debts = Number(
@@ -210,11 +205,6 @@ const queries: QueryResolvers = {
       createdAt: x.createdAt,
     }));
   },
-  tags: async () => {
-    const tags = await Tag.findAll();
-
-    return tags.map((x) => adaptTag(x));
-  },
   cardList: async (_, input, context) => {
     const {
       user: { userId },
@@ -257,7 +247,7 @@ const queries: QueryResolvers = {
     } = context;
 
     // const payBeforeWhere = whereByFornight(userId, payBefore, 'payBefore');
-    const expenses = await findAllExpensesWithTagsAndCards({ userId, cardId });
+    const expenses = await findAllExpensesWithCards({ userId, cardId });
     const totalByMonth = calcualteTotalByMonth(expenses);
     const totalByFortnight = calculateTotalByFortnight<
       Expense,

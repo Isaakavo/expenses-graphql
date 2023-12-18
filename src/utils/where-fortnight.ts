@@ -18,7 +18,7 @@ export const whereByFornight = (
   const definedFortnightWhere = {
     userId,
     [fortnightWhere]:
-      fortnight === Fortnight.First
+      fortnight === Fortnight.FIRST
         ? {
           [Op.gte]: startOfMonth(parsedBeforeDate),
           [Op.lte]: fifteenthDayOfMonth(parsedBeforeDate),

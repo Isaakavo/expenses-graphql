@@ -1,11 +1,11 @@
 import {
   Income as GraphqlIncome,
   Expense as GraphqlExpense,
-} from 'generated/graphql';
+  Category as GraphqlCategory,
+} from '../generated/graphql.js';
 import { Income } from '../models/income';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import { Expense } from '../models/expense';
-import { Tag } from 'models/tag';
 import { Card } from 'models/card';
 
 export function adaptSingleIncome(x: Income): GraphqlIncome {
@@ -24,9 +24,8 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
 
 export const adaptMultipleIncomes = (incomes: Income[]) => incomes.map((x) => adaptSingleIncome(x))
 
-export function adaptExpensesWithTagsAndCard(
+export function adaptExpensesWithCard(
   x: Expense,
-  tags: Tag[],
   card?: Card
 ): GraphqlExpense {
   return {
@@ -39,7 +38,7 @@ export function adaptExpensesWithTagsAndCard(
     createdAt: x.createdAt,
     updatedAt: x.updatedAt,
     card: card ? adaptCard(card) : null,
-    tags: tags.map((y) => adaptTag(y)),
+    category: GraphqlCategory[x.category]
   };
 }
 
@@ -51,14 +50,5 @@ export function adaptCard(card: Card) {
     bank: card.bank,
     isDigital: card.isDigital,
     isDebit: card.isDebit,
-  };
-}
-
-export function adaptTag(tag: Tag) {
-  return {
-    id: tag.id.toString(),
-    name: tag.name,
-    createdAt: tag.createdAt,
-    updatedAt: tag.updatedAt,
   };
 }

@@ -1,10 +1,8 @@
 import { WhereOptions } from 'sequelize';
-import { adaptExpensesWithTagsAndCard } from '../adapters/income-adapter.js';
+import { adaptExpensesWithCard } from '../adapters/income-adapter.js';
 import { Card } from '../models/card.js';
-import { ExpenseTags } from '../models/expense-tags.js';
 import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
-import { Tag } from '../models/tag.js';
 import { logger } from '../logger.js';
 
 export const findIncomeByIdWithExpenses = async (
@@ -15,7 +13,7 @@ export const findIncomeByIdWithExpenses = async (
   });
 };
 
-export const findAllExpensesWithTagsAndCards = async (
+export const findAllExpensesWithCards = async (
   where: WhereOptions = {}
 ) => {
   const allExpenses = await Expense.findAll({
@@ -23,18 +21,13 @@ export const findAllExpensesWithTagsAndCards = async (
     order: [['payBefore', 'DESC']]
   });
 
-  return await findTagsAndCard(allExpenses);
+  return await findCard(allExpenses);
 };
 
-export const findTagsAndCard = async (expenses: Expense[]) => {
+export const findCard = async (expenses: Expense[]) => {
   try {
     return await Promise.all(
       expenses.map(async (expense) => {
-        const expensesTags = await ExpenseTags.findAll({
-          where: {
-            expenseId: expense.id,
-          },
-        });
 
         const expensesCard = await Card.findOne({
           where: {
@@ -43,13 +36,7 @@ export const findTagsAndCard = async (expenses: Expense[]) => {
           },
         });
 
-        const tags = await Promise.all(
-          expensesTags.map(async (expenseTag) => {
-            return await Tag.findOne({ where: { id: expenseTag.tagId } });
-          })
-        );
-
-        return adaptExpensesWithTagsAndCard(expense, tags, expensesCard);
+        return adaptExpensesWithCard(expense, expensesCard);
       })
     );
   } catch (error) {

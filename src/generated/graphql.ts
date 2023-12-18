@@ -29,6 +29,22 @@ export type Card = {
   userId: Scalars['ID']['output'];
 };
 
+export enum Category {
+  BILLS = 'BILLS',
+  CAR = 'CAR',
+  CLOTHES = 'CLOTHES',
+  COMMUNICATION = 'COMMUNICATION',
+  EATING_OUT = 'EATING_OUT',
+  ENTERTAINMENT = 'ENTERTAINMENT',
+  FOOD = 'FOOD',
+  GIFTS = 'GIFTS',
+  HEALTH = 'HEALTH',
+  HOUSE = 'HOUSE',
+  PETS = 'PETS',
+  SPORTS = 'SPORTS',
+  TRANSPORT = 'TRANSPORT'
+}
+
 export type CreateCardInput = {
   alias?: InputMaybe<Scalars['String']['input']>;
   bank: Scalars['String']['input'];
@@ -38,37 +54,25 @@ export type CreateCardInput = {
 
 export type CreateExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
+  category: Category;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   payBefore: Scalars['Date']['input'];
-  tags: Array<ExpenseTagInput>;
   total: Scalars['Float']['input'];
 };
 
 export type Expense = {
   __typename?: 'Expense';
   card?: Maybe<Card>;
+  category: Category;
   comment?: Maybe<Scalars['String']['output']>;
   concept: Scalars['String']['output'];
   createdAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   payBefore: Scalars['Date']['output'];
-  tags: Array<ExpenseTag>;
   total: Scalars['Float']['output'];
   updatedAt?: Maybe<Scalars['Date']['output']>;
   userId?: Maybe<Scalars['String']['output']>;
-};
-
-export type ExpenseTag = {
-  __typename?: 'ExpenseTag';
-  createdAt?: Maybe<Scalars['Date']['output']>;
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  updatedAt?: Maybe<Scalars['Date']['output']>;
-};
-
-export type ExpenseTagInput = {
-  name?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ExpensesBy = {
@@ -84,8 +88,8 @@ export type FinancialBalance = {
 };
 
 export enum Fortnight {
-  First = 'FIRST',
-  Second = 'SECOND'
+  FIRST = 'FIRST',
+  SECOND = 'SECOND'
 }
 
 export type Income = {
@@ -167,7 +171,6 @@ export type Query = {
   incomesAndExpensesByFortnight: IncomesListAndExpenses;
   incomesByMonth?: Maybe<Array<Maybe<Income>>>;
   incomesList?: Maybe<IncomesList>;
-  tags?: Maybe<Array<Maybe<ExpenseTag>>>;
 };
 
 
@@ -310,12 +313,11 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = R
 export type ResolversTypes = ResolversObject<{
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Card: ResolverTypeWrapper<Card>;
+  Category: Category;
   CreateCardInput: CreateCardInput;
   CreateExpenseInput: CreateExpenseInput;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
-  ExpenseTag: ResolverTypeWrapper<ExpenseTag>;
-  ExpenseTagInput: ExpenseTagInput;
   ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
   FinancialBalance: ResolverTypeWrapper<FinancialBalance>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
@@ -343,8 +345,6 @@ export type ResolversParentTypes = ResolversObject<{
   CreateExpenseInput: CreateExpenseInput;
   Date: Scalars['Date']['output'];
   Expense: Expense;
-  ExpenseTag: ExpenseTag;
-  ExpenseTagInput: ExpenseTagInput;
   ExpensesBy: ExpensesBy;
   FinancialBalance: FinancialBalance;
   Float: Scalars['Float']['output'];
@@ -379,23 +379,15 @@ export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 
 export type ExpenseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Expense'] = ResolversParentTypes['Expense']> = ResolversObject<{
   card?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType>;
+  category?: Resolver<ResolversTypes['Category'], ParentType, ContextType>;
   comment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   payBefore?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
-  tags?: Resolver<Array<ResolversTypes['ExpenseTag']>, ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   userId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
-export type ExpenseTagResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ExpenseTag'] = ResolversParentTypes['ExpenseTag']> = ResolversObject<{
-  createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -461,7 +453,6 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   incomesAndExpensesByFortnight?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesAndExpensesByFortnightArgs, 'input'>>;
   incomesByMonth?: Resolver<Maybe<Array<Maybe<ResolversTypes['Income']>>>, ParentType, ContextType, RequireFields<QueryIncomesByMonthArgs, 'date'>>;
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
-  tags?: Resolver<Maybe<Array<Maybe<ResolversTypes['ExpenseTag']>>>, ParentType, ContextType>;
 }>;
 
 export type TotalResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Total'] = ResolversParentTypes['Total']> = ResolversObject<{
@@ -496,7 +487,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Card?: CardResolvers<ContextType>;
   Date?: GraphQLScalarType;
   Expense?: ExpenseResolvers<ContextType>;
-  ExpenseTag?: ExpenseTagResolvers<ContextType>;
   ExpensesBy?: ExpensesByResolvers<ContextType>;
   FinancialBalance?: FinancialBalanceResolvers<ContextType>;
   Income?: IncomeResolvers<ContextType>;

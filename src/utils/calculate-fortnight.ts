@@ -12,10 +12,10 @@ export const calculateFortnight = (date: Date) => {
   });
 
   if (isFirstFortnight) {
-    return Fortnight.First;
+    return Fortnight.FIRST;
   }
 
-  return Fortnight.Second;
+  return Fortnight.SECOND;
 };
 
 export const fifteenthDayOfMonth = (date: Date | number) => {

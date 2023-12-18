@@ -1,11 +1,10 @@
 import { DataTypes } from 'sequelize';
-import { ExpenseTags } from '../models/expense-tags.js';
 import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
-import { Tag } from '../models/tag.js';
 import { sequelize } from './client.js';
 import { Card } from '../models/card.js';
 import { logger } from '../logger.js';
+import { Category } from '../generated/graphql.js';
 
 export const syncTables = async () => {
   try {
@@ -72,28 +71,6 @@ export const syncTables = async () => {
       },
       { sequelize }
     );
-    Tag.init(
-      {
-        id: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
-          primaryKey: true,
-        },
-        name: {
-          type: DataTypes.STRING,
-          allowNull: false,
-          unique: true,
-        },
-        createdAt: {
-          type: DataTypes.DATE,
-          allowNull: false,
-        },
-        updatedAt: {
-          type: DataTypes.DATE,
-        },
-      },
-      { sequelize, underscored: true }
-    );
     Expense.init(
       {
         id: {
@@ -103,6 +80,10 @@ export const syncTables = async () => {
         },
         userId: {
           type: DataTypes.STRING,
+          allowNull: false,
+        },
+        category: {
+          type: DataTypes.ENUM(...Object.values(Category)),
           allowNull: false,
         },
         concept: {
@@ -131,29 +112,6 @@ export const syncTables = async () => {
       },
       { sequelize, underscored: true }
     );
-
-    ExpenseTags.init(
-      {
-        pk_expenses_tags: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
-          primaryKey: true,
-        },
-        expenseId: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
-          allowNull: false,
-        },
-        tagId: {
-          type: DataTypes.UUID,
-          defaultValue: DataTypes.UUIDV4,
-          allowNull: false,
-        },
-      },
-      { sequelize, timestamps: false }
-    );
-    Expense.belongsToMany(Tag, { through: ExpenseTags });
-    Tag.belongsToMany(Expense, { through: ExpenseTags });
     Card.hasMany(Expense, {
       foreignKey: 'cardId',
       as: 'cards',

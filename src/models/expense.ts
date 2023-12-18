@@ -13,5 +13,6 @@ export class Expense extends Model {
   public payBefore!: Date;
   public createdAt!: Date;
   public updatedAt!: Date;
+  public category!: string;
   declare cardId: ForeignKey<Card['id']>;
 }
