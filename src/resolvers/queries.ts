@@ -240,7 +240,6 @@ const queries: QueryResolvers = {
       user: { userId },
     } = context;
 
-    // const payBeforeWhere = whereByFornight(userId, payBefore, 'payBefore');
     const expenses = await findAllExpensesWithCards({ userId, cardId });
     const totalByMonth = calcualteTotalByMonth(expenses);
     const totalByFortnight = calculateTotalByFortnight<
