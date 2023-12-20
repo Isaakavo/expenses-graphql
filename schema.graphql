@@ -16,6 +16,7 @@ enum Category {
   GIFTS
   HEALTH
   HOUSE
+  INSURANCE
   PETS
   SPORTS
   TRANSPORT
@@ -25,6 +26,7 @@ interface Total {
   date: String!
   total: Float!
   month: String!
+  year: String!
 }
 
 type PaymentDate {
@@ -46,6 +48,7 @@ type TotalByMonth implements Total {
   date: String!
   total: Float!
   month: String!
+  year: String!
 }
 
 type TotalByFortnight implements Total {
@@ -53,6 +56,7 @@ type TotalByFortnight implements Total {
   month: String!
   fortnight: Fortnight!
   total: Float!
+  year: String!
 }
 
 # Type used to display all the incomes registered and to obtain the total by month

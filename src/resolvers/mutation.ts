@@ -72,6 +72,8 @@ const mutations: MutationResolvers = {
       updatedAt: serverDate,
     });
 
+    logger.info('Expense created');
+
     return {
       id: newExpense.id.toString(),
       incomeId: 'pito',

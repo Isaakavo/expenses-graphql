@@ -40,6 +40,7 @@ export enum Category {
   GIFTS = 'GIFTS',
   HEALTH = 'HEALTH',
   HOUSE = 'HOUSE',
+  INSURANCE = 'INSURANCE',
   PETS = 'PETS',
   SPORTS = 'SPORTS',
   TRANSPORT = 'TRANSPORT'
@@ -212,6 +213,7 @@ export type Total = {
   date: Scalars['String']['output'];
   month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
+  year: Scalars['String']['output'];
 };
 
 export type TotalByCardId = {
@@ -226,6 +228,7 @@ export type TotalByFortnight = Total & {
   fortnight: Fortnight;
   month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
+  year: Scalars['String']['output'];
 };
 
 export type TotalByMonth = Total & {
@@ -233,6 +236,7 @@ export type TotalByMonth = Total & {
   date: Scalars['String']['output'];
   month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
+  year: Scalars['String']['output'];
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -460,6 +464,7 @@ export type TotalResolvers<ContextType = Context, ParentType extends ResolversPa
   date?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   month?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  year?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 }>;
 
 export type TotalByCardIdResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TotalByCardId'] = ResolversParentTypes['TotalByCardId']> = ResolversObject<{
@@ -473,6 +478,7 @@ export type TotalByFortnightResolvers<ContextType = Context, ParentType extends 
   fortnight?: Resolver<ResolversTypes['Fortnight'], ParentType, ContextType>;
   month?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  year?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -480,6 +486,7 @@ export type TotalByMonthResolvers<ContextType = Context, ParentType extends Reso
   date?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   month?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  year?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 

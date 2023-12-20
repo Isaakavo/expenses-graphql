@@ -11,33 +11,58 @@ interface ElementFields {
 export const calcualteTotalByMonth = <T extends ElementFields>(
   databaseList: T[]
 ) => {
-  const monthMap = {};
-
+  let monthTotal = {};
+  let currentYear = '';
   const totalByMonth = databaseList.map((x) => {
     const date = x.paymentDate ?? x.payBefore;
+    const formatedYear = format(date, 'yyyy');
     const formatedMonth = format(x.paymentDate ?? x.payBefore, 'LLLL');
     const formatedDate = format(date, 'yyyy-MM-dd');
-    monthMap[formatedMonth] = (monthMap[formatedMonth] ?? 0) + x.total;
+
+    if (currentYear !== formatedYear) {
+      monthTotal = {};
+    }
+
+    monthTotal[formatedMonth] = (monthTotal[formatedMonth] ?? 0) + x.total;
+    currentYear = formatedYear;
 
     return {
+      year: formatedYear,
       month: formatedMonth,
       date: formatedDate,
-      total: monthMap[formatedMonth],
+      total: monthTotal[formatedMonth],
     };
   });
 
   const maxTotalByDate = {};
 
   for (const item of totalByMonth) {
+    const itemYear = item.year;
+    const itemMonth = item.month;
+    const year = maxTotalByDate[itemYear];
+
+    if (!year) {
+      maxTotalByDate[itemYear] = {};
+    }
+
     if (
-      !maxTotalByDate[item.month] ||
-      item.total > maxTotalByDate[item.month].total
+      !maxTotalByDate[itemYear][itemMonth] ||
+      item.total > year[itemMonth].total
     ) {
-      maxTotalByDate[item.month] = item;
+      maxTotalByDate[itemYear][itemMonth] = { ...item };
     }
   }
 
-  return Object.values(maxTotalByDate) as Array<Total>;
+  const month = Object.values(maxTotalByDate);
+  const monthValues = month.values();
+  const result = [];
+
+  for (const value of monthValues) {
+    const objValues = Object.values(value);
+    result.push(objValues);
+  }
+
+  return result.flat(2) as Array<Total>;
 };
 
 export const calculateTotalByFortnight = <T extends ElementFields, O>(
