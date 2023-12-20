@@ -70,6 +70,8 @@ const queries: QueryResolvers = {
       0
     );
 
+    logger.info(`Returning ${expenses.length} expenses`);
+
     return {
       expenses,
       expensesTotal,
