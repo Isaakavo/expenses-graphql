@@ -1,5 +1,9 @@
 import { GraphQLError } from 'graphql';
-import { adaptCard, adaptMultipleIncomes } from '../adapters/income-adapter.js';
+import {
+  adaptCard,
+  adaptMultipleIncomes,
+  adaptSingleIncome,
+} from '../adapters/income-adapter.js';
 import {
   Expense,
   QueryResolvers,
@@ -159,17 +163,7 @@ const queries: QueryResolvers = {
       logger.info(`returning ${allIncomes.length} incomes`);
 
       return {
-        incomes: allIncomes.map((x) => ({
-          id: x.id.toString(),
-          userId: x.userId,
-          total: x.total,
-          comment: x.comment,
-          paymentDate: {
-            date: x.paymentDate,
-            fortnight: calculateFortnight(x.paymentDate),
-          },
-          createdAt: x.createdAt,
-        })),
+        incomes: allIncomes.map((x) => adaptSingleIncome(x)),
         totalByMonth: calcualteTotalByMonth(allIncomes),
         total: allIncomes.reduce(
           (acumulator, currentValue) => acumulator + currentValue.total,
@@ -216,7 +210,7 @@ const queries: QueryResolvers = {
       },
     });
 
-    logger.info(`returning cards ${allCards}`);
+    logger.info(`returning ${allCards.length} cards`);
 
     return allCards.map((card) => {
       return adaptCard(card);
