@@ -19,6 +19,7 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
       fortnight: calculateFortnight(x.paymentDate),
     },
     createdAt: x.createdAt,
+    updatedAt: x.updatedAt
   };
 }
 

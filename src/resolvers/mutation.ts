@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { categoryAdapter } from '../adapters/category-adapter.js';
-import { adaptCard } from '../adapters/income-adapter.js';
+import { adaptCard, adaptSingleIncome } from '../adapters/income-adapter.js';
 import { MutationResolvers } from '../generated/graphql.js';
 import { logger } from '../logger.js';
 import { Card } from '../models/card.js';
@@ -13,7 +13,7 @@ import { calculateFortnight } from '../utils/calculate-fortnight.js';
 const mutations: MutationResolvers = {
   //TODO implement logic to handle the create of incomes for 1 year
   // add a new flag to indicate if the mutation should create 12 new incomes with the provided inputs
-  createIncome: async (_, input, context) => {
+  createIncome: async (_, { input }, context) => {
     const { total, paymentDate, comment } = input;
     const {
       user: { userId },
@@ -41,6 +41,39 @@ const mutations: MutationResolvers = {
       },
       createdAt: newIncome.createdAt,
     };
+  },
+  updateIncome: async (_, { input }, context) => {
+    const {
+      user: { userId },
+    } = context;
+    const { incomeId, total, paymentDate, comment } = input;
+
+    const [affectedCount, updatedIncome] = await Income.update(
+      {
+        total,
+        comment: comment?.trim() ?? '',
+        paymentDate: CustomDate.parseValue(paymentDate),
+        updatedAt: CustomDate.parseValue(new Date().toISOString()),
+      },
+      {
+        where: {
+          id: incomeId,
+          userId,
+        },
+        returning: true,
+      }
+    );
+
+    if (updatedIncome.length === 0) {
+      logger.info(`Couldn't update income, id ${incomeId} doesnt exists`)
+      return null;
+    }
+
+    logger.info(
+      `Updated income with id ${incomeId}, affectedCount ${affectedCount}`
+    );
+
+    return adaptSingleIncome(updatedIncome[0]);
   },
   createExpense: async (_, { input }, context) => {
     const { cardId, concept, total, comment, payBefore, category } = input;

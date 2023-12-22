@@ -39,6 +39,7 @@ type Income {
   userId: String!
   total: Float!
   createdAt: Date
+  updatedAt: Date
   comment: String
   paymentDate: PaymentDate!
   # Add a field for "safe to spend" and maybe one for "savings"
@@ -115,6 +116,19 @@ type ExpensesBy {
   expensesTotal: Float
 }
 
+input CreateIncomeInput {
+  total: Float!
+  comment: String
+  paymentDate: Date!
+}
+
+input UpdateIncomeInput {
+  incomeId: ID!
+  total: Float!
+  comment: String
+  paymentDate: Date!
+}
+
 input CreateExpenseInput {
   cardId: ID
   concept: String!
@@ -151,7 +165,8 @@ type Query {
 }
 
 type Mutation {
-  createIncome(total: Float!, comment: String, paymentDate: Date!): Income!
+  createIncome(input: CreateIncomeInput!): Income!
+  updateIncome(input: UpdateIncomeInput): Income
   createExpense(input: CreateExpenseInput!): Expense
   createCard(input: CreateCardInput): Card
   deleteIncomeById(id: ID!): Boolean

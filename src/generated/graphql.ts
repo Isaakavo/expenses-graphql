@@ -62,6 +62,12 @@ export type CreateExpenseInput = {
   total: Scalars['Float']['input'];
 };
 
+export type CreateIncomeInput = {
+  comment?: InputMaybe<Scalars['String']['input']>;
+  paymentDate: Scalars['Date']['input'];
+  total: Scalars['Float']['input'];
+};
+
 export type Expense = {
   __typename?: 'Expense';
   card?: Maybe<Card>;
@@ -100,6 +106,7 @@ export type Income = {
   id: Scalars['ID']['output'];
   paymentDate: PaymentDate;
   total: Scalars['Float']['output'];
+  updatedAt?: Maybe<Scalars['Date']['output']>;
   userId: Scalars['String']['output'];
 };
 
@@ -125,6 +132,7 @@ export type Mutation = {
   createExpense?: Maybe<Expense>;
   createIncome: Income;
   deleteIncomeById?: Maybe<Scalars['Boolean']['output']>;
+  updateIncome?: Maybe<Income>;
 };
 
 
@@ -139,14 +147,17 @@ export type MutationCreateExpenseArgs = {
 
 
 export type MutationCreateIncomeArgs = {
-  comment?: InputMaybe<Scalars['String']['input']>;
-  paymentDate: Scalars['Date']['input'];
-  total: Scalars['Float']['input'];
+  input: CreateIncomeInput;
 };
 
 
 export type MutationDeleteIncomeByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateIncomeArgs = {
+  input?: InputMaybe<UpdateIncomeInput>;
 };
 
 export type PayBeforeInput = {
@@ -239,6 +250,13 @@ export type TotalByMonth = Total & {
   year: Scalars['String']['output'];
 };
 
+export type UpdateIncomeInput = {
+  comment?: InputMaybe<Scalars['String']['input']>;
+  incomeId: Scalars['ID']['input'];
+  paymentDate: Scalars['Date']['input'];
+  total: Scalars['Float']['input'];
+};
+
 export type WithIndex<TObject> = TObject & Record<string, any>;
 export type ResolversObject<TObject> = WithIndex<TObject>;
 
@@ -320,6 +338,7 @@ export type ResolversTypes = ResolversObject<{
   Category: Category;
   CreateCardInput: CreateCardInput;
   CreateExpenseInput: CreateExpenseInput;
+  CreateIncomeInput: CreateIncomeInput;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
   ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
@@ -339,6 +358,7 @@ export type ResolversTypes = ResolversObject<{
   TotalByCardId: ResolverTypeWrapper<TotalByCardId>;
   TotalByFortnight: ResolverTypeWrapper<TotalByFortnight>;
   TotalByMonth: ResolverTypeWrapper<TotalByMonth>;
+  UpdateIncomeInput: UpdateIncomeInput;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -347,6 +367,7 @@ export type ResolversParentTypes = ResolversObject<{
   Card: Card;
   CreateCardInput: CreateCardInput;
   CreateExpenseInput: CreateExpenseInput;
+  CreateIncomeInput: CreateIncomeInput;
   Date: Scalars['Date']['output'];
   Expense: Expense;
   ExpensesBy: ExpensesBy;
@@ -365,6 +386,7 @@ export type ResolversParentTypes = ResolversObject<{
   TotalByCardId: TotalByCardId;
   TotalByFortnight: TotalByFortnight;
   TotalByMonth: TotalByMonth;
+  UpdateIncomeInput: UpdateIncomeInput;
 }>;
 
 export type CardResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Card'] = ResolversParentTypes['Card']> = ResolversObject<{
@@ -413,6 +435,7 @@ export type IncomeResolvers<ContextType = Context, ParentType extends ResolversP
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   paymentDate?: Resolver<ResolversTypes['PaymentDate'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -436,8 +459,9 @@ export type IncomesListAndExpensesResolvers<ContextType = Context, ParentType ex
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   createCard?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, Partial<MutationCreateCardArgs>>;
   createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'input'>>;
-  createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'paymentDate' | 'total'>>;
+  createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
   deleteIncomeById?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
+  updateIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, Partial<MutationUpdateIncomeArgs>>;
 }>;
 
 export type PaymentDateResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PaymentDate'] = ResolversParentTypes['PaymentDate']> = ResolversObject<{
