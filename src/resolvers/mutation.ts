@@ -65,7 +65,7 @@ const mutations: MutationResolvers = {
     );
 
     if (updatedIncome.length === 0) {
-      logger.info(`Couldn't update income, id ${incomeId} doesnt exists`)
+      logger.info(`Couldn't update income, id ${incomeId} doesnt exists`);
       return null;
     }
 
@@ -74,6 +74,51 @@ const mutations: MutationResolvers = {
     );
 
     return adaptSingleIncome(updatedIncome[0]);
+  },
+  deleteIncomeById: async (_, input, context) => {
+    try {
+      const { id } = input;
+      const {
+        user: { userId },
+      } = context;
+
+      const incomeToDelete = await Income.findOne({
+        where: {
+          userId,
+          id,
+        },
+      });
+
+      if (!incomeToDelete) {
+        logger.info(`Couldnt find income with id ${id}`);
+        throw new GraphQLError('Income id not found', {
+          extensions: {
+            code: 'NOT_FOUND',
+            http: { status: 404 },
+          },
+        });
+      }
+
+      const isDeleted = await Income.destroy({
+        where: {
+          userId,
+          id,
+        },
+      });
+
+      if (isDeleted === 0) {
+        logger.info(`Couldnt delete income with id ${id}`);
+        return false;
+      }
+
+      logger.info(`Deleted ${isDeleted} income`);
+      return true;
+    } catch (error) {
+      if (error instanceof GraphQLError) {
+        logger.error(`Error deleting income by id ${error.message}`);
+        throw error;
+      }
+    }
   },
   createExpense: async (_, { input }, context) => {
     const { cardId, concept, total, comment, payBefore, category } = input;
@@ -144,48 +189,6 @@ const mutations: MutationResolvers = {
     } catch (error) {
       logger.error(`Error creating card ${error.message}`);
       throw error;
-    }
-  },
-  deleteIncomeById: async (_, input, context) => {
-    try {
-      const { id } = input;
-      const {
-        user: { userId },
-      } = context;
-
-      const incomeToDelete = await Income.findOne({
-        where: {
-          userId,
-          id,
-        },
-      });
-
-      if (!incomeToDelete) {
-        throw new GraphQLError('Income id not found', {
-          extensions: {
-            code: 'NOT_FOUND',
-            http: { status: 404 },
-          },
-        });
-      }
-
-      const isDeleted = await Income.destroy({
-        where: {
-          userId,
-          id,
-        },
-      });
-
-      if (isDeleted === 0) {
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      if (error instanceof GraphQLError) {
-        logger.error(`Error deleting income by id ${error.message}`);
-        throw error;
-      }
     }
   },
 };
