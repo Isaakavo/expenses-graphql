@@ -153,6 +153,7 @@ input PayBeforeInput {
 
 type Query {
   incomesList: IncomesList
+  incomeById(incomeId: ID!): Income
   incomesByMonth(date: Date!): [Income] # Validate if this query is necessary
   expensesByFortnight(input: PayBeforeInput!): ExpensesBy
   expensesByMonth(input: PayBeforeInput!): ExpensesBy

@@ -180,6 +180,24 @@ const queries: QueryResolvers = {
       logger.error(`Error incomes list ${error}`);
     }
   },
+  incomeById: async (_, { incomeId }, context) => {
+    try {
+      const {
+        user: { userId },
+      } = context;
+
+      const income = await Income.findOne({
+        where: {
+          userId,
+          id: incomeId,
+        },
+      });
+
+      return adaptSingleIncome(income)
+    } catch (error) {
+      logger.error(error)
+    }
+  },
   incomesByMonth: async (_, input, context) => {
     const { date } = input;
     const {
