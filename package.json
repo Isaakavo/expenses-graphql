@@ -1,19 +1,5 @@
 {
-  "name": "expenses-graphql",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.ts",
-  "keywords": [],
   "author": "",
-  "license": "ISC",
-  "type": "module",
-  "scripts": {
-    "compile": "tsc",
-    "dev": "NODE_ENV=dev npm run compile && nodemon --esm src/index.ts",
-    "codegen": "graphql-codegen --watch --config codegen.ts",
-    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen\"  \"tsc -w \" \"nodemon --esm src/index.ts \"",
-    "lint": "eslint . --ext .ts"
-  },
   "dependencies": {
     "@apollo/server": "^4.9.3",
     "axios": "^1.5.1",
@@ -25,7 +11,9 @@
     "sequelize": "^6.33.0",
     "winston": "^3.11.0"
   },
+  "description": "",
   "devDependencies": {
+    "@flydotio/dockerfile": "^0.5.0",
     "@graphql-codegen/cli": "5.0.0",
     "@graphql-codegen/introspection": "4.0.0",
     "@graphql-codegen/typescript": "4.0.1",
@@ -42,5 +30,21 @@
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
-  }
+  },
+  "keywords": [],
+  "license": "ISC",
+  "main": "index.ts",
+  "name": "expenses-graphql",
+  "scripts": {
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:watch": "graphql-codegen --watch --config codegen.ts",
+    "compile": "tsc",
+    "delete:dist": "rm -rf ./dist",
+    "deploy:prod": "pnpm delete:dist && pnpm codegen && pnpm compile && fly deploy",
+    "dev": "NODE_ENV=dev npm run compile && nodemon --esm src/index.ts",
+    "lint": "eslint . --ext .ts",
+    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"nodemon --esm src/index.ts \""
+  },
+  "type": "module",
+  "version": "1.0.0"
 }
