@@ -36,7 +36,7 @@ const startServer = async () => {
   });
 
   return await startStandaloneServer(server, {
-    listen: { port: 3000 },
+    listen: { port: process.env.NODE_ENV === 'production' ? 3000 : 4000 },
     context: async ({ req }) => ({
       sequilizeClient: sequelize,
       axiosClient: instance,

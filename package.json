@@ -41,9 +41,9 @@
     "compile": "tsc",
     "delete:dist": "rm -rf ./dist",
     "deploy:prod": "pnpm delete:dist && pnpm codegen && pnpm compile && fly deploy",
-    "dev": "NODE_ENV=dev npm run compile && nodemon --esm src/index.ts",
+    "dev": "NODE_ENV=dev nodemon --esm src/index.ts",
     "lint": "eslint . --ext .ts",
-    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"nodemon --esm src/index.ts \""
+    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \""
   },
   "type": "module",
   "version": "1.0.0"
