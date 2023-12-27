@@ -8,6 +8,7 @@ import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import { Date as CustomDate } from '../scalars/date.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
+import { deleteElement, validateId } from '../utils/graphql-utils.js';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
@@ -82,42 +83,12 @@ const mutations: MutationResolvers = {
         user: { userId },
       } = context;
 
-      const incomeToDelete = await Income.findOne({
-        where: {
-          userId,
-          id,
-        },
-      });
+      await validateId(Income, userId, id, logger);
 
-      if (!incomeToDelete) {
-        logger.info(`Couldnt find income with id ${id}`);
-        throw new GraphQLError('Income id not found', {
-          extensions: {
-            code: 'NOT_FOUND',
-            http: { status: 404 },
-          },
-        });
-      }
-
-      const isDeleted = await Income.destroy({
-        where: {
-          userId,
-          id,
-        },
-      });
-
-      if (isDeleted === 0) {
-        logger.info(`Couldnt delete income with id ${id}`);
-        return false;
-      }
-
-      logger.info(`Deleted ${isDeleted} income`);
-      return true;
+      return deleteElement(Income, userId, id, logger);
     } catch (error) {
-      if (error instanceof GraphQLError) {
-        logger.error(`Error deleting income by id ${error.message}`);
-        throw error;
-      }
+      logger.error(error);
+      return error;
     }
   },
   createExpense: async (_, { input }, context) => {
@@ -189,6 +160,20 @@ const mutations: MutationResolvers = {
     } catch (error) {
       logger.error(`Error creating card ${error.message}`);
       throw error;
+    }
+  },
+  deleteCard: async (_, { id }, context) => {
+    try {
+      const {
+        user: { userId },
+      } = context;
+
+      await validateId(Card, userId, id, logger);
+
+      return deleteElement(Card, userId, id, logger);
+    } catch (error) {
+      logger.error(error);
+      return error;
     }
   },
 };
