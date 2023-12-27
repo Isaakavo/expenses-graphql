@@ -168,6 +168,20 @@ const mutations: MutationResolvers = {
       return error;
     }
   },
+  deleteExpense: async (_, { id }, context) => {
+    try {
+      const {
+        user: { userId },
+      } = context;
+
+      await validateId(Expense, userId, id);
+
+      return deleteElement(Expense, userId, id);
+    } catch (error) {
+      logger.error(error);
+      return error;
+    }
+  },
   createCard: async (_, { input }, context) => {
     try {
       const { alias, bank, isDigital, isDebit } = input;

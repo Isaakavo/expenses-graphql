@@ -189,6 +189,7 @@ type Mutation {
   deleteIncomeById(id: ID!): Boolean
   createExpense(input: CreateExpenseInput!): Expense
   updateExpense(input: UpdateExpenseInput): Expense!
+  deleteExpense(id: ID!): Boolean
   createCard(input: CreateCardInput): Card
   updateCard(input: UpdateCardInput): Card!
   deleteCard(id: ID!): Boolean
