@@ -145,6 +145,14 @@ input CreateCardInput {
   isDebit: Boolean
 }
 
+input UpdateCardInput {
+  id: ID!
+  alias: String
+  bank: String!
+  isDigital: Boolean
+  isDebit: Boolean
+}
+
 input PayBeforeInput {
   # input used to get all the expenses matching this date (from 1st to 15th or from 15th to 30th)
   payBefore: Date!
@@ -171,5 +179,6 @@ type Mutation {
   deleteIncomeById(id: ID!): Boolean
   createExpense(input: CreateExpenseInput!): Expense
   createCard(input: CreateCardInput): Card
+  updateCard(input: UpdateCardInput): Card!
   deleteCard(id: ID!): Boolean
 }

@@ -8,7 +8,11 @@ import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import { Date as CustomDate } from '../scalars/date.js';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
-import { deleteElement, validateId } from '../utils/graphql-utils.js';
+import {
+  deleteElement,
+  updateElement,
+  validateId,
+} from '../utils/sequilize-utils.js';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
@@ -49,32 +53,22 @@ const mutations: MutationResolvers = {
     } = context;
     const { incomeId, total, paymentDate, comment } = input;
 
-    const [affectedCount, updatedIncome] = await Income.update(
-      {
-        total,
-        comment: comment?.trim() ?? '',
-        paymentDate: CustomDate.parseValue(paymentDate),
-        updatedAt: CustomDate.parseValue(new Date().toISOString()),
-      },
-      {
-        where: {
-          id: incomeId,
-          userId,
-        },
-        returning: true,
-      }
-    );
-
-    if (updatedIncome.length === 0) {
-      logger.info(`Couldn't update income, id ${incomeId} doesnt exists`);
-      return null;
+    const updateParams = {
+      total,
+      comment: comment?.trim() ?? '',
+      paymentDate: CustomDate.parseValue(paymentDate),
+      updatedAt: CustomDate.parseValue(new Date().toISOString()),
     }
 
-    logger.info(
-      `Updated income with id ${incomeId}, affectedCount ${affectedCount}`
+    const updatedIncome = await updateElement(
+      Income,
+      userId,
+      incomeId,
+      updateParams,
+      logger
     );
 
-    return adaptSingleIncome(updatedIncome[0]);
+    return adaptSingleIncome(updatedIncome[0] as Income);
   },
   deleteIncomeById: async (_, input, context) => {
     try {
@@ -160,6 +154,27 @@ const mutations: MutationResolvers = {
     } catch (error) {
       logger.error(`Error creating card ${error.message}`);
       throw error;
+    }
+  },
+  updateCard: async (_, { input }, context) => {
+    try {
+      const {
+        user: { userId },
+      } = context;
+      const { bank, id, alias, isDebit, isDigital } = input;
+
+      const updatedCard = await updateElement(
+        Card,
+        userId,
+        id,
+        { bank, alias, isDebit, isDigital },
+        logger
+      );
+
+      return adaptCard(updatedCard[0] as Card);
+    } catch (error) {
+      logger.error(error);
+      return error;
     }
   },
   deleteCard: async (_, { id }, context) => {
