@@ -131,9 +131,9 @@ export type Mutation = {
   createCard?: Maybe<Card>;
   createExpense?: Maybe<Expense>;
   createIncome: Income;
-  deleteCard?: Maybe<Scalars['Boolean']['output']>;
-  deleteExpense?: Maybe<Scalars['Boolean']['output']>;
-  deleteIncomeById?: Maybe<Scalars['Boolean']['output']>;
+  deleteCard: Scalars['Boolean']['output'];
+  deleteExpense: Scalars['Boolean']['output'];
+  deleteIncomeById: Scalars['Boolean']['output'];
   updateCard: Card;
   updateExpense: Expense;
   updateIncome?: Maybe<Income>;
@@ -512,9 +512,9 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createCard?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, Partial<MutationCreateCardArgs>>;
   createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'input'>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
-  deleteCard?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteCardArgs, 'id'>>;
-  deleteExpense?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
-  deleteIncomeById?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
+  deleteCard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteCardArgs, 'id'>>;
+  deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
+  deleteIncomeById?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
   updateCard?: Resolver<ResolversTypes['Card'], ParentType, ContextType, Partial<MutationUpdateCardArgs>>;
   updateExpense?: Resolver<ResolversTypes['Expense'], ParentType, ContextType, Partial<MutationUpdateExpenseArgs>>;
   updateIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, Partial<MutationUpdateIncomeArgs>>;
