@@ -1,6 +1,10 @@
 import { GraphQLError } from 'graphql';
 import { categoryAdapter } from '../adapters/category-adapter.js';
-import { adaptCard, adaptSingleIncome } from '../adapters/income-adapter.js';
+import {
+  adaptCard,
+  adaptExpensesWithCard,
+  adaptSingleIncome,
+} from '../adapters/income-adapter.js';
 import { MutationResolvers } from '../generated/graphql.js';
 import { logger } from '../logger.js';
 import { Card } from '../models/card.js';
@@ -58,14 +62,13 @@ const mutations: MutationResolvers = {
       comment: comment?.trim() ?? '',
       paymentDate: CustomDate.parseValue(paymentDate),
       updatedAt: CustomDate.parseValue(new Date().toISOString()),
-    }
+    };
 
     const updatedIncome = await updateElement(
       Income,
       userId,
       incomeId,
-      updateParams,
-      logger
+      updateParams
     );
 
     return adaptSingleIncome(updatedIncome[0] as Income);
@@ -77,9 +80,9 @@ const mutations: MutationResolvers = {
         user: { userId },
       } = context;
 
-      await validateId(Income, userId, id, logger);
+      await validateId(Income, userId, id);
 
-      return deleteElement(Income, userId, id, logger);
+      return deleteElement(Income, userId, id);
     } catch (error) {
       logger.error(error);
       return error;
@@ -131,6 +134,40 @@ const mutations: MutationResolvers = {
       card: card && adaptCard(card),
     };
   },
+  updateExpense: async (_, { input }, context) => {
+    try {
+      const {
+        user: { userId },
+      } = context;
+      const { category, concept, id, payBefore, total, cardId, comment } =
+        input;
+
+      const parameters = {
+        payBefore,
+        total,
+        cardId,
+        comment,
+        concept,
+        category,
+      };
+
+      const updatedExpense = (await updateElement(
+        Expense,
+        userId,
+        id,
+        parameters
+      )) as Expense[];
+
+      const card = await Card.findOne({
+        where: { userId, id: updatedExpense[0].cardId },
+      });
+
+      return adaptExpensesWithCard(updatedExpense[0], card);
+    } catch (error) {
+      logger.error(error);
+      return error;
+    }
+  },
   createCard: async (_, { input }, context) => {
     try {
       const { alias, bank, isDigital, isDebit } = input;
@@ -163,13 +200,12 @@ const mutations: MutationResolvers = {
       } = context;
       const { bank, id, alias, isDebit, isDigital } = input;
 
-      const updatedCard = await updateElement(
-        Card,
-        userId,
-        id,
-        { bank, alias, isDebit, isDigital },
-        logger
-      );
+      const updatedCard = await updateElement(Card, userId, id, {
+        bank,
+        alias,
+        isDebit,
+        isDigital,
+      });
 
       return adaptCard(updatedCard[0] as Card);
     } catch (error) {
@@ -183,9 +219,9 @@ const mutations: MutationResolvers = {
         user: { userId },
       } = context;
 
-      await validateId(Card, userId, id, logger);
+      await validateId(Card, userId, id);
 
-      return deleteElement(Card, userId, id, logger);
+      return deleteElement(Card, userId, id);
     } catch (error) {
       logger.error(error);
       return error;

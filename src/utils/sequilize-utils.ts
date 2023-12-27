@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Model, ModelStatic } from 'sequelize';
-import { Logger } from 'winston';
+import { logger } from '../logger.js';
 
 const NOT_FOUND_GRAPHQL_ERROR = (model: typeof Model) =>
   new GraphQLError(`${model.name} id not found`, {
@@ -13,8 +13,7 @@ const NOT_FOUND_GRAPHQL_ERROR = (model: typeof Model) =>
 export const validateId = async (
   model: typeof Model,
   userId: string,
-  id: string,
-  logger: Logger
+  id: string
 ) => {
   const modelToValidate = await (model as ModelStatic<Model>).findOne({
     where: { userId, id },
@@ -28,12 +27,11 @@ export const validateId = async (
   return modelToValidate;
 };
 
-export const updateElement = async  (
+export const updateElement = async (
   model: typeof Model,
   userId: string,
   id: string,
-  parameters: object,
-  logger: Logger
+  parameters: object
 ) => {
   const [affectedCount, updatedElement] = await (
     model as ModelStatic<Model>
@@ -55,9 +53,7 @@ export const updateElement = async  (
     throw NOT_FOUND_GRAPHQL_ERROR(model);
   }
 
-  logger.info(
-    `Updated ${model.name}, affectedCount ${affectedCount}`
-  );
+  logger.info(`Updated ${model.name}, affectedCount ${affectedCount}`);
 
   return updatedElement;
 };
@@ -65,8 +61,7 @@ export const updateElement = async  (
 export const deleteElement = async (
   model: typeof Model,
   userId: string,
-  id: string,
-  logger: Logger
+  id: string
 ) => {
   const isDeleted = await (model as ModelStatic<Model>).destroy({
     where: {
