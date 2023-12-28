@@ -1,11 +1,12 @@
 import { GraphQLError } from 'graphql';
 import {
   adaptCard,
+  adaptExpensesWithCard,
   adaptMultipleIncomes,
   adaptSingleIncome,
 } from '../adapters/income-adapter.js';
 import {
-  Expense,
+  Expense as GraphqlExpense,
   QueryResolvers,
   TotalByFortnight,
 } from '../generated/graphql.js';
@@ -22,6 +23,8 @@ import {
   findIncomeByIdWithExpenses,
 } from '../utils/expenses-find.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
+import { validateId } from '../utils/sequilize-utils.js';
+import { Expense } from '../models/expense.js';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -76,6 +79,22 @@ const queries: QueryResolvers = {
       expenses,
       expensesTotal,
     };
+  },
+  expenseById: async (_, { id }, context) => {
+    const {
+      user: { userId },
+    } = context;
+
+    const expense = (await validateId(Expense, userId, id)) as Expense;
+
+    const card = await Card.findOne({
+      where: {
+        userId,
+        id: expense.cardId,
+      },
+    });
+
+    return adaptExpensesWithCard(expense, card);
   },
   incomesAndExpensesByFortnight: async (_, { input }, context) => {
     try {
@@ -193,9 +212,9 @@ const queries: QueryResolvers = {
         },
       });
 
-      return adaptSingleIncome(income)
+      return adaptSingleIncome(income);
     } catch (error) {
-      logger.error(error)
+      logger.error(error);
     }
   },
   incomesByMonth: async (_, input, context) => {
@@ -263,7 +282,7 @@ const queries: QueryResolvers = {
     const expenses = await findAllExpensesWithCards({ userId, cardId });
     const totalByMonth = calcualteTotalByMonth(expenses);
     const totalByFortnight = calculateTotalByFortnight<
-      Expense,
+      GraphqlExpense,
       TotalByFortnight
     >(expenses);
 

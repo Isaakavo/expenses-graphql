@@ -176,7 +176,7 @@ export type MutationUpdateCardArgs = {
 
 
 export type MutationUpdateExpenseArgs = {
-  input?: InputMaybe<UpdateExpenseInput>;
+  input: UpdateExpenseInput;
 };
 
 
@@ -200,6 +200,7 @@ export type Query = {
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
   cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
+  expenseById?: Maybe<Expense>;
   expensesByFortnight?: Maybe<ExpensesBy>;
   expensesByMonth?: Maybe<ExpensesBy>;
   expensesTotalByCardId?: Maybe<TotalByCardId>;
@@ -213,6 +214,11 @@ export type Query = {
 
 export type QueryCardByIdArgs = {
   cardId: Scalars['ID']['input'];
+};
+
+
+export type QueryExpenseByIdArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -516,7 +522,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
   deleteIncomeById?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
   updateCard?: Resolver<ResolversTypes['Card'], ParentType, ContextType, Partial<MutationUpdateCardArgs>>;
-  updateExpense?: Resolver<ResolversTypes['Expense'], ParentType, ContextType, Partial<MutationUpdateExpenseArgs>>;
+  updateExpense?: Resolver<ResolversTypes['Expense'], ParentType, ContextType, RequireFields<MutationUpdateExpenseArgs, 'input'>>;
   updateIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, Partial<MutationUpdateIncomeArgs>>;
 }>;
 
@@ -530,6 +536,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
+  expenseById?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<QueryExpenseByIdArgs, 'id'>>;
   expensesByFortnight?: Resolver<Maybe<ResolversTypes['ExpensesBy']>, ParentType, ContextType, RequireFields<QueryExpensesByFortnightArgs, 'input'>>;
   expensesByMonth?: Resolver<Maybe<ResolversTypes['ExpensesBy']>, ParentType, ContextType, RequireFields<QueryExpensesByMonthArgs, 'input'>>;
   expensesTotalByCardId?: Resolver<Maybe<ResolversTypes['TotalByCardId']>, ParentType, ContextType, RequireFields<QueryExpensesTotalByCardIdArgs, 'cardId'>>;

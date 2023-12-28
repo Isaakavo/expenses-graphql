@@ -146,7 +146,7 @@ const mutations: MutationResolvers = {
         payBefore,
         total,
         cardId,
-        comment,
+        comments: comment,
         concept,
         category,
       };
