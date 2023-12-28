@@ -142,14 +142,22 @@ const mutations: MutationResolvers = {
       const { category, concept, id, payBefore, total, cardId, comment } =
         input;
 
-      const parameters = {
-        payBefore,
-        total,
-        cardId,
-        comments: comment,
-        concept,
-        category,
-      };
+      const parameters = cardId
+        ? {
+          payBefore,
+          total,
+          cardId,
+          comments: comment,
+          concept,
+          category,
+        }
+        : {
+          payBefore,
+          total,
+          comments: comment,
+          concept,
+          category,
+        };
 
       const updatedExpense = (await updateElement(
         Expense,

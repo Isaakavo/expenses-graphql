@@ -33,29 +33,34 @@ export const updateElement = async (
   id: string,
   parameters: object
 ) => {
-  const [affectedCount, updatedElement] = await (
-    model as ModelStatic<Model>
-  ).update(
-    {
-      ...parameters,
-    },
-    {
-      where: {
-        id,
-        userId,
+  try {
+    const [affectedCount, updatedElement] = await (
+      model as ModelStatic<Model>
+    ).update(
+      {
+        ...parameters,
       },
-      returning: true,
+      {
+        where: {
+          id,
+          userId,
+        },
+        returning: true,
+      }
+    );
+
+    if (updatedElement.length === 0) {
+      logger.info(`Couldn't update ${model.name}, id doesnt exists`);
+      throw NOT_FOUND_GRAPHQL_ERROR(model);
     }
-  );
 
-  if (updatedElement.length === 0) {
-    logger.info(`Couldn't update ${model.name}, id doesnt exists`);
-    throw NOT_FOUND_GRAPHQL_ERROR(model);
+    logger.info(`Updated ${model.name}, affectedCount ${affectedCount}`);
+
+    return updatedElement;
+  } catch (error) {
+    logger.error(error);
+    return error
   }
-
-  logger.info(`Updated ${model.name}, affectedCount ${affectedCount}`);
-
-  return updatedElement;
 };
 
 export const deleteElement = async (

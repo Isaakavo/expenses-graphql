@@ -7,6 +7,7 @@ import { Income } from '../models/income';
 import { calculateFortnight } from '../utils/calculate-fortnight.js';
 import { Expense } from '../models/expense';
 import { Card } from 'models/card';
+import { logger } from '../logger.js';
 
 export function adaptSingleIncome(x: Income): GraphqlIncome {
   return {
@@ -29,27 +30,37 @@ export function adaptExpensesWithCard(
   x: Expense,
   card?: Card
 ): GraphqlExpense {
-  return {
-    id: x.id.toString(),
-    concept: x.concept,
-    payBefore: x.payBefore,
-    total: x.total,
-    userId: x.userId,
-    comment: x.comments,
-    createdAt: x.createdAt,
-    updatedAt: x.updatedAt,
-    card: card ? adaptCard(card) : null,
-    category: GraphqlCategory[x.category]
-  };
+  try {
+    return {
+      id: x.id.toString(),
+      concept: x.concept,
+      payBefore: x.payBefore,
+      total: x.total,
+      userId: x.userId,
+      comment: x.comments,
+      createdAt: x.createdAt,
+      updatedAt: x.updatedAt,
+      card: card ? adaptCard(card) : null,
+      category: GraphqlCategory[x.category]
+    };
+  } catch (error) {
+    logger.error(error)
+  }
+  
 }
 
 export function adaptCard(card: Card) {
-  return {
-    id: card.id.toString(),
-    userId: card.userId,
-    alias: card.alias,
-    bank: card.bank,
-    isDigital: card.isDigital,
-    isDebit: card.isDebit,
-  };
+  try {
+    return {
+      id: card.id.toString(),
+      userId: card.userId,
+      alias: card.alias,
+      bank: card.bank,
+      isDigital: card.isDigital,
+      isDebit: card.isDebit,
+    };
+  } catch (error) {
+    logger.error(error)
+  }
+  
 }
