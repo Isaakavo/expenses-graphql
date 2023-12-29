@@ -9,6 +9,7 @@ import { connectDatabase, sequelize } from './database/client.js';
 import { syncTables } from './database/sync-database.js';
 import resolvers from './resolvers/index.js';
 import { logger } from './logger.js';
+import { GraphQLError } from 'graphql';
 
 export interface User {
   userId?: string;
@@ -21,7 +22,7 @@ export interface User {
 export interface Context {
   sequilizeClient: Sequelize;
   axiosClient: AxiosInstance;
-  user: User;
+  user?: User;
 }
 
 const startServer = async () => {
@@ -37,11 +38,23 @@ const startServer = async () => {
 
   return await startStandaloneServer(server, {
     listen: { port: process.env.NODE_ENV === 'production' ? 3000 : 4000 },
-    context: async ({ req }) => ({
-      sequilizeClient: sequelize,
-      axiosClient: instance,
-      user: await resolverUser(req),
-    }),
+    context: async ({ req }) => {
+      try {
+        return {
+          sequilizeClient: sequelize,
+          axiosClient: instance,
+          user: await resolverUser(req),
+        };
+      } catch (error) {
+        if (error instanceof GraphQLError) {
+          logger.error(`Graphql Error: ${error.message}`);
+          throw error;
+        }
+
+        logger.error(error);
+        throw error;
+      }
+    },
   });
 };
 
