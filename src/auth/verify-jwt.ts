@@ -51,7 +51,7 @@ export async function verifyJwt(token: string): Promise<User> {
       throw new GraphQLError(error.message, {
         extensions: {
           code: 'EXPIRED_JWT',
-          http: { status: 403 },
+          http: { status: 401 },
           expiredAt: error.expiredAt,
         },
       });
