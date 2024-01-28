@@ -47,7 +47,7 @@ const startServer = async () => {
         };
       } catch (error) {
         if (error instanceof GraphQLError) {
-          logger.error(`Graphql Error: ${error.message}`);
+          logger.error(`Graphql Error: ${error.message} ${error.extensions}`);
           throw error;
         }
 
