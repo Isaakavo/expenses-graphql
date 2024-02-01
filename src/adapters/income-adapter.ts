@@ -4,7 +4,7 @@ import {
   Category as GraphqlCategory,
 } from '../generated/graphql.js';
 import { Income } from '../models/income';
-import { calculateFortnight } from '../utils/calculate-fortnight.js';
+import { calculateFortnight } from '../utils/date-utils.js';
 import { Expense } from '../models/expense';
 import { Card } from 'models/card';
 import { logger } from '../logger.js';

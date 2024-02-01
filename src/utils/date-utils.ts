@@ -1,4 +1,10 @@
-import { endOfMonth, isWithinInterval, startOfMonth } from 'date-fns';
+import {
+  differenceInMonths,
+  differenceInWeeks,
+  endOfMonth,
+  isWithinInterval,
+  startOfMonth,
+} from 'date-fns';
 import { Fortnight } from '../generated/graphql.js';
 
 export const calculateFortnight = (date: Date) => {
@@ -22,3 +28,11 @@ export const fifteenthDayOfMonth = (date: Date | number) => {
   const fifteenthDayOfMonth = endOfMonth(date);
   return fifteenthDayOfMonth.setDate(15);
 };
+
+export const calculateNumberOfBiWeeklyWeeks = (
+  startDate: Date,
+  endDate: Date
+) => Math.ceil(differenceInWeeks(endDate, startDate) / 2);
+
+export const calculateNumberOfMonthWeeks = (startDate: Date, endDate: Date) =>
+  differenceInMonths(endDate, startDate);

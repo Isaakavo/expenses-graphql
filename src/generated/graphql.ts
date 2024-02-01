@@ -36,6 +36,7 @@ export enum Category {
   COMMUNICATION = 'COMMUNICATION',
   EATING_OUT = 'EATING_OUT',
   ENTERTAINMENT = 'ENTERTAINMENT',
+  FIXED_EXPENSE = 'FIXED_EXPENSE',
   FOOD = 'FOOD',
   GIFTS = 'GIFTS',
   HANG_OUT = 'HANG_OUT',
@@ -62,6 +63,18 @@ export type CreateExpenseInput = {
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   payBefore: Scalars['Date']['input'];
+  total: Scalars['Float']['input'];
+};
+
+export type CreateFixedExpenseInput = {
+  cardId?: InputMaybe<Scalars['ID']['input']>;
+  category: Category;
+  comment?: InputMaybe<Scalars['String']['input']>;
+  concept: Scalars['String']['input'];
+  endDate: Scalars['Date']['input'];
+  frequency?: InputMaybe<FixedExpenseFrequency>;
+  payBefore: Scalars['Date']['input'];
+  startDate: Scalars['Date']['input'];
   total: Scalars['Float']['input'];
 };
 
@@ -96,6 +109,11 @@ export type FinancialBalance = {
   debts: Scalars['Float']['output'];
   remaining: Scalars['Float']['output'];
 };
+
+export enum FixedExpenseFrequency {
+  BIWEEKLY = 'Biweekly',
+  MONTHLY = 'Monthly'
+}
 
 export enum Fortnight {
   FIRST = 'FIRST',
@@ -133,6 +151,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   createCard?: Maybe<Card>;
   createExpense?: Maybe<Expense>;
+  createFixedExpense?: Maybe<Array<Maybe<Expense>>>;
   createIncome: Income;
   deleteCard: Scalars['Boolean']['output'];
   deleteExpense: Scalars['Boolean']['output'];
@@ -150,6 +169,11 @@ export type MutationCreateCardArgs = {
 
 export type MutationCreateExpenseArgs = {
   input: CreateExpenseInput;
+};
+
+
+export type MutationCreateFixedExpenseArgs = {
+  input?: InputMaybe<CreateFixedExpenseInput>;
 };
 
 
@@ -395,11 +419,13 @@ export type ResolversTypes = ResolversObject<{
   Category: Category;
   CreateCardInput: CreateCardInput;
   CreateExpenseInput: CreateExpenseInput;
+  CreateFixedExpenseInput: CreateFixedExpenseInput;
   CreateIncomeInput: CreateIncomeInput;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
   ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
   FinancialBalance: ResolverTypeWrapper<FinancialBalance>;
+  FixedExpenseFrequency: FixedExpenseFrequency;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   Fortnight: Fortnight;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
@@ -426,6 +452,7 @@ export type ResolversParentTypes = ResolversObject<{
   Card: Card;
   CreateCardInput: CreateCardInput;
   CreateExpenseInput: CreateExpenseInput;
+  CreateFixedExpenseInput: CreateFixedExpenseInput;
   CreateIncomeInput: CreateIncomeInput;
   Date: Scalars['Date']['output'];
   Expense: Expense;
@@ -520,6 +547,7 @@ export type IncomesListAndExpensesResolvers<ContextType = Context, ParentType ex
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   createCard?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, Partial<MutationCreateCardArgs>>;
   createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'input'>>;
+  createFixedExpense?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<MutationCreateFixedExpenseArgs>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
   deleteCard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteCardArgs, 'id'>>;
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;

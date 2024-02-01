@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 import { Total } from 'generated/graphql';
-import { calculateFortnight } from './calculate-fortnight.js';
+import { calculateFortnight } from './date-utils.js';
 
 interface ElementFields {
   paymentDate?: Date;

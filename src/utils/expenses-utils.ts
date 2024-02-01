@@ -13,12 +13,10 @@ export const findIncomeByIdWithExpenses = async (
   });
 };
 
-export const findAllExpensesWithCards = async (
-  where: WhereOptions = {}
-) => {
+export const findAllExpensesWithCards = async (where: WhereOptions = {}) => {
   const allExpenses = await Expense.findAll({
     where,
-    order: [['payBefore', 'DESC']]
+    order: [['payBefore', 'DESC']],
   });
 
   return await findCard(allExpenses);
@@ -28,7 +26,6 @@ export const findCard = async (expenses: Expense[]) => {
   try {
     return await Promise.all(
       expenses.map(async (expense) => {
-
         const expensesCard = await Card.findOne({
           where: {
             id: expense.cardId,

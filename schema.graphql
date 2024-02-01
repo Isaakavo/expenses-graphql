@@ -23,6 +23,12 @@ enum Category {
   SUPER_MARKET
   HANG_OUT
   SAVINGS
+  FIXED_EXPENSE
+}
+
+enum FixedExpenseFrequency {
+  Biweekly
+  Monthly
 }
 
 interface Total {
@@ -141,6 +147,18 @@ input CreateExpenseInput {
   category: Category!
 }
 
+input CreateFixedExpenseInput {
+  cardId: ID
+  concept: String!
+  total: Float!
+  payBefore: Date!
+  comment: String
+  category: Category!
+  startDate: Date!
+  endDate: Date!
+  frequency: FixedExpenseFrequency
+}
+
 input UpdateExpenseInput {
   id: ID!
   cardId: ID
@@ -192,6 +210,7 @@ type Mutation {
   updateIncome(input: UpdateIncomeInput): Income
   deleteIncomeById(id: ID!): Boolean!
   createExpense(input: CreateExpenseInput!): Expense
+  createFixedExpense(input: CreateFixedExpenseInput): [Expense]
   updateExpense(input: UpdateExpenseInput!): Expense!
   deleteExpense(id: ID!): Boolean!
   createCard(input: CreateCardInput): Card

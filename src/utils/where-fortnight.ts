@@ -5,7 +5,7 @@ import { Date as GrahpqlDate } from '../scalars/date.js';
 import {
   calculateFortnight,
   fifteenthDayOfMonth,
-} from './calculate-fortnight.js';
+} from './date-utils.js';
 
 export const whereByFornight = (
   userId: string,

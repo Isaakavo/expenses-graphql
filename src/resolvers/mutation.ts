@@ -5,18 +5,26 @@ import {
   adaptExpensesWithCard,
   adaptSingleIncome,
 } from '../adapters/income-adapter.js';
-import { MutationResolvers } from '../generated/graphql.js';
+import {
+  FixedExpenseFrequency,
+  MutationResolvers,
+} from '../generated/graphql.js';
 import { logger } from '../logger.js';
 import { Card } from '../models/card.js';
 import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import { Date as CustomDate } from '../scalars/date.js';
-import { calculateFortnight } from '../utils/calculate-fortnight.js';
+import {
+  calculateFortnight,
+  calculateNumberOfBiWeeklyWeeks,
+  calculateNumberOfMonthWeeks,
+} from '../utils/date-utils.js';
 import {
   deleteElement,
   updateElement,
   validateId,
 } from '../utils/sequilize-utils.js';
+import { addDays, addMonths } from 'date-fns';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
@@ -122,7 +130,6 @@ const mutations: MutationResolvers = {
 
     return {
       id: newExpense.id.toString(),
-      incomeId: 'pito',
       userId: newExpense.userId,
       concept: newExpense.concept,
       category,
@@ -133,6 +140,70 @@ const mutations: MutationResolvers = {
       updatedAt: newExpense.updatedAt,
       card: card && adaptCard(card),
     };
+  },
+  createFixedExpense: async (_, { input }, context) => {
+    const {
+      cardId,
+      concept,
+      total,
+      comment,
+      payBefore,
+      category,
+      endDate,
+      startDate,
+      frequency,
+    } = input;
+
+    const {
+      user: { userId },
+    } = context;
+
+    // TODO add logic to validate that paybefore and start date are okay
+    // the paybefore should not be ahead of start date
+    let datePtr = CustomDate.parseValue(payBefore);
+    const parsedStartDate = CustomDate.parseValue(startDate);
+    const parsedEndDate = CustomDate.parseValue(endDate);
+    const serverDate = CustomDate.parseValue(new Date().toISOString());
+    const expensesArr = [];
+
+    const card =
+      cardId &&
+      (await Card.findOne({
+        where: {
+          id: cardId,
+          userId,
+        },
+      }));
+
+    const numberOfExpenses =
+      frequency === FixedExpenseFrequency.BIWEEKLY
+        ? calculateNumberOfBiWeeklyWeeks(parsedStartDate, parsedEndDate)
+        : calculateNumberOfMonthWeeks(parsedStartDate, parsedEndDate);
+
+    logger.info(`${numberOfExpenses} expenses will be created ${frequency}`);
+
+    for (let i = 0; i < numberOfExpenses; i++) {
+      expensesArr.push({
+        userId,
+        concept,
+        total,
+        comments: comment,
+        category: categoryAdapter(category),
+        payBefore: datePtr,
+        cardId: card?.id,
+        createdAt: serverDate,
+        updatedAt: serverDate,
+      });
+      datePtr =
+        frequency === FixedExpenseFrequency.BIWEEKLY
+          ? addDays(datePtr, 15)
+          : addMonths(datePtr, 1);
+    }
+
+    const expensesList = await Expense.bulkCreate(expensesArr);
+    logger.info(`Returning ${expensesList.length} Expenses`);
+
+    return expensesList.map((expense) => adaptExpensesWithCard(expense, card));
   },
   updateExpense: async (_, { input }, context) => {
     try {

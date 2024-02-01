@@ -13,7 +13,7 @@ import {
 import { logger } from '../logger.js';
 import { Card } from '../models/card.js';
 import { Income } from '../models/income.js';
-import { calculateFortnight } from '../utils/calculate-fortnight.js';
+import { calculateFortnight } from '../utils/date-utils.js';
 import {
   calcualteTotalByMonth,
   calculateTotalByFortnight,
@@ -21,7 +21,7 @@ import {
 import {
   findAllExpensesWithCards,
   findIncomeByIdWithExpenses,
-} from '../utils/expenses-find.js';
+} from '../utils/expenses-utils.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
 import { validateId } from '../utils/sequilize-utils.js';
 import { Expense } from '../models/expense.js';
