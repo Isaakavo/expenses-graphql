@@ -1,3 +1,9 @@
+import {
+  addDays,
+  addMonths,
+  differenceInMonths,
+  differenceInWeeks,
+} from 'date-fns';
 import { GraphQLError } from 'graphql';
 import { categoryAdapter } from '../adapters/category-adapter.js';
 import {
@@ -24,7 +30,6 @@ import {
   updateElement,
   validateId,
 } from '../utils/sequilize-utils.js';
-import { addDays, addMonths } from 'date-fns';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
@@ -166,8 +171,7 @@ const mutations: MutationResolvers = {
       comment,
       payBefore,
       category,
-      endDate,
-      startDate,
+      numberOfMonthsOrWeeks,
       frequency,
     } = input;
 
@@ -175,11 +179,8 @@ const mutations: MutationResolvers = {
       user: { userId },
     } = context;
 
-    // TODO add logic to validate that paybefore and start date are okay
-    // the paybefore should not be ahead of start date
     let datePtr = CustomDate.parseValue(payBefore);
-    const parsedStartDate = CustomDate.parseValue(startDate);
-    const parsedEndDate = CustomDate.parseValue(endDate);
+    const parsedStartDate = datePtr;
     const serverDate = CustomDate.parseValue(new Date().toISOString());
     const expensesArr = [];
 
@@ -194,10 +195,17 @@ const mutations: MutationResolvers = {
 
     const numberOfExpenses =
       frequency === FixedExpenseFrequency.BIWEEKLY
-        ? calculateNumberOfBiWeeklyWeeks(parsedStartDate, parsedEndDate)
-        : calculateNumberOfMonthWeeks(parsedStartDate, parsedEndDate);
-
-    logger.info(`${numberOfExpenses} expenses will be created ${frequency}`);
+        ? differenceInWeeks(
+          calculateNumberOfBiWeeklyWeeks(
+            parsedStartDate,
+            numberOfMonthsOrWeeks
+          ),
+          datePtr
+        )
+        : differenceInMonths(
+          calculateNumberOfMonthWeeks(parsedStartDate, numberOfMonthsOrWeeks),
+          datePtr
+        );
 
     for (let i = 0; i < numberOfExpenses; i++) {
       expensesArr.push({
@@ -218,7 +226,7 @@ const mutations: MutationResolvers = {
     }
 
     const expensesList = await Expense.bulkCreate(expensesArr);
-    logger.info(`Returning ${expensesList.length} Expenses`);
+    logger.info(`${expensesList.length} Expenses were created ${frequency}`);
 
     return expensesList.map((expense) => adaptExpensesWithCard(expense, card));
   },

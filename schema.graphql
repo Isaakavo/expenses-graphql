@@ -17,12 +17,14 @@ enum Category {
   HEALTH
   HOUSE
   INSURANCE
+  MONTHS_WITHOUT_INTEREST
   PETS
   SPORTS
   TRANSPORT
   SUPER_MARKET
   HANG_OUT
   SAVINGS
+  SUBSCRIPTION
   FIXED_EXPENSE
 }
 
@@ -154,8 +156,7 @@ input CreateFixedExpenseInput {
   payBefore: Date!
   comment: String
   category: Category!
-  startDate: Date!
-  endDate: Date!
+  numberOfMonthsOrWeeks: Int!
   frequency: FixedExpenseFrequency
 }
 

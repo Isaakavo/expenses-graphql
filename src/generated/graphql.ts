@@ -43,9 +43,11 @@ export enum Category {
   HEALTH = 'HEALTH',
   HOUSE = 'HOUSE',
   INSURANCE = 'INSURANCE',
+  MONTHS_WITHOUT_INTEREST = 'MONTHS_WITHOUT_INTEREST',
   PETS = 'PETS',
   SAVINGS = 'SAVINGS',
   SPORTS = 'SPORTS',
+  SUBSCRIPTION = 'SUBSCRIPTION',
   SUPER_MARKET = 'SUPER_MARKET',
   TRANSPORT = 'TRANSPORT'
 }
@@ -71,10 +73,9 @@ export type CreateFixedExpenseInput = {
   category: Category;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
-  endDate: Scalars['Date']['input'];
   frequency?: InputMaybe<FixedExpenseFrequency>;
+  numberOfMonthsOrWeeks: Scalars['Int']['input'];
   payBefore: Scalars['Date']['input'];
-  startDate: Scalars['Date']['input'];
   total: Scalars['Float']['input'];
 };
 
@@ -432,6 +433,7 @@ export type ResolversTypes = ResolversObject<{
   Income: ResolverTypeWrapper<Income>;
   IncomesList: ResolverTypeWrapper<IncomesList>;
   IncomesListAndExpenses: ResolverTypeWrapper<IncomesListAndExpenses>;
+  Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
   PayBeforeInput: PayBeforeInput;
   PaymentDate: ResolverTypeWrapper<PaymentDate>;
@@ -463,6 +465,7 @@ export type ResolversParentTypes = ResolversObject<{
   Income: Income;
   IncomesList: IncomesList;
   IncomesListAndExpenses: IncomesListAndExpenses;
+  Int: Scalars['Int']['output'];
   Mutation: {};
   PayBeforeInput: PayBeforeInput;
   PaymentDate: PaymentDate;
