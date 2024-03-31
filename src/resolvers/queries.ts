@@ -1,4 +1,6 @@
+import { endOfYear, startOfYear } from 'date-fns';
 import { GraphQLError } from 'graphql';
+import { Op } from 'sequelize';
 import {
   adaptCard,
   adaptExpensesWithCard,
@@ -12,25 +14,36 @@ import {
 } from '../generated/graphql.js';
 import { logger } from '../logger.js';
 import { Card } from '../models/card.js';
+import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
-import { calculateFortnight } from '../utils/date-utils.js';
 import {
   calcualteTotalByMonth,
   calculateTotalByFortnight,
 } from '../utils/calculate-total.js';
+import { calculateFortnight } from '../utils/date-utils.js';
 import {
   findAllExpensesWithCards,
   findIncomeByIdWithExpenses,
 } from '../utils/expenses-utils.js';
-import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
 import { validateId } from '../utils/sequilize-utils.js';
-import { Expense } from '../models/expense.js';
+import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
 
 const queries: QueryResolvers = {
-  allExpenses: async (_, __, context) => {
+  allExpenses: async (_, { year, month = 1, day = 1 }, context) => {
     const {
       user: { userId },
     } = context;
+
+    if (year) {
+      const date = new Date(year, month, day);
+      const start = startOfYear(date);
+      const end = endOfYear(date);
+
+      return findAllExpensesWithCards({
+        userId,
+        payBefore: { [Op.gte]: start, [Op.lte]: end },
+      });
+    }
 
     return findAllExpensesWithCards({ userId });
   },
@@ -102,6 +115,8 @@ const queries: QueryResolvers = {
       const {
         user: { userId },
       } = context;
+
+      logger.info(payBefore);
 
       const payBeforeWhere = whereByFornight(userId, payBefore, 'payBefore');
 

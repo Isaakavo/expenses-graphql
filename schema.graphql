@@ -199,7 +199,7 @@ type Query {
   expensesByMonth(input: PayBeforeInput!): ExpensesBy
   expenseById(id: ID!): Expense
   incomesAndExpensesByFortnight(input: PayBeforeInput!): IncomesListAndExpenses!
-  allExpenses: [Expense]
+  allExpenses(year: Int, month: Int, day: Int): [Expense]
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   cardList: [Card]
   cardById(cardId: ID!): Card

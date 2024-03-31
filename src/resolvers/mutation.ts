@@ -163,6 +163,7 @@ const mutations: MutationResolvers = {
       card: card && adaptCard(card),
     };
   },
+  // TODO add logic to handle weekly expenses
   createFixedExpense: async (_, { input }, context) => {
     const {
       cardId,
