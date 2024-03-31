@@ -1,4 +1,3 @@
-import { endOfYear, startOfYear } from 'date-fns';
 import { GraphQLError } from 'graphql';
 import { Op } from 'sequelize';
 import {
@@ -29,23 +28,36 @@ import { validateId } from '../utils/sequilize-utils.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
 
 const queries: QueryResolvers = {
-  allExpenses: async (_, { year, month = 1, day = 1 }, context) => {
+  allExpenses: async (_, __, context) => {
     const {
       user: { userId },
     } = context;
 
-    if (year) {
-      const date = new Date(year, month, day);
-      const start = startOfYear(date);
-      const end = endOfYear(date);
+    return findAllExpensesWithCards({ userId });
+  },
+  allExpensesByDateRange: async (_, { input }, context) => {
+    const {
+      user: { userId },
+    } = context;
+    const { endDate, initialDate } = input;
 
-      return findAllExpensesWithCards({
-        userId,
-        payBefore: { [Op.gte]: start, [Op.lte]: end },
-      });
+    const parsedEndDate = new Date(endDate.year, endDate.month, endDate.day);
+    const parsedStartDate = new Date(
+      initialDate.year,
+      initialDate.month,
+      initialDate.day
+    );
+
+    if (parsedEndDate < parsedStartDate) {
+      logger.error('end date must be ahead of start date');
+      throw new GraphQLError('Wrong dates');
     }
 
-    return findAllExpensesWithCards({ userId });
+    logger.info(`Start date: ${parsedStartDate} End date: ${parsedEndDate}`);
+    return findAllExpensesWithCards({
+      userId,
+      payBefore: { [Op.gte]: parsedStartDate, [Op.lte]: parsedEndDate },
+    });
   },
   expensesByFortnight: async (_, { input }, context) => {
     const { payBefore, cardId } = input;

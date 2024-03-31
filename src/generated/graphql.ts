@@ -19,6 +19,11 @@ export type Scalars = {
   Date: { input: Date; output: Date; }
 };
 
+export type AllExpensesByDateRangeInput = {
+  endDate?: InputMaybe<EndDate>;
+  initialDate?: InputMaybe<InitialDate>;
+};
+
 export type Card = {
   __typename?: 'Card';
   alias?: Maybe<Scalars['String']['output']>;
@@ -226,6 +231,7 @@ export type PaymentDate = {
 export type Query = {
   __typename?: 'Query';
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
+  allExpensesByDateRange?: Maybe<Array<Maybe<Expense>>>;
   cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
   expenseById?: Maybe<Expense>;
@@ -240,10 +246,8 @@ export type Query = {
 };
 
 
-export type QueryAllExpensesArgs = {
-  day?: InputMaybe<Scalars['Int']['input']>;
-  month?: InputMaybe<Scalars['Int']['input']>;
-  year?: InputMaybe<Scalars['Int']['input']>;
+export type QueryAllExpensesByDateRangeArgs = {
+  input?: InputMaybe<AllExpensesByDateRangeInput>;
 };
 
 
@@ -346,6 +350,18 @@ export type UpdateIncomeInput = {
   total: Scalars['Float']['input'];
 };
 
+export type EndDate = {
+  day?: InputMaybe<Scalars['Int']['input']>;
+  month?: InputMaybe<Scalars['Int']['input']>;
+  year?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type InitialDate = {
+  day?: InputMaybe<Scalars['Int']['input']>;
+  month?: InputMaybe<Scalars['Int']['input']>;
+  year?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type WithIndex<TObject> = TObject & Record<string, any>;
 export type ResolversObject<TObject> = WithIndex<TObject>;
 
@@ -422,6 +438,7 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = R
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
+  AllExpensesByDateRangeInput: AllExpensesByDateRangeInput;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Card: ResolverTypeWrapper<Card>;
   Category: Category;
@@ -453,10 +470,13 @@ export type ResolversTypes = ResolversObject<{
   UpdateCardInput: UpdateCardInput;
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateIncomeInput: UpdateIncomeInput;
+  endDate: EndDate;
+  initialDate: InitialDate;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = ResolversObject<{
+  AllExpensesByDateRangeInput: AllExpensesByDateRangeInput;
   Boolean: Scalars['Boolean']['output'];
   Card: Card;
   CreateCardInput: CreateCardInput;
@@ -485,6 +505,8 @@ export type ResolversParentTypes = ResolversObject<{
   UpdateCardInput: UpdateCardInput;
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateIncomeInput: UpdateIncomeInput;
+  endDate: EndDate;
+  initialDate: InitialDate;
 }>;
 
 export type CardResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Card'] = ResolversParentTypes['Card']> = ResolversObject<{
@@ -574,7 +596,8 @@ export type PaymentDateResolvers<ContextType = Context, ParentType extends Resol
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<QueryAllExpensesArgs>>;
+  allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  allExpensesByDateRange?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<QueryAllExpensesByDateRangeArgs>>;
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
   expenseById?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<QueryExpenseByIdArgs, 'id'>>;
