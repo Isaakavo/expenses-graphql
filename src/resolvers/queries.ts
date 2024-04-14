@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Op } from 'sequelize';
 import {
   adaptCard,
+  adaptCategory,
   adaptExpensesWithCard,
   adaptMultipleIncomes,
   adaptSingleIncome,
@@ -26,6 +27,7 @@ import {
 } from '../utils/expenses-utils.js';
 import { validateId } from '../utils/sequilize-utils.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
+import { Category } from '../models/category.js';
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
@@ -58,6 +60,15 @@ const queries: QueryResolvers = {
       userId,
       payBefore: { [Op.gte]: parsedStartDate, [Op.lte]: parsedEndDate },
     });
+  },
+  allCategories: async () => {
+    try {
+      const categories = await Category.findAll();
+
+      return categories.map((cat) => adaptCategory(cat));
+    } catch (error) {
+      logger.error(error);
+    }
   },
   expensesByFortnight: async (_, { input }, context) => {
     const { payBefore, cardId } = input;

@@ -4,6 +4,7 @@ import { Card } from '../models/card.js';
 import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import { logger } from '../logger.js';
+import { Category } from '../models/category.js';
 
 export const findIncomeByIdWithExpenses = async (
   incomeExpenses: WhereOptions = {}
@@ -33,10 +34,24 @@ export const findCard = async (expenses: Expense[]) => {
           },
         });
 
-        return adaptExpensesWithCard(expense, expensesCard);
+        const categories = await findCategory(expense);
+
+        return adaptExpensesWithCard(expense, expensesCard, categories);
       })
     );
   } catch (error) {
     logger.error(`Error finding cards and tags ${error.message}`);
+  }
+};
+
+export const findCategory = async (expense: Expense) => {
+  try {
+    return await Category.findOne({
+      where: {
+        id: expense.categoryId,
+      },
+    });
+  } catch (error) {
+    logger.error(`Error finding categories ${error.message}`);
   }
 };
