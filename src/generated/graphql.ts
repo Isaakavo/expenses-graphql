@@ -34,28 +34,16 @@ export type Card = {
   userId: Scalars['ID']['output'];
 };
 
-export enum Category {
-  BILLS = 'BILLS',
-  CAR = 'CAR',
-  CLOTHES = 'CLOTHES',
-  COMMUNICATION = 'COMMUNICATION',
-  EATING_OUT = 'EATING_OUT',
-  ENTERTAINMENT = 'ENTERTAINMENT',
-  FIXED_EXPENSE = 'FIXED_EXPENSE',
-  FOOD = 'FOOD',
-  GIFTS = 'GIFTS',
-  HANG_OUT = 'HANG_OUT',
-  HEALTH = 'HEALTH',
-  HOUSE = 'HOUSE',
-  INSURANCE = 'INSURANCE',
-  MONTHS_WITHOUT_INTEREST = 'MONTHS_WITHOUT_INTEREST',
-  PETS = 'PETS',
-  SAVINGS = 'SAVINGS',
-  SPORTS = 'SPORTS',
-  SUBSCRIPTION = 'SUBSCRIPTION',
-  SUPER_MARKET = 'SUPER_MARKET',
-  TRANSPORT = 'TRANSPORT'
-}
+export type Category = {
+  __typename?: 'Category';
+  id?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+};
+
+export type CategoryInput = {
+  id?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+};
 
 export type CreateCardInput = {
   alias?: InputMaybe<Scalars['String']['input']>;
@@ -66,7 +54,7 @@ export type CreateCardInput = {
 
 export type CreateExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
-  category: Category;
+  category: CategoryInput;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   payBefore: Scalars['Date']['input'];
@@ -75,7 +63,7 @@ export type CreateExpenseInput = {
 
 export type CreateFixedExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
-  category: Category;
+  category: CategoryInput;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   frequency?: InputMaybe<FixedExpenseFrequency>;
@@ -230,6 +218,7 @@ export type PaymentDate = {
 
 export type Query = {
   __typename?: 'Query';
+  allCategories?: Maybe<Array<Maybe<Category>>>;
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
   allExpensesByDateRange?: Maybe<Array<Maybe<Expense>>>;
   cardById?: Maybe<Card>;
@@ -335,7 +324,7 @@ export type UpdateCardInput = {
 
 export type UpdateExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
-  category: Category;
+  category: CategoryInput;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   id: Scalars['ID']['input'];
@@ -441,7 +430,8 @@ export type ResolversTypes = ResolversObject<{
   AllExpensesByDateRangeInput: AllExpensesByDateRangeInput;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Card: ResolverTypeWrapper<Card>;
-  Category: Category;
+  Category: ResolverTypeWrapper<Category>;
+  CategoryInput: CategoryInput;
   CreateCardInput: CreateCardInput;
   CreateExpenseInput: CreateExpenseInput;
   CreateFixedExpenseInput: CreateFixedExpenseInput;
@@ -479,6 +469,8 @@ export type ResolversParentTypes = ResolversObject<{
   AllExpensesByDateRangeInput: AllExpensesByDateRangeInput;
   Boolean: Scalars['Boolean']['output'];
   Card: Card;
+  Category: Category;
+  CategoryInput: CategoryInput;
   CreateCardInput: CreateCardInput;
   CreateExpenseInput: CreateExpenseInput;
   CreateFixedExpenseInput: CreateFixedExpenseInput;
@@ -516,6 +508,12 @@ export type CardResolvers<ContextType = Context, ParentType extends ResolversPar
   isDebit?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   isDigital?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type CategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Category'] = ResolversParentTypes['Category']> = ResolversObject<{
+  id?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -596,6 +594,7 @@ export type PaymentDateResolvers<ContextType = Context, ParentType extends Resol
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
+  allCategories?: Resolver<Maybe<Array<Maybe<ResolversTypes['Category']>>>, ParentType, ContextType>;
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
   allExpensesByDateRange?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<QueryAllExpensesByDateRangeArgs>>;
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
@@ -644,6 +643,7 @@ export type TotalByMonthResolvers<ContextType = Context, ParentType extends Reso
 
 export type Resolvers<ContextType = Context> = ResolversObject<{
   Card?: CardResolvers<ContextType>;
+  Category?: CategoryResolvers<ContextType>;
   Date?: GraphQLScalarType;
   Expense?: ExpenseResolvers<ContextType>;
   ExpensesBy?: ExpensesByResolvers<ContextType>;

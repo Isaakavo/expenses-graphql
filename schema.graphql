@@ -5,27 +5,14 @@ enum Fortnight {
   SECOND
 }
 
-enum Category {
-  BILLS
-  CAR
-  CLOTHES
-  COMMUNICATION
-  EATING_OUT
-  ENTERTAINMENT
-  FOOD
-  GIFTS
-  HEALTH
-  HOUSE
-  INSURANCE
-  MONTHS_WITHOUT_INTEREST
-  PETS
-  SPORTS
-  TRANSPORT
-  SUPER_MARKET
-  HANG_OUT
-  SAVINGS
-  SUBSCRIPTION
-  FIXED_EXPENSE
+type Category {
+  id: String
+  name: String!
+}
+
+input CategoryInput {
+  id: String
+  name: String!
 }
 
 enum FixedExpenseFrequency {
@@ -146,7 +133,7 @@ input CreateExpenseInput {
   total: Float!
   payBefore: Date!
   comment: String
-  category: Category!
+  category: CategoryInput!
 }
 
 input CreateFixedExpenseInput {
@@ -155,7 +142,7 @@ input CreateFixedExpenseInput {
   total: Float!
   payBefore: Date!
   comment: String
-  category: Category!
+  category: CategoryInput!
   numberOfMonthsOrWeeks: Int!
   frequency: FixedExpenseFrequency
 }
@@ -167,7 +154,7 @@ input UpdateExpenseInput {
   total: Float!
   payBefore: Date!
   comment: String
-  category: Category!
+  category: CategoryInput!
 }
 
 input CreateCardInput {
@@ -216,6 +203,7 @@ type Query {
   expensesByMonth(input: PayBeforeInput!): ExpensesBy
   expenseById(id: ID!): Expense
   incomesAndExpensesByFortnight(input: PayBeforeInput!): IncomesListAndExpenses!
+  allCategories: [Category]
   allExpenses: [Expense]
   allExpensesByDateRange(input: AllExpensesByDateRangeInput): [Expense]
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
