@@ -4,8 +4,7 @@ import { Income } from '../models/income.js';
 import { sequelize } from './client.js';
 import { Card } from '../models/card.js';
 import { logger } from '../logger.js';
-import { Category } from '../generated/graphql.js';
-
+import { Category } from '../models/category.js';
 export const syncTables = async () => {
   try {
     Income.init(
@@ -40,6 +39,28 @@ export const syncTables = async () => {
         },
       },
       { sequelize, underscored: true }
+    );
+    Category.init(
+      {
+        id: {
+          type: DataTypes.INTEGER,
+          primaryKey: true,
+          autoIncrement: true,
+        },
+        name: {
+          type: DataTypes.STRING,
+          allowNull: false,
+        },
+        createdAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        },
+        updatedAt: {
+          type: DataTypes.DATE,
+          allowNull: false,
+        },
+      },
+      { sequelize, underscored: true }  
     );
     // add payday limit to handle where the card should be paid
     Card.init(
@@ -82,8 +103,8 @@ export const syncTables = async () => {
           type: DataTypes.STRING,
           allowNull: false,
         },
-        category: {
-          type: DataTypes.ENUM(...Object.values(Category)),
+        categoryId: {
+          type: DataTypes.INTEGER,
           allowNull: false,
         },
         concept: {
@@ -116,10 +137,15 @@ export const syncTables = async () => {
       foreignKey: 'cardId',
       as: 'cards',
     });
+    Category.hasMany(Expense, {
+      foreignKey: 'categoryId',
+      as: 'categories',
+    });
     Expense.belongsTo(Card, { foreignKey: 'cardId' });
+    Expense.belongsTo(Category, { foreignKey: 'categoryId' });
 
     // await sequelize.sync({ force: true });
-    await sequelize.sync();
+    await sequelize.sync({logging: true});
     logger.info('Synced tables', 'syncTables');
   } catch (error) {
     logger.error('Failed to sync tables', error);
