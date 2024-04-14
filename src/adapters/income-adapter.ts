@@ -46,7 +46,8 @@ export function adaptExpensesWithCard(
       category: adaptCategory(category),
     };
   } catch (error) {
-    logger.error(error);
+    logger.error(`error adapting expenses with card ${error}`);
+    throw error;
   }
 }
 
@@ -61,7 +62,8 @@ export function adaptCard(card: Card) {
       isDebit: card.isDebit,
     };
   } catch (error) {
-    logger.error(error);
+    logger.error(`error adapting card ${error}`);
+    throw error;
   }
 }
 
@@ -72,6 +74,7 @@ export function adaptCategory(category: Category) {
       name: category.name,
     };
   } catch (error) {
-    logger.error(error);
+    logger.error(`error adapting category ${error}`);
+    throw error;
   }
 }

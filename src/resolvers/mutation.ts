@@ -5,7 +5,6 @@ import {
   differenceInWeeks,
 } from 'date-fns';
 import { GraphQLError } from 'graphql';
-import { categoryAdapter } from '../adapters/category-adapter.js';
 import {
   adaptCard,
   adaptExpensesWithCard,
@@ -21,13 +20,13 @@ import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import { Date as CustomDate } from '../scalars/date.js';
 import {
-  calculateFortnight,
   calculateNumberOfBiWeeklyWeeks,
   calculateNumberOfMonthWeeks,
 } from '../utils/date-utils.js';
 import {
   deleteElement,
   updateElement,
+  upsertCategory,
   validateId,
 } from '../utils/sequilize-utils.js';
 
@@ -53,16 +52,7 @@ const mutations: MutationResolvers = {
     });
 
     logger.info(`Income added with id ${newIncome.id}`);
-    return {
-      id: newIncome.id.toString(),
-      userId: newIncome.userId,
-      total: newIncome.total,
-      paymentDate: {
-        date: newIncome.paymentDate,
-        fortnight: calculateFortnight(parsedPaymentDay),
-      },
-      createdAt: newIncome.createdAt,
-    };
+    return adaptSingleIncome(newIncome);
   },
   updateIncome: async (_, { input }, context) => {
     const {
@@ -102,66 +92,63 @@ const mutations: MutationResolvers = {
     }
   },
   createExpense: async (_, { input }, context) => {
-    const { cardId, concept, total, comment, payBefore, category } = input;
-    const {
-      user: { userId },
-    } = context;
-    const conceptLengthMax = 100;
+    try {
+      const { cardId, concept, total, comment, payBefore, category } = input;
+      const {
+        user: { userId },
+      } = context;
+      const conceptLengthMax = 100;
 
-    // TODO improve error logic
-    if (concept.length === 0) {
-      logger.error('Concept is empty');
-      throw new Error('Concept must not be empty');
+      // TODO improve error logic
+      if (concept.length === 0) {
+        logger.error('Concept is empty');
+        throw new Error('Concept must not be empty');
+      }
+
+      if (total === 0 || total < 0) {
+        logger.error('Total bad input');
+        throw new Error('Total must not be negative or zero');
+      }
+
+      if (concept.length > conceptLengthMax) {
+        logger.error('concept error');
+        throw new Error(
+          `Concept lenght must be lower than ${conceptLengthMax}`
+        );
+      }
+
+      const card =
+        cardId &&
+        (await Card.findOne({
+          where: {
+            id: cardId,
+            userId,
+          },
+        }));
+
+      const categoryFinded = await upsertCategory(category);
+
+      const serverDate = CustomDate.parseValue(new Date().toISOString());
+      const parsedPayBefore = CustomDate.parseValue(payBefore);
+
+      const newExpense = await Expense.create({
+        userId,
+        concept,
+        total,
+        categoryId: categoryFinded.id,
+        cardId: card?.id,
+        comments: comment,
+        payBefore: parsedPayBefore,
+        createdAt: serverDate,
+        updatedAt: serverDate,
+      });
+
+      logger.info('Expense created');
+
+      return adaptExpensesWithCard(newExpense, card, categoryFinded);
+    } catch (error) {
+      logger.error(`Error creating an expense ${error}`);
     }
-
-    if (total === 0 || total < 0) {
-      logger.error('Total bad input');
-      throw new Error('Total must not be negative or zero');
-    }
-
-    if (concept.length > conceptLengthMax) {
-      logger.error('concept error');
-      throw new Error(`Concept lenght must be lower than ${conceptLengthMax}`);
-    }
-
-    const card =
-      cardId &&
-      (await Card.findOne({
-        where: {
-          id: cardId,
-          userId,
-        },
-      }));
-
-    const serverDate = CustomDate.parseValue(new Date().toISOString());
-    const parsedPayBefore = CustomDate.parseValue(payBefore);
-
-    const newExpense = await Expense.create({
-      userId,
-      concept,
-      total,
-      category: categoryAdapter(category),
-      cardId: card?.id,
-      comments: comment,
-      payBefore: parsedPayBefore,
-      createdAt: serverDate,
-      updatedAt: serverDate,
-    });
-
-    logger.info('Expense created');
-
-    return {
-      id: newExpense.id.toString(),
-      userId: newExpense.userId,
-      concept: newExpense.concept,
-      category,
-      total: newExpense.total,
-      comment: newExpense.comments,
-      payBefore: newExpense.payBefore,
-      createdAt: newExpense.createdAt,
-      updatedAt: newExpense.updatedAt,
-      card: card && adaptCard(card),
-    };
   },
   // TODO add logic to handle weekly expenses
   createFixedExpense: async (_, { input }, context) => {
@@ -194,6 +181,8 @@ const mutations: MutationResolvers = {
         },
       }));
 
+    const categoryFinded = await upsertCategory(category);
+
     const numberOfExpenses =
       frequency === FixedExpenseFrequency.BIWEEKLY
         ? differenceInWeeks(
@@ -208,13 +197,25 @@ const mutations: MutationResolvers = {
           datePtr
         );
 
+    if (numberOfExpenses >= 27 && frequency === FixedExpenseFrequency.BIWEEKLY) {
+      throw Error(
+        'Max of expenses reached, you can only create 27 expenses at once'
+      );
+    }
+
+    if (numberOfExpenses >= 13 && frequency === FixedExpenseFrequency.MONTHLY) {
+      throw Error(
+        'Max of expenses reached, you can only create 12 expenses at once'
+      );
+    }
+
     for (let i = 0; i < numberOfExpenses; i++) {
       expensesArr.push({
         userId,
         concept,
         total,
         comments: comment,
-        category: categoryAdapter(category),
+        categoryId: categoryFinded.id,
         payBefore: datePtr,
         cardId: card?.id,
         createdAt: serverDate,
@@ -229,7 +230,9 @@ const mutations: MutationResolvers = {
     const expensesList = await Expense.bulkCreate(expensesArr);
     logger.info(`${expensesList.length} Expenses were created ${frequency}`);
 
-    return expensesList.map((expense) => adaptExpensesWithCard(expense, card));
+    return expensesList.map((expense) =>
+      adaptExpensesWithCard(expense, card, categoryFinded)
+    );
   },
   updateExpense: async (_, { input }, context) => {
     try {
@@ -239,6 +242,8 @@ const mutations: MutationResolvers = {
       const { category, concept, id, payBefore, total, cardId, comment } =
         input;
 
+      const categoryFinded = await upsertCategory(category);
+
       const parameters = cardId
         ? {
           payBefore,
@@ -246,14 +251,14 @@ const mutations: MutationResolvers = {
           cardId,
           comments: comment,
           concept,
-          category,
+          categoryId: categoryFinded.id,
         }
         : {
           payBefore,
           total,
           comments: comment,
           concept,
-          category,
+          categoryId: categoryFinded.id,
         };
 
       const updatedExpense = (await updateElement(
@@ -267,10 +272,10 @@ const mutations: MutationResolvers = {
         where: { userId, id: updatedExpense[0].cardId },
       });
 
-      return adaptExpensesWithCard(updatedExpense[0], card);
+      return adaptExpensesWithCard(updatedExpense[0], card, categoryFinded);
     } catch (error) {
-      logger.error(error);
-      return error;
+      logger.error(`error deleting the expense ${error}`);
+      throw error;
     }
   },
   deleteExpense: async (_, { id }, context) => {

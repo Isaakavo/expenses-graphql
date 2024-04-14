@@ -1,6 +1,8 @@
 import { GraphQLError } from 'graphql';
 import { Model, ModelStatic } from 'sequelize';
 import { logger } from '../logger.js';
+import { Category } from '../models/category.js';
+import { CategoryInput } from '../generated/graphql.js';
 
 const NOT_FOUND_GRAPHQL_ERROR = (model: typeof Model) =>
   new GraphQLError(`${model.name} id not found`, {
@@ -50,7 +52,7 @@ export const updateElement = async (
     );
 
     if (updatedElement.length === 0) {
-      logger.info(`Couldn't update ${model.name}, id doesnt exists`);
+      logger.error(`Couldn't update ${model.name}, id doesnt exists`);
       throw NOT_FOUND_GRAPHQL_ERROR(model);
     }
 
@@ -59,7 +61,7 @@ export const updateElement = async (
     return updatedElement;
   } catch (error) {
     logger.error(error);
-    return error
+    throw error;
   }
 };
 
@@ -87,4 +89,24 @@ export const deleteElement = async (
 
   logger.info(`Deleted ${isDeleted} ${model.name}`);
   return true;
+};
+
+export const upsertCategory = async (category: CategoryInput) => {
+  let wasAdded = false;
+  let categoryFinded = await Category.findOne({
+    where: {
+      name: category.name,
+    },
+  });
+
+  if (!categoryFinded) {
+    logger.info('Category doesnt exists, creating a new one...');
+    [categoryFinded, wasAdded] = await Category.upsert(category);
+
+    if (wasAdded) {
+      logger.info('New category added');
+    }
+  }
+
+  return categoryFinded;
 };
