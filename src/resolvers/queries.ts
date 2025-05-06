@@ -21,19 +21,29 @@ import {
 } from '../utils/calculate-total.js';
 import { calculateFortnight } from '../utils/date-utils.js';
 import {
+  // decodeCursor,
   findAllExpensesWithCards,
   findIncomeByIdWithExpenses,
 } from '../utils/expenses-utils.js';
 import { validateId } from '../utils/sequilize-utils.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
+import { ExpensesService } from '../service/expenses-service.js';
+
+const expenseRepository = new ExpensesService();
 
 const queries: QueryResolvers = {
   allExpenses: async (_, __, context) => {
     const {
       user: { userId },
     } = context;
+    // const { first, after } = input
 
-    return findAllExpensesWithCards({ userId });
+    // if (after) {
+    //   const decoded = decodeCursor(after);
+
+    // }
+
+    return await expenseRepository.getAllExpenses(userId);
   },
   allExpensesByDateRange: async (_, { input }, context) => {
     const {
