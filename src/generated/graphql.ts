@@ -104,6 +104,18 @@ export type Expense = {
   userId?: Maybe<Scalars['String']['output']>;
 };
 
+export type ExpenseConnection = {
+  __typename?: 'ExpenseConnection';
+  edges: Array<ExpenseEdge>;
+  pageInfo: PageInfo;
+};
+
+export type ExpenseEdge = {
+  __typename?: 'ExpenseEdge';
+  cursor: Scalars['String']['output'];
+  node: Expense;
+};
+
 export type ExpensesBy = {
   __typename?: 'ExpensesBy';
   expenses?: Maybe<Array<Maybe<Expense>>>;
@@ -217,6 +229,12 @@ export type MutationUpdateIncomeArgs = {
   input?: InputMaybe<UpdateIncomeInput>;
 };
 
+export type PageInfo = {
+  __typename?: 'PageInfo';
+  endCursor?: Maybe<Scalars['String']['output']>;
+  hasNextPage: Scalars['Boolean']['output'];
+};
+
 export type PayBeforeInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
   payBefore: Scalars['Date']['input'];
@@ -230,7 +248,7 @@ export type PaymentDate = {
 
 export type Query = {
   __typename?: 'Query';
-  allExpenses?: Maybe<Array<Maybe<Expense>>>;
+  allExpenses: ExpenseConnection;
   allExpensesByDateRange?: Maybe<Array<Maybe<Expense>>>;
   cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
@@ -243,6 +261,12 @@ export type Query = {
   incomesAndExpensesByFortnight: IncomesListAndExpenses;
   incomesByMonth?: Maybe<Array<Maybe<Income>>>;
   incomesList?: Maybe<IncomesList>;
+};
+
+
+export type QueryAllExpensesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first: Scalars['Int']['input'];
 };
 
 
@@ -448,6 +472,8 @@ export type ResolversTypes = ResolversObject<{
   CreateIncomeInput: CreateIncomeInput;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
+  ExpenseConnection: ResolverTypeWrapper<ExpenseConnection>;
+  ExpenseEdge: ResolverTypeWrapper<ExpenseEdge>;
   ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
   FinancialBalance: ResolverTypeWrapper<FinancialBalance>;
   FixedExpenseFrequency: FixedExpenseFrequency;
@@ -459,6 +485,7 @@ export type ResolversTypes = ResolversObject<{
   IncomesListAndExpenses: ResolverTypeWrapper<IncomesListAndExpenses>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   Mutation: ResolverTypeWrapper<{}>;
+  PageInfo: ResolverTypeWrapper<PageInfo>;
   PayBeforeInput: PayBeforeInput;
   PaymentDate: ResolverTypeWrapper<PaymentDate>;
   Query: ResolverTypeWrapper<{}>;
@@ -485,6 +512,8 @@ export type ResolversParentTypes = ResolversObject<{
   CreateIncomeInput: CreateIncomeInput;
   Date: Scalars['Date']['output'];
   Expense: Expense;
+  ExpenseConnection: ExpenseConnection;
+  ExpenseEdge: ExpenseEdge;
   ExpensesBy: ExpensesBy;
   FinancialBalance: FinancialBalance;
   Float: Scalars['Float']['output'];
@@ -494,6 +523,7 @@ export type ResolversParentTypes = ResolversObject<{
   IncomesListAndExpenses: IncomesListAndExpenses;
   Int: Scalars['Int']['output'];
   Mutation: {};
+  PageInfo: PageInfo;
   PayBeforeInput: PayBeforeInput;
   PaymentDate: PaymentDate;
   Query: {};
@@ -534,6 +564,18 @@ export type ExpenseResolvers<ContextType = Context, ParentType extends Resolvers
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   userId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ExpenseConnectionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ExpenseConnection'] = ResolversParentTypes['ExpenseConnection']> = ResolversObject<{
+  edges?: Resolver<Array<ResolversTypes['ExpenseEdge']>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ExpenseEdgeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ExpenseEdge'] = ResolversParentTypes['ExpenseEdge']> = ResolversObject<{
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  node?: Resolver<ResolversTypes['Expense'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -589,6 +631,12 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   updateIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, Partial<MutationUpdateIncomeArgs>>;
 }>;
 
+export type PageInfoResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PageInfo'] = ResolversParentTypes['PageInfo']> = ResolversObject<{
+  endCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type PaymentDateResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PaymentDate'] = ResolversParentTypes['PaymentDate']> = ResolversObject<{
   date?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   fortnight?: Resolver<ResolversTypes['Fortnight'], ParentType, ContextType>;
@@ -596,7 +644,7 @@ export type PaymentDateResolvers<ContextType = Context, ParentType extends Resol
 }>;
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
-  allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  allExpenses?: Resolver<ResolversTypes['ExpenseConnection'], ParentType, ContextType, RequireFields<QueryAllExpensesArgs, 'first'>>;
   allExpensesByDateRange?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<QueryAllExpensesByDateRangeArgs>>;
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
@@ -646,12 +694,15 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Card?: CardResolvers<ContextType>;
   Date?: GraphQLScalarType;
   Expense?: ExpenseResolvers<ContextType>;
+  ExpenseConnection?: ExpenseConnectionResolvers<ContextType>;
+  ExpenseEdge?: ExpenseEdgeResolvers<ContextType>;
   ExpensesBy?: ExpensesByResolvers<ContextType>;
   FinancialBalance?: FinancialBalanceResolvers<ContextType>;
   Income?: IncomeResolvers<ContextType>;
   IncomesList?: IncomesListResolvers<ContextType>;
   IncomesListAndExpenses?: IncomesListAndExpensesResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  PageInfo?: PageInfoResolvers<ContextType>;
   PaymentDate?: PaymentDateResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Total?: TotalResolvers<ContextType>;

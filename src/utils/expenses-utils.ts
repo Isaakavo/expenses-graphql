@@ -40,3 +40,11 @@ export const findCard = async (expenses: Expense[]) => {
     logger.error(`Error finding cards and tags ${error.message}`);
   }
 };
+
+export const encodeCursor = (date: Date): string => {
+  return Buffer.from(date.toISOString()).toString('base64')
+}
+
+export const decodeCursor = (cursor: string): Date => {
+  return new Date(Buffer.from(cursor, 'base64').toString('utf8'))
+}

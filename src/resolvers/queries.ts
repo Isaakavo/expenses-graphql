@@ -1,5 +1,5 @@
 import { GraphQLError } from 'graphql';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import {
   adaptCard,
   adaptExpensesWithCard,
@@ -21,6 +21,8 @@ import {
 } from '../utils/calculate-total.js';
 import { calculateFortnight } from '../utils/date-utils.js';
 import {
+  decodeCursor,
+  encodeCursor,
   // decodeCursor,
   findAllExpensesWithCards,
   findIncomeByIdWithExpenses,
@@ -32,18 +34,52 @@ import { ExpensesService } from '../service/expenses-service.js';
 const expenseRepository = new ExpensesService();
 
 const queries: QueryResolvers = {
-  allExpenses: async (_, __, context) => {
+  allExpenses: async (_, { first, after }, context) => {
     const {
       user: { userId },
     } = context;
-    // const { first, after } = input
 
-    // if (after) {
-    //   const decoded = decodeCursor(after);
+    console.log(decodeCursor(after));
+    
 
-    // }
+    const whereClause: WhereOptions = after
+      ? { createdAt: { [Op.gt]: decodeCursor(after) } }
+      : {};
 
-    return await expenseRepository.getAllExpenses(userId);
+    const expensesPaginatedList = await expenseRepository.getAllExpenses(
+      userId,
+      {
+        where: whereClause,
+        limit: first,
+      }
+    );
+
+    const edges = expensesPaginatedList.map((exp) => ({
+      node: exp,
+      cursor: encodeCursor(exp.createdAt),
+    }));
+
+    const endCursor = edges.length ? edges[edges.length - 1].cursor : null;
+
+    // Verificamos si hay más resultados con un fetch adicional
+    let hasNextPage = false;
+    if (edges.length === first) {
+      const lastCreatedAt =
+        expensesPaginatedList[expensesPaginatedList.length - 1].createdAt;
+      const nextExpense = await Expense.findOne({
+        where: { createdAt: { [Op.gt]: lastCreatedAt } },
+        order: [['createdAt', 'ASC']],
+      });
+      hasNextPage = !!nextExpense;
+    }
+
+    return {
+      edges,
+      pageInfo: {
+        endCursor,
+        hasNextPage,
+      },
+    };
   },
   allExpensesByDateRange: async (_, { input }, context) => {
     const {

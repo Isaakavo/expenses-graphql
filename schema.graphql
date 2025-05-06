@@ -127,6 +127,21 @@ type ExpensesBy {
   expensesTotal: Float
 }
 
+type ExpenseEdge {
+  node: Expense!
+  cursor: String!
+}
+
+type ExpenseConnection {
+  edges: [ExpenseEdge!]!
+  pageInfo: PageInfo!
+}
+
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+
 input CreateIncomeInput {
   total: Float!
   comment: String
@@ -216,7 +231,7 @@ type Query {
   expensesByMonth(input: PayBeforeInput!): ExpensesBy
   expenseById(id: ID!): Expense
   incomesAndExpensesByFortnight(input: PayBeforeInput!): IncomesListAndExpenses!
-  allExpenses: [Expense]
+  allExpenses(first: Int!, after: String): ExpenseConnection!
   allExpensesByDateRange(input: AllExpensesByDateRangeInput): [Expense]
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   cardList: [Card]
