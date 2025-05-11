@@ -1,5 +1,5 @@
 import { QueryResolvers } from '../../../generated/graphql.js';
-import { findAllExpensesWithCards } from '../../../utils/expenses-utils.js';
+import { ExpensesService } from '../../../service/expenses-service.js';
 
 export const allExpenses: QueryResolvers['allExpenses'] = async (
   _,
@@ -10,5 +10,7 @@ export const allExpenses: QueryResolvers['allExpenses'] = async (
     user: { userId },
   } = context;
 
-  return findAllExpensesWithCards({ userId });
+  const service = new ExpensesService();
+
+  return service.getAllExpenses(userId);
 };
