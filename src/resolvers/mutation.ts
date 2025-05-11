@@ -10,7 +10,7 @@ import {
   updateCard,
   updateExpense,
   updateIncome,
-} from './mutations/index.js';
+} from './mutation/index.js';
 
 //TODO add mutation for deletion
 const mutations: MutationResolvers = {
