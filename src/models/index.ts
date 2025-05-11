@@ -1,3 +1,3 @@
-export { Card } from './card'
-export { Expense } from './expense'
-export { Income } from './income'
+export { Card } from './card.js'
+export { Expense } from './expense.js'
+export { Income } from './income.js'
