@@ -2,7 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Op } from 'sequelize';
 import { QueryResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
-import { findAllExpensesWithCards } from '../../../utils/expenses-utils.js';
+import { ExpensesService } from '../../../service/expenses-service.js';
 
 export const allExpensesByDateRange: QueryResolvers['allExpensesByDateRange'] =
   async (_, { input }, context) => {
@@ -24,8 +24,12 @@ export const allExpensesByDateRange: QueryResolvers['allExpensesByDateRange'] =
     }
 
     logger.info(`Start date: ${parsedStartDate} End date: ${parsedEndDate}`);
-    return findAllExpensesWithCards({
-      userId,
-      payBefore: { [Op.gte]: parsedStartDate, [Op.lte]: parsedEndDate },
+
+    const service = new ExpensesService();
+
+    return service.getAllExpenses(userId, {
+      where: {
+        payBefore: { [Op.gte]: parsedStartDate, [Op.lte]: parsedEndDate },
+      },
     });
   };
