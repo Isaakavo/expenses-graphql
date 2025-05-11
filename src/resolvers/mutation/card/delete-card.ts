@@ -1,8 +1,13 @@
+import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Card } from '../../../models/index.js';
 import { deleteElement, validateId } from '../../../utils/sequilize-utils.js';
 
-export const deleteCard = async (_, { id }, context) => {
+export const deleteCard: MutationResolvers['deleteCard'] = async (
+  _,
+  { id },
+  context
+) => {
   try {
     const {
       user: { userId },

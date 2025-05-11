@@ -1,9 +1,14 @@
 import { adaptCard } from '../../../adapters/index.js';
+import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Card } from '../../../models/index.js';
 import { updateElement } from '../../../utils/sequilize-utils.js';
 
-export const updateCard = async (_, { input }, context) => {
+export const updateCard: MutationResolvers['updateCard'] = async (
+  _,
+  { input },
+  context
+) => {
   try {
     const {
       user: { userId },

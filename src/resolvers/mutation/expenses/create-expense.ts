@@ -1,10 +1,14 @@
-
-import { Date as CustomDate } from '../../../scalars/date.js';
-import { Card, Expense } from '../../../models/index.js';
-import { logger } from '../../../logger.js';
 import { adaptCard, categoryAdapter } from '../../../adapters/index.js';
+import { MutationResolvers } from '../../../generated/graphql.js';
+import { logger } from '../../../logger.js';
+import { Card, Expense } from '../../../models/index.js';
+import { Date as CustomDate } from '../../../scalars/date.js';
 
-export const createExpense = async (_, { input }, context) => {
+export const createExpense: MutationResolvers['createExpense'] = async (
+  _,
+  { input },
+  context
+) => {
   const { cardId, concept, total, comment, payBefore, category } = input;
   const {
     user: { userId },

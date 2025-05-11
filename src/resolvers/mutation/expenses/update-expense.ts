@@ -1,9 +1,14 @@
 import { adaptExpensesWithCard } from '../../../adapters/index.js';
+import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Card, Expense } from '../../../models/index.js';
 import { updateElement } from '../../../utils/sequilize-utils.js';
 
-export const updateExpense = async (_, { input }, context) => {
+export const updateExpense: MutationResolvers['updateExpense'] = async (
+  _,
+  { input },
+  context
+) => {
   try {
     const {
       user: { userId },
@@ -12,20 +17,20 @@ export const updateExpense = async (_, { input }, context) => {
 
     const parameters = cardId
       ? {
-        payBefore,
-        total,
-        cardId,
-        comments: comment,
-        concept,
-        category,
-      }
+          payBefore,
+          total,
+          cardId,
+          comments: comment,
+          concept,
+          category,
+        }
       : {
-        payBefore,
-        total,
-        comments: comment,
-        concept,
-        category,
-      };
+          payBefore,
+          total,
+          comments: comment,
+          concept,
+          category,
+        };
 
     const updatedExpense = (await updateElement(
       Expense,

@@ -1,8 +1,13 @@
+import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Expense } from '../../../models/index.js';
-import { validateId, deleteElement } from '../../../utils/sequilize-utils.js';
+import { deleteElement, validateId } from '../../../utils/sequilize-utils.js';
 
-export const deleteExpense = async (_, { id }, context) => {
+export const deleteExpense: MutationResolvers['deleteExpense'] = async (
+  _,
+  { id },
+  context
+) => {
   try {
     const {
       user: { userId },

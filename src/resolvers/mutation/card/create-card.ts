@@ -1,9 +1,14 @@
 import { GraphQLError } from 'graphql';
-import { Card } from '../../../models/index.js';
 import { adaptCard } from '../../../adapters/income-adapter.js';
+import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
+import { Card } from '../../../models/index.js';
 
-export const createCard = async (_, { input }, context) => {
+export const createCard: MutationResolvers['createCard'] = async (
+  _,
+  { input },
+  context
+) => {
   try {
     const { alias, bank, isDigital, isDebit } = input;
     const {

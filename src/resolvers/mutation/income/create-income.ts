@@ -1,11 +1,16 @@
-import { Date as CustomDate } from '../../../scalars/date.js';
-import { Income } from '../../../models/income.js';
-import { calculateFortnight } from '../../../utils/date-utils.js';
+import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
+import { Income } from '../../../models/income.js';
+import { Date as CustomDate } from '../../../scalars/date.js';
+import { calculateFortnight } from '../../../utils/date-utils.js';
 
 //TODO implement logic to handle the create of incomes for 1 year
 // add a new flag to indicate if the mutation should create 12 new incomes with the provided inputs
-export const createIncome = async (_, { input }, context) => {
+export const createIncome: MutationResolvers['createIncome'] = async (
+  _,
+  { input },
+  context
+) => {
   const { total, paymentDate, comment } = input;
   const {
     user: { userId },
