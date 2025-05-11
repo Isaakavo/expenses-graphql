@@ -1,8 +1,6 @@
 import { GraphQLError } from 'graphql';
-import { Op } from 'sequelize';
 import {
   adaptCard,
-  adaptExpensesWithCard,
   adaptMultipleIncomes,
   adaptSingleIncome,
 } from '../adapters/income-adapter.js';
@@ -13,7 +11,6 @@ import {
 } from '../generated/graphql.js';
 import { logger } from '../logger.js';
 import { Card } from '../models/card.js';
-import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
 import {
   calcualteTotalByMonth,
@@ -24,103 +21,21 @@ import {
   findAllExpensesWithCards,
   findIncomeByIdWithExpenses,
 } from '../utils/expenses-utils.js';
-import { validateId } from '../utils/sequilize-utils.js';
 import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
+import {
+  allExpenses,
+  allExpensesByDateRange,
+  expenseById,
+  expensesByFortnight,
+  expensesByMonth,
+} from './query/index.js';
 
 const queries: QueryResolvers = {
-  allExpenses: async (_, __, context) => {
-    const {
-      user: { userId },
-    } = context;
-
-    return findAllExpensesWithCards({ userId });
-  },
-  allExpensesByDateRange: async (_, { input }, context) => {
-    const {
-      user: { userId },
-    } = context;
-    const { endDate, initialDate } = input;
-
-    const parsedEndDate = new Date(endDate.year, endDate.month, endDate.day);
-    const parsedStartDate = new Date(
-      initialDate.year,
-      initialDate.month,
-      initialDate.day
-    );
-
-    if (parsedEndDate < parsedStartDate) {
-      logger.error('end date must be ahead of start date');
-      throw new GraphQLError('Wrong dates');
-    }
-
-    logger.info(`Start date: ${parsedStartDate} End date: ${parsedEndDate}`);
-    return findAllExpensesWithCards({
-      userId,
-      payBefore: { [Op.gte]: parsedStartDate, [Op.lte]: parsedEndDate },
-    });
-  },
-  expensesByFortnight: async (_, { input }, context) => {
-    const { payBefore, cardId } = input;
-    const {
-      user: { userId },
-    } = context;
-
-    // TODO refactor this to handle undfined value un function whereByFornight
-    const where = !cardId
-      ? whereByFornight(userId, payBefore, 'payBefore')
-      : whereByFornight(userId, payBefore, 'payBefore', { cardId });
-
-    const expenses = await findAllExpensesWithCards(where);
-
-    const expensesTotal = expenses.reduce(
-      (acumulator, currentValue) => acumulator + currentValue.total,
-      0
-    );
-
-    return {
-      expenses,
-      expensesTotal,
-    };
-  },
-  expensesByMonth: async (_, { input }, context) => {
-    const { payBefore, cardId } = input;
-    const {
-      user: { userId },
-    } = context;
-
-    const where = !cardId
-      ? whereByMonth(userId, payBefore, 'payBefore')
-      : whereByMonth(userId, payBefore, 'payBefore', { cardId });
-
-    const expenses = await findAllExpensesWithCards(where);
-    const expensesTotal = expenses.reduce(
-      (acumulator, currentValue) => acumulator + currentValue.total,
-      0
-    );
-
-    logger.info(`Returning ${expenses.length} expenses`);
-
-    return {
-      expenses,
-      expensesTotal,
-    };
-  },
-  expenseById: async (_, { id }, context) => {
-    const {
-      user: { userId },
-    } = context;
-
-    const expense = (await validateId(Expense, userId, id)) as Expense;
-
-    const card = await Card.findOne({
-      where: {
-        userId,
-        id: expense.cardId,
-      },
-    });
-
-    return adaptExpensesWithCard(expense, card);
-  },
+  allExpenses,
+  allExpensesByDateRange,
+  expensesByFortnight,
+  expensesByMonth,
+  expenseById,
   incomesAndExpensesByFortnight: async (_, { input }, context) => {
     try {
       const { payBefore } = input;
