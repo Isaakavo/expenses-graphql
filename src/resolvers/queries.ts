@@ -38,10 +38,7 @@ const queries: QueryResolvers = {
     const {
       user: { userId },
     } = context;
-
-    console.log(decodeCursor(after));
     
-
     const whereClause: WhereOptions = after
       ? { createdAt: { [Op.gt]: decodeCursor(after) } }
       : {};
