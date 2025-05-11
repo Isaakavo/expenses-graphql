@@ -1,3 +1,4 @@
+export { createCard } from './card/create-card.js';
 export { createExpense } from './expenses/create-expense.js';
 export { createFixedExpense } from './expenses/create-fixed-expense.js';
 export { deleteExpense } from './expenses/delete-expense.js';
@@ -5,4 +6,5 @@ export { updateExpense } from './expenses/update-expense.js';
 export { createIncome } from './income/create-income.js';
 export { deleteIncomeById } from './income/delete-income.js';
 export { updateIncome } from './income/update-income.js';
-
+export { updateCard } from './card/update-card.js';
+export { deleteCard } from './card/delete-card.js';
