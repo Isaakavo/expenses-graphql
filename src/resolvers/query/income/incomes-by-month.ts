@@ -1,8 +1,13 @@
+import { QueryResolvers } from '../../../generated/graphql.js';
 import { Income } from '../../../models/index.js';
 import { calculateFortnight } from '../../../utils/date-utils.js';
 import { whereByMonth } from '../../../utils/where-fortnight.js';
 
-export const incomesByMonth = async (_, input, context) => {
+export const incomesByMonth: QueryResolvers['incomesByMonth'] = async (
+  _,
+  input,
+  context
+) => {
   const { date } = input;
   const {
     user: { userId },

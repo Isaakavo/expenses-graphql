@@ -1,8 +1,9 @@
 import { adaptExpensesWithCard } from '../../../adapters/index.js';
 import { Expense, Card } from '../../../models/index.js';
 import { validateId } from '../../../utils/sequilize-utils.js';
+import { QueryResolvers } from '../../../generated/graphql.js';
 
-export const expenseById = async (_, { id }, context) => {
+export const expenseById: QueryResolvers['expenseById'] = async (_, { id }, context) => {
   const {
     user: { userId },
   } = context;

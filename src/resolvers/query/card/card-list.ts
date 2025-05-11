@@ -1,8 +1,9 @@
 import { adaptCard } from '../../../adapters/index.js';
 import { logger } from '../../../logger.js';
 import { Card } from '../../../models/index.js';
+import { QueryResolvers } from '../../../generated/graphql.js';
 
-export const cardList = async (_, input, context) => {
+export const cardList: QueryResolvers['cardList'] = async (_, input, context) => {
   const {
     user: { userId },
   } = context;

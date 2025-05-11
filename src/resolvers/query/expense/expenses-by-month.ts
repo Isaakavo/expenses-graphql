@@ -1,8 +1,9 @@
+import { QueryResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { findAllExpensesWithCards } from '../../../utils/expenses-utils.js';
 import { whereByMonth } from '../../../utils/where-fortnight.js';
 
-export const expensesByMonth = async (_, { input }, context) => {
+export const expensesByMonth: QueryResolvers['expensesByMonth'] = async (_, { input }, context) => {
   const { payBefore, cardId } = input;
   const {
     user: { userId },

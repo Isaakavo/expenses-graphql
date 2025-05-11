@@ -1,10 +1,15 @@
 import { GraphQLError } from 'graphql';
 import { adaptSingleIncome } from '../../../adapters/index.js';
+import { QueryResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Income } from '../../../models/index.js';
 import { calcualteTotalByMonth } from '../../../utils/calculate-total.js';
 
-export const incomesList = async (_, __, context) => {
+export const incomesList: QueryResolvers['incomesList'] = async (
+  _,
+  __,
+  context
+) => {
   try {
     const {
       user: { userId },
