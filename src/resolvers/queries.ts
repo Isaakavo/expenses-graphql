@@ -1,8 +1,6 @@
 import { GraphQLError } from 'graphql';
 import {
-  adaptCard,
-  adaptMultipleIncomes,
-  adaptSingleIncome,
+  adaptCard
 } from '../adapters/income-adapter.js';
 import {
   Expense as GraphqlExpense,
@@ -16,18 +14,20 @@ import {
   calcualteTotalByMonth,
   calculateTotalByFortnight,
 } from '../utils/calculate-total.js';
-import { calculateFortnight } from '../utils/date-utils.js';
 import {
   findAllExpensesWithCards,
-  findIncomeByIdWithExpenses,
 } from '../utils/expenses-utils.js';
-import { whereByFornight, whereByMonth } from '../utils/where-fortnight.js';
+import { whereByFornight } from '../utils/where-fortnight.js';
+import { incomeById } from './query/income/income-by-id.js';
+import { incomesByMonth } from './query/income/incomes-by-month.js';
 import {
   allExpenses,
   allExpensesByDateRange,
   expenseById,
   expensesByFortnight,
   expensesByMonth,
+  incomesAndExpensesByFortnight,
+  incomesList,
 } from './query/index.js';
 
 const queries: QueryResolvers = {
@@ -36,48 +36,7 @@ const queries: QueryResolvers = {
   expensesByFortnight,
   expensesByMonth,
   expenseById,
-  incomesAndExpensesByFortnight: async (_, { input }, context) => {
-    try {
-      const { payBefore } = input;
-      const {
-        user: { userId },
-      } = context;
-
-      logger.info(payBefore);
-
-      const payBeforeWhere = whereByFornight(userId, payBefore, 'payBefore');
-
-      const incomesWithExpenses = await findIncomeByIdWithExpenses(
-        whereByFornight(userId, payBefore, 'paymentDate')
-      );
-
-      const expenses = await findAllExpensesWithCards(payBeforeWhere);
-
-      const incomesTotal = incomesWithExpenses.reduce(
-        (acc, current) => acc + current.total,
-        0
-      );
-
-      const expensesTotal = expenses.reduce(
-        (acumulator, currentValue) => acumulator + currentValue.total,
-        0
-      );
-
-      logger.info(`Returning ${expenses.length} expenses for incomes`);
-
-      return {
-        incomes: adaptMultipleIncomes(incomesWithExpenses),
-        incomesTotal,
-        expenses: expenses,
-        expensesTotal,
-        remaining: incomesTotal - expensesTotal,
-      };
-    } catch (error) {
-      logger.error(
-        `Error quering incomeAndExpensesByFornight ${error.message}`
-      );
-    }
-  },
+  incomesAndExpensesByFortnight,
   // TODO add logic to return a new field called creditCardDebts
   // if the expense contains tag "tarjeta de credito" those totals should be added
   // to this new field.
@@ -109,77 +68,9 @@ const queries: QueryResolvers = {
       remaining,
     };
   },
-  incomesList: async (_, __, context) => {
-    try {
-      const {
-        user: { userId },
-      } = context;
-
-      //TODO implement logic in the query to receive the order of filtering from the client
-      const allIncomes = await Income.findAll({
-        where: {
-          userId,
-        },
-        order: [['paymentDate', 'DESC']],
-      });
-
-      logger.info(`returning ${allIncomes.length} incomes`);
-
-      return {
-        incomes: allIncomes.map((x) => adaptSingleIncome(x)),
-        totalByMonth: calcualteTotalByMonth(allIncomes),
-        total: allIncomes.reduce(
-          (acumulator, currentValue) => acumulator + currentValue.total,
-          0
-        ),
-      };
-    } catch (error) {
-      if (error instanceof GraphQLError) {
-        logger.error(`Graphql Error incomes list ${error.message}`);
-        throw error;
-      }
-      logger.error(`Error incomes list ${error}`);
-    }
-  },
-  incomeById: async (_, { incomeId }, context) => {
-    try {
-      const {
-        user: { userId },
-      } = context;
-
-      const income = await Income.findOne({
-        where: {
-          userId,
-          id: incomeId,
-        },
-      });
-
-      return adaptSingleIncome(income);
-    } catch (error) {
-      logger.error(error);
-    }
-  },
-  incomesByMonth: async (_, input, context) => {
-    const { date } = input;
-    const {
-      user: { userId },
-    } = context;
-
-    const where = whereByMonth(userId, date, 'paymentDate');
-
-    const allIncomes = await Income.findAll({ where });
-
-    return allIncomes.map((x) => ({
-      id: x.id.toString(),
-      userId: x.userId,
-      total: x.total,
-      paymentDate: {
-        date: x.paymentDate,
-        fortnight: calculateFortnight(x.paymentDate),
-      },
-      createdAt: x.createdAt,
-    }));
-  },
+  incomesList,
+  incomeById,
+  incomesByMonth,
   cardList: async (_, input, context) => {
     const {
       user: { userId },
