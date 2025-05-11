@@ -4,9 +4,9 @@ import { FindOptions } from 'sequelize';
 export class ExpenseRepository {
   async getAllExpenses(
     userId: string,
-    queryOptions: FindOptions
+    queryOptions?: FindOptions
   ) {
-    const { limit, where } = queryOptions;
+    const { limit, where } = queryOptions ?? {};
     return await Expense.findAll({
       where: {
         ...where,
