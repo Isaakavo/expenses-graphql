@@ -49,7 +49,7 @@ export class IncomeService {
     return true;
   }
 
-  async updaIncome(input: UpdateIncomeInput, context: Context) {
+  async updateIncome(input: UpdateIncomeInput, context: Context) {
     const { incomeId, total, comment, paymentDate } = input;
     const {
       user: { userId },
