@@ -1,6 +1,4 @@
-import {
-  Model
-} from 'sequelize';
+import { Model } from 'sequelize';
 
 export class Income extends Model {
   public id!: string;

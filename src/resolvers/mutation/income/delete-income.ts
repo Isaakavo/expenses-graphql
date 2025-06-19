@@ -1,7 +1,8 @@
 import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Income } from '../../../models/income.js';
-import { deleteElement, validateId } from '../../../utils/sequilize-utils.js';
+import { IncomeService } from '../../../service/income-service.js';
+import { validateId } from '../../../utils/sequilize-utils.js';
 
 export const deleteIncomeById: MutationResolvers['deleteIncomeById'] = async (
   _,
@@ -14,9 +15,11 @@ export const deleteIncomeById: MutationResolvers['deleteIncomeById'] = async (
       user: { userId },
     } = context;
 
+    const incomeService = new IncomeService();
+
     await validateId(Income, userId, id);
 
-    return deleteElement(Income, userId, id);
+    return incomeService.deleteIncome(input, context);
   } catch (error) {
     logger.error(error);
     return error;
