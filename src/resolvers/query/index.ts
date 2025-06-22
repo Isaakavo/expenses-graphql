@@ -11,4 +11,4 @@ export { incomeById } from './income/income-by-id.js';
 export { incomesAndExpensesByFortnight } from './income/income-expense-by-fortnight.js';
 export { incomesByMonth } from './income/incomes-by-month.js';
 export { incomesList } from './income/incomes-list.js';
-
+export { login } from './login/login.js';
