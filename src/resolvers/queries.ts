@@ -14,7 +14,8 @@ import {
   incomeById,
   incomesAndExpensesByFortnight,
   incomesByMonth,
-  incomesList
+  incomesList,
+  login
 } from './query/index.js';
 
 const queries: QueryResolvers = {
@@ -34,6 +35,7 @@ const queries: QueryResolvers = {
   cardList,
   cardById,
   expensesTotalByCardId,
+  login
 };
 
 export default queries;

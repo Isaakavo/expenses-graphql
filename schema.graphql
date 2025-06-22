@@ -127,6 +127,15 @@ type ExpensesBy {
   expensesTotal: Float
 }
 
+enum AUTH_STATUS {
+  AUTHENTICATED
+  UNAUTHENTICATED
+}
+
+type LoginResponse {
+  status: AUTH_STATUS!
+}
+
 input CreateIncomeInput {
   total: Float!
   comment: String
@@ -209,6 +218,7 @@ input AllExpensesByDateRangeInput {
 }
 
 type Query {
+  login: LoginResponse!
   incomesList: IncomesList
   incomeById(incomeId: ID!): Income
   incomesByMonth(date: Date!): [Income] # Validate if this query is necessary

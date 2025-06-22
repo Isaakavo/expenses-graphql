@@ -19,6 +19,11 @@ export type Scalars = {
   Date: { input: Date; output: Date; }
 };
 
+export enum Auth_Status {
+  AUTHENTICATED = 'AUTHENTICATED',
+  UNAUTHENTICATED = 'UNAUTHENTICATED'
+}
+
 export type AllExpensesByDateRangeInput = {
   endDate?: InputMaybe<EndDate>;
   initialDate?: InputMaybe<InitialDate>;
@@ -153,6 +158,11 @@ export type IncomesListAndExpenses = {
   remaining?: Maybe<Scalars['Float']['output']>;
 };
 
+export type LoginResponse = {
+  __typename?: 'LoginResponse';
+  status: Auth_Status;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   createCard?: Maybe<Card>;
@@ -243,6 +253,7 @@ export type Query = {
   incomesAndExpensesByFortnight: IncomesListAndExpenses;
   incomesByMonth?: Maybe<Array<Maybe<Income>>>;
   incomesList?: Maybe<IncomesList>;
+  login: LoginResponse;
 };
 
 
@@ -438,6 +449,7 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = R
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = ResolversObject<{
+  AUTH_STATUS: Auth_Status;
   AllExpensesByDateRangeInput: AllExpensesByDateRangeInput;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Card: ResolverTypeWrapper<Card>;
@@ -458,6 +470,7 @@ export type ResolversTypes = ResolversObject<{
   IncomesList: ResolverTypeWrapper<IncomesList>;
   IncomesListAndExpenses: ResolverTypeWrapper<IncomesListAndExpenses>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  LoginResponse: ResolverTypeWrapper<LoginResponse>;
   Mutation: ResolverTypeWrapper<{}>;
   PayBeforeInput: PayBeforeInput;
   PaymentDate: ResolverTypeWrapper<PaymentDate>;
@@ -493,6 +506,7 @@ export type ResolversParentTypes = ResolversObject<{
   IncomesList: IncomesList;
   IncomesListAndExpenses: IncomesListAndExpenses;
   Int: Scalars['Int']['output'];
+  LoginResponse: LoginResponse;
   Mutation: {};
   PayBeforeInput: PayBeforeInput;
   PaymentDate: PaymentDate;
@@ -576,6 +590,11 @@ export type IncomesListAndExpensesResolvers<ContextType = Context, ParentType ex
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type LoginResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['LoginResponse'] = ResolversParentTypes['LoginResponse']> = ResolversObject<{
+  status?: Resolver<ResolversTypes['AUTH_STATUS'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   createCard?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, Partial<MutationCreateCardArgs>>;
   createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'input'>>;
@@ -609,6 +628,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   incomesAndExpensesByFortnight?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesAndExpensesByFortnightArgs, 'input'>>;
   incomesByMonth?: Resolver<Maybe<Array<Maybe<ResolversTypes['Income']>>>, ParentType, ContextType, RequireFields<QueryIncomesByMonthArgs, 'date'>>;
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
+  login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
 }>;
 
 export type TotalResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Total'] = ResolversParentTypes['Total']> = ResolversObject<{
@@ -651,6 +671,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Income?: IncomeResolvers<ContextType>;
   IncomesList?: IncomesListResolvers<ContextType>;
   IncomesListAndExpenses?: IncomesListAndExpensesResolvers<ContextType>;
+  LoginResponse?: LoginResponseResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   PaymentDate?: PaymentDateResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
