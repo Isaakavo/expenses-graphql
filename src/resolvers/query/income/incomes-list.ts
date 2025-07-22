@@ -4,6 +4,16 @@ import { QueryResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Income } from '../../../models/index.js';
 import { calcualteTotalByMonth } from '../../../utils/calculate-total.js';
+import { sequelize } from '../../../database/client.js';
+import { QueryTypes } from 'sequelize';
+import { toCamelCaseDeep } from '../../../utils/case-convertion.js';
+import { formatInTimeZone } from 'date-fns-tz';
+
+interface IncomByMonth {
+  total: number;
+  month: Date;
+  incomes: Income[];
+}
 
 export const incomesList: QueryResolvers['incomesList'] = async (
   _,
@@ -21,13 +31,41 @@ export const incomesList: QueryResolvers['incomesList'] = async (
         userId,
       },
       order: [['paymentDate', 'DESC']],
-    });
+    });    
+
+    const results = (await sequelize.query(
+      `
+      SELECT
+        DATE_TRUNC('month', "payment_date") AS month,
+        SUM(total) AS total,
+        JSON_AGG(incomes.* ORDER BY payment_date DESC) AS incomes
+      FROM incomes
+      WHERE "user_id" = :userId
+      GROUP BY month
+      ORDER BY month DESC
+    `,
+      {
+        replacements: { userId },
+        type: QueryTypes.SELECT,
+      }
+    )) as IncomByMonth[];
 
     logger.info(`returning ${allIncomes.length} incomes`);
+
+    const grouped = toCamelCaseDeep(results).map((r) => {
+      return {
+        month: formatInTimeZone(new Date(r.month), 'UTC', 'MMMM'),
+        total: r.total,
+        incomes: r.incomes.map((x) => adaptSingleIncome(x)),
+      };
+    });
+
+    logger.info(grouped[0].month);
 
     return {
       incomes: allIncomes.map((x) => adaptSingleIncome(x)),
       totalByMonth: calcualteTotalByMonth(allIncomes),
+      groupedByMonth: grouped,
       total: allIncomes.reduce(
         (acumulator, currentValue) => acumulator + currentValue.total,
         0

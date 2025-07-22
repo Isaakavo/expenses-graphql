@@ -71,11 +71,18 @@ type TotalByFortnight implements Total {
   year: String!
 }
 
+type IncomesGroupedByMonth {
+  month: String!         # "2025-07" o similar
+  total: Float!
+  incomes: [Income!]!
+}
+
 # Type used to display all the incomes registered and to obtain the total by month
 # and total of all
 type IncomesList {
   incomes: [Income!]!
   totalByMonth: [TotalByMonth!]!
+  groupedByMonth: [IncomesGroupedByMonth!]
   total: Float!
 }
 

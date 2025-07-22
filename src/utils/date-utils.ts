@@ -7,11 +7,18 @@ import {
 } from 'date-fns';
 import { Fortnight } from '../generated/graphql.js';
 
-export const calculateFortnight = (date: Date) => {
-  const firstDayOfMonth = startOfMonth(date);
-  const fifteenthDayOfMonth = endOfMonth(date).setDate(15);
+export const calculateFortnight = (date: Date | string) => {
 
-  return isWithinInterval(date, {
+  let parsedDate: Date = date as Date;
+
+  if (typeof date === 'string') {
+    parsedDate = new Date(date);
+  }
+  
+  const firstDayOfMonth = startOfMonth(parsedDate);
+  const fifteenthDayOfMonth = endOfMonth(parsedDate).setDate(15);
+
+  return isWithinInterval(parsedDate, {
     start: firstDayOfMonth,
     end: fifteenthDayOfMonth,
   })
