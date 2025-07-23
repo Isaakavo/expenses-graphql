@@ -147,6 +147,7 @@ export type IncomesGroupedByMonth = {
   incomes: Array<Income>;
   month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
+  year: Scalars['String']['output'];
 };
 
 export type IncomesList = {
@@ -588,6 +589,7 @@ export type IncomesGroupedByMonthResolvers<ContextType = Context, ParentType ext
   incomes?: Resolver<Array<ResolversTypes['Income']>, ParentType, ContextType>;
   month?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  year?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 

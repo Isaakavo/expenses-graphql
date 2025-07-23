@@ -12,6 +12,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 interface IncomByMonth {
   total: number;
   month: Date;
+  year: string;
   incomes: Income[];
 }
 
@@ -37,11 +38,12 @@ export const incomesList: QueryResolvers['incomesList'] = async (
       `
       SELECT
         DATE_TRUNC('month', "payment_date") AS month,
+        EXTRACT(YEAR FROM payment_date) AS year,
         SUM(total) AS total,
         JSON_AGG(incomes.* ORDER BY payment_date DESC) AS incomes
       FROM incomes
       WHERE "user_id" = :userId
-      GROUP BY month
+      GROUP BY month, year
       ORDER BY month DESC
     `,
       {
@@ -50,11 +52,12 @@ export const incomesList: QueryResolvers['incomesList'] = async (
       }
     )) as IncomByMonth[];
 
-    logger.info(`returning ${allIncomes.length} incomes`);
+    logger.info(`returning ${allIncomes.length} incomes`);    
 
     const grouped = toCamelCaseDeep(results).map((r) => {
       return {
         month: formatInTimeZone(new Date(r.month), 'UTC', 'MMMM'),
+        year: r.year,
         total: r.total,
         incomes: r.incomes.map((x) => adaptSingleIncome(x)),
       };

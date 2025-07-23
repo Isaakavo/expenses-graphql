@@ -72,7 +72,8 @@ type TotalByFortnight implements Total {
 }
 
 type IncomesGroupedByMonth {
-  month: String!         # "2025-07" o similar
+  month: String!
+  year: String!
   total: Float!
   incomes: [Income!]!
 }
