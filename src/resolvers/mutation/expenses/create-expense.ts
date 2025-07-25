@@ -1,15 +1,54 @@
 import { adaptCard, categoryAdapter } from '../../../adapters/index.js';
 import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
-import { Card, Expense } from '../../../models/index.js';
+import { Card, Expense, Period as PeriodModel } from '../../../models/index.js';
 import { Date as CustomDate } from '../../../scalars/date.js';
+import { Period } from '../../../generated/graphql.js';
+import { addDays } from 'date-fns';
+import { Op } from 'sequelize';
+
+export const getOrCreateByPeriod = async (
+  userId: string,
+  date: Date,
+  periodType: Period
+): Promise<PeriodModel> => {
+  if (!userId) {
+    throw Error('Not Allowed');
+  }
+
+  const day = CustomDate.parseValue(date);
+
+  // if (periodType === Period.WEEKLY) {
+  const start = day;
+  const end = addDays(start, 7);
+
+  console.log(end);
+  
+// TODO validate how to handle the logic to create incomes or expenses by date range dynamically
+// one possible solution: extract a period based on the periodType
+// if weekly rest and sum 7 days and check if a period already exists, if yes, extract it and use the id
+// if not, create it and extract the id
+  const [period] = await PeriodModel.findOrCreate({
+    defaults: { type: periodType, userId, startDate: start, endDate: end },
+    where: {
+      userId,
+      // startDate: { [Op.lte]: start },
+      endDate: { [Op.gte]: end },
+      type: periodType,
+    },
+  });
+
+  return period;
+  // }
+};
 
 export const createExpense: MutationResolvers['createExpense'] = async (
   _,
   { input },
   context
 ) => {
-  const { cardId, concept, total, comment, payBefore, category } = input;
+  const { cardId, concept, total, comment, payBefore, category, periodType } =
+    input;
   const {
     user: { userId },
   } = context;
@@ -43,10 +82,13 @@ export const createExpense: MutationResolvers['createExpense'] = async (
   const serverDate = CustomDate.parseValue(new Date().toISOString());
   const parsedPayBefore = CustomDate.parseValue(payBefore);
 
+  const period = await getOrCreateByPeriod(userId, payBefore, periodType);
+
   const newExpense = await Expense.create({
     userId,
     concept,
     total,
+    periodId: period.id,
     category: categoryAdapter(category),
     cardId: card?.id,
     comments: comment,

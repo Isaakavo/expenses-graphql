@@ -33,6 +33,12 @@ enum FixedExpenseFrequency {
   Monthly
 }
 
+enum Period {
+  weekly,
+  fortnightly,
+  montly
+}
+
 interface Total {
   date: String!
   total: Float!
@@ -139,6 +145,7 @@ type LoginResponse {
 input CreateIncomeInput {
   total: Float!
   comment: String
+  periodType: Period!
   paymentDate: Date!
 }
 
@@ -156,6 +163,7 @@ input CreateExpenseInput {
   payBefore: Date!
   comment: String
   category: Category!
+  periodType: Period!
 }
 
 input CreateFixedExpenseInput {
