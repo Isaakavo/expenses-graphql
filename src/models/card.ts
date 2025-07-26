@@ -1,5 +1,4 @@
-import { Model, DataTypes } from 'sequelize';
-import { sequelize } from '../database/client.js';
+import { Model, DataTypes, Sequelize } from 'sequelize';
 
 export class Card extends Model {
   public id!: string;
@@ -10,32 +9,34 @@ export class Card extends Model {
   public isDigital!: boolean;
 }
 
-Card.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
+export const initCardModel = (sequelize: Sequelize) => {
+  Card.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      userId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      // change with alias
+      alias: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      bank: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      isDigital: {
+        type: DataTypes.BOOLEAN,
+      },
+      isDebit: {
+        type: DataTypes.BOOLEAN,
+      },
     },
-    userId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    // change with alias
-    alias: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    bank: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    isDigital: {
-      type: DataTypes.BOOLEAN,
-    },
-    isDebit: {
-      type: DataTypes.BOOLEAN,
-    },
-  },
-  { sequelize }
-);
+    { sequelize }
+  );
+};

@@ -1,5 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
-import { sequelize } from '../database/client.js';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class Income extends Model {
   public id!: string;
@@ -7,45 +6,48 @@ export class Income extends Model {
   public paymentDate!: Date;
   public comment!: string;
   public userId!: string;
+  public periodId!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
 }
 
-Income.init(
-  {
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
+export const initIncomeModel = (sequelize: Sequelize) => {
+  Income.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      total: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
+      comment: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      paymentDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      userId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      periodId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: { model: 'periods', key: 'id' },
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+      },
     },
-    total: {
-      type: DataTypes.FLOAT,
-      allowNull: false,
-    },
-    comment: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    paymentDate: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    userId: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    periodId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: { model: 'periods', key: 'id' },
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      allowNull: false,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-    },
-  },
-  { sequelize, underscored: true }
-);
+    { sequelize, underscored: true }
+  );
+};

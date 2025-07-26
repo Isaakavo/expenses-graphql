@@ -1,8 +1,10 @@
+import { initModels } from 'models/init.js';
 import { logger } from '../logger.js';
 import { sequelize } from './client.js';
 
 export const syncTables = async () => {
   try {
+    initModels(sequelize);
 
     // await sequelize.sync({ force: true });
     await sequelize.sync();
