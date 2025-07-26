@@ -13,14 +13,15 @@ export class PeriodRepository {
     this.periodType = periodType;
   }
 
-  async upsertWeeklyPeriod(date: Date) {
+  async upsertWeeklyPeriod(date: string) {
+    
+    
     const day = CustomDate.parseValue(date);
 
     // if (periodType === Period.WEEKLY) {
     const start = day;
     const end = addDays(start, 7);
 
-    console.log(end);
 
     // TODO validate how to handle the logic to create incomes or expenses by date range dynamically
     // one possible solution: extract a period based on the periodType
@@ -39,7 +40,7 @@ export class PeriodRepository {
         endDate: { [Op.gte]: end },
         type: this.periodType,
       },
-    });
+    });    
 
     return period;
   }

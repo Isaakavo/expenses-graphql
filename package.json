@@ -2,6 +2,7 @@
   "author": "",
   "dependencies": {
     "@apollo/server": "^4.9.3",
+    "@sequelize/sqlite3": "7.0.0-alpha.46",
     "axios": "^1.5.1",
     "date-fns": "^2.30.0",
     "graphql": "^16.8.0",
@@ -35,6 +36,7 @@
     "ts-node": "^10.9.1",
     "tsx": "^4.20.3",
     "typescript": "^5.2.2",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
   },
   "keywords": [],
