@@ -1,4 +1,4 @@
-import { Model } from 'sequelize';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class Income extends Model {
   public id!: string;
@@ -9,3 +9,44 @@ export class Income extends Model {
   public createdAt!: Date;
   public updatedAt!: Date;
 }
+
+export const initIncomeModel = (sequelize: Sequelize) => {
+  Income.init(
+    {
+      id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+        primaryKey: true,
+      },
+      total: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+      },
+      comment: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      paymentDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      userId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      periodId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: { model: 'periods', key: 'id' },
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
+      },
+    },
+    { sequelize, underscored: true }
+  );
+};
