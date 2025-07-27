@@ -4,12 +4,14 @@ import { logger } from '../../../logger.js';
 import { Card, Expense } from '../../../models/index.js';
 import { Date as CustomDate } from '../../../scalars/date.js';
 
+
 export const createExpense: MutationResolvers['createExpense'] = async (
   _,
   { input },
   context
 ) => {
-  const { cardId, concept, total, comment, payBefore, category } = input;
+  const { cardId, concept, total, comment, payBefore, category, periodType } =
+    input;
   const {
     user: { userId },
   } = context;
@@ -43,10 +45,13 @@ export const createExpense: MutationResolvers['createExpense'] = async (
   const serverDate = CustomDate.parseValue(new Date().toISOString());
   const parsedPayBefore = CustomDate.parseValue(payBefore);
 
+  // const period = await getOrCreateByPeriod(userId, payBefore, periodType);
+
   const newExpense = await Expense.create({
     userId,
     concept,
     total,
+    // periodId: period.id,
     category: categoryAdapter(category),
     cardId: card?.id,
     comments: comment,

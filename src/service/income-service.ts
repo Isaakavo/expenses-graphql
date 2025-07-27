@@ -9,19 +9,22 @@ import { logger } from '../logger.js';
 import { Income } from '../models/income.js';
 import { Date as CustomDate } from '../scalars/date.js';
 import { validateId } from '../utils/sequilize-utils.js';
+import { getOrCreateByPeriod } from '../resolvers/mutation/expenses/create-expense.js';
 
 export class IncomeService {
   async createIncome(input: CreateIncomeInput, context: Context) {
-    const { total, paymentDate, comment } = input;
+    const { total, paymentDate, comment, periodType } = input;
     const {
       user: { userId },
     } = context;
     const parsedPaymentDay = CustomDate.parseValue(paymentDate);
     const parsedCreatedAt = CustomDate.parseValue(new Date().toISOString());
+    const period = await getOrCreateByPeriod(userId, paymentDate, periodType);
 
     return await Income.create({
       userId,
       total,
+      periodId: period.id,
       comment: comment?.trim() ?? '',
       paymentDate: parsedPaymentDay,
       createdAt: parsedCreatedAt,

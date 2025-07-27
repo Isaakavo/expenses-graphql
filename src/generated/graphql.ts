@@ -75,6 +75,7 @@ export type CreateExpenseInput = {
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   payBefore: Scalars['Date']['input'];
+  periodType: Period;
   total: Scalars['Float']['input'];
 };
 
@@ -92,6 +93,7 @@ export type CreateFixedExpenseInput = {
 export type CreateIncomeInput = {
   comment?: InputMaybe<Scalars['String']['input']>;
   paymentDate: Scalars['Date']['input'];
+  periodType: Period;
   total: Scalars['Float']['input'];
 };
 
@@ -237,6 +239,12 @@ export type PaymentDate = {
   date: Scalars['Date']['output'];
   fortnight: Fortnight;
 };
+
+export enum Period {
+  FORTNIGHTLY = 'fortnightly',
+  MONTLY = 'montly',
+  WEEKLY = 'weekly'
+}
 
 export type Query = {
   __typename?: 'Query';
@@ -474,6 +482,7 @@ export type ResolversTypes = ResolversObject<{
   Mutation: ResolverTypeWrapper<{}>;
   PayBeforeInput: PayBeforeInput;
   PaymentDate: ResolverTypeWrapper<PaymentDate>;
+  Period: Period;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Total: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Total']>;

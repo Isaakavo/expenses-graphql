@@ -1,48 +1,44 @@
-import { DataTypes, Model, Sequelize } from 'sequelize';
+import { Model, DataTypes, Sequelize } from 'sequelize';
+import { sequelize } from '../database/client.js';
 
-export class Income extends Model {
+export class Period extends Model {
   public id!: string;
-  public total!: number;
-  public paymentDate!: Date;
-  public comment!: string;
   public userId!: string;
-  public periodId!: string;
+  public startDate!: Date;
+  public endDate!: Date;
+  public type!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
 }
 
-export const initIncomeModel = (sequelize: Sequelize) => {
-  Income.init(
+export const initPeriodModel = (sequelize: Sequelize) => {
+  Period.init(
     {
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      total: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-      },
-      comment: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      paymentDate: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
       userId: {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      periodId: {
-        type: DataTypes.UUID,
+      startDate: {
+        type: DataTypes.DATE,
         allowNull: false,
-        references: { model: 'periods', key: 'id' },
+      },
+      endDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      type: {
+        type: DataTypes.ENUM('weekly', 'fortnightly', 'monthly', 'custom'),
+        allowNull: false,
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
       updatedAt: {
         type: DataTypes.DATE,
