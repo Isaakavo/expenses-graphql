@@ -1,4 +1,4 @@
-import { Model, DataTypes, Sequelize } from 'sequelize';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class Card extends Model {
   public id!: string;

@@ -1,4 +1,4 @@
-import { initModels } from 'models/init.js';
+import { initModels } from '../models/init-models.js';
 import { logger } from '../logger.js';
 import { sequelize } from './client.js';
 

@@ -1,6 +1,10 @@
-import { ForeignKey, Model, DataTypes, Sequelize } from 'sequelize';
+import {
+  DataTypes,
+  ForeignKey,
+  Model,
+  Sequelize
+} from 'sequelize';
 import { Card } from './card';
-import { sequelize } from '../database/client.js';
 import { Category } from '../generated/graphql.js';
 
 //TODO include a column for check (if a paymet was already done and when it was done)
