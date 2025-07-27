@@ -1,7 +1,7 @@
 import { Sequelize } from 'sequelize';
-import { Card, initCardModel } from './card';
-import { Expense, initExpenseModel } from './expense';
-import { initIncomeModel } from './income';
+import { Card, initCardModel } from './card.js';
+import { Expense, initExpenseModel } from './expense.js';
+import { initIncomeModel } from './income.js';
 
 export const initModels = (sequelize: Sequelize) => {
   initExpenseModel(sequelize);
