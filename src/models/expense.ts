@@ -52,11 +52,6 @@ export function initExpenseModel(sequelize: Sequelize) {
         type: DataTypes.DATE,
         allowNull: false,
       },
-      periodId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: { model: 'periods', key: 'id' },
-      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,

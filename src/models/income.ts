@@ -34,11 +34,6 @@ export const initIncomeModel = (sequelize: Sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      periodId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: { model: 'periods', key: 'id' },
-      },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
