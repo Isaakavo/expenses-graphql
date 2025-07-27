@@ -1,8 +1,8 @@
 import { initModels } from '../models/init-models.js';
 import { logger } from '../logger.js';
-import { sequelize } from './client.js';
+import { Sequelize } from 'sequelize';
 
-export const syncTables = async () => {
+export const syncTables = async (sequelize: Sequelize) => {
   try {
     initModels(sequelize);
 
