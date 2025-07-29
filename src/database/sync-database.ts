@@ -4,8 +4,9 @@ import { Sequelize } from 'sequelize';
 
 export const syncTables = async (sequelize: Sequelize) => {
   try {
+    logger.info('Starting data base connection...');
+    await sequelize.authenticate();
     initModels(sequelize);
-
     // await sequelize.sync({ force: true });
     await sequelize.sync();
     logger.info('Synced tables', 'syncTables');

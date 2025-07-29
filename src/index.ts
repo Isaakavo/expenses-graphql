@@ -5,7 +5,7 @@ import { readFileSync } from 'fs';
 import { Sequelize } from 'sequelize';
 import { instance } from './auth/axios-instance.js';
 import { resolverUser } from './auth/resolve-user.js';
-import { connectDatabase, sequelizeClient } from './database/client.js';
+import { sequelizeClient } from './database/client.js';
 import { syncTables } from './database/sync-database.js';
 import resolvers from './resolvers/index.js';
 import { logger } from './logger.js';
@@ -26,7 +26,6 @@ export interface Context {
 }
 
 const startServer = async () => {
-  await connectDatabase();
   await syncTables(sequelizeClient);
 
   const typeDefs = readFileSync('./schema.graphql', { encoding: 'utf-8' });

@@ -1,5 +1,4 @@
 import { Sequelize } from 'sequelize';
-import { logger } from '../logger.js';
 
 export const sequelizeClient =
   process.env.NODE_ENV === 'production'
@@ -15,12 +14,3 @@ export const sequelizeClient =
       database: 'expenses',
       logging: false,
     });
-
-export const connectDatabase = async () => {
-  try {
-    await sequelizeClient.authenticate();
-    logger.info('Connected to database');
-  } catch (error) {
-    logger.error(`Error connecting to database ${error.message}`);
-  }
-};
