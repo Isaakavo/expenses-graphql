@@ -1,11 +1,5 @@
-import {
-  DataTypes,
-  ForeignKey,
-  Model,
-  Sequelize
-} from 'sequelize';
+import { DataTypes, ForeignKey, Model, Sequelize } from 'sequelize';
 import { Card } from './card';
-import { Category } from '../generated/graphql.js';
 //TODO include a column for check (if a paymet was already done and when it was done)
 export class Expense extends Model {
   public id!: string;
@@ -32,9 +26,13 @@ export function initExpenseModel(sequelize: Sequelize) {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      category: {
-        type: DataTypes.ENUM(...Object.values(Category)),
+      categoryId: {
+        type: DataTypes.UUID,
         allowNull: false,
+        references: {
+          model: 'categories',
+          key: 'id',
+        },
       },
       concept: {
         type: DataTypes.STRING,
@@ -63,4 +61,3 @@ export function initExpenseModel(sequelize: Sequelize) {
     { sequelize, underscored: true }
   );
 }
-

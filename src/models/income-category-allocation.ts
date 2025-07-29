@@ -14,6 +14,14 @@ export const initIncomeCategoryAllocationModel = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      percentage: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        validate: {
+          min: 0,
+          max: 1,
+        },
+      },
       amount: {
         type: DataTypes.FLOAT,
         allowNull: false,

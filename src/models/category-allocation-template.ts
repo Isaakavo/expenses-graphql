@@ -13,6 +13,10 @@ export const initUserCategoryAllocationTemplateModel = (
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
+      userId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
       percentage: {
         type: DataTypes.FLOAT,
         allowNull: false,
@@ -28,7 +32,7 @@ export const initUserCategoryAllocationTemplateModel = (
       indexes: [
         {
           unique: true,
-          fields: ['UserId', 'CategoryId'], // 🔐 Previene duplicados
+          fields: ['user_id', 'category_id'], // 🔐 Previene duplicados
         },
       ],
     }
