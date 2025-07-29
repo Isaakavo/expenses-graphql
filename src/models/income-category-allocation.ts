@@ -14,6 +14,23 @@ export const initIncomeCategoryAllocationModel = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      incomeId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: 'incomes',
+          key: 'id',
+        },
+        onDelete: 'CASCADE'
+      },
+      categoryId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: 'categories',
+          key: 'id',
+        },
+      },
       percentage: {
         type: DataTypes.FLOAT,
         allowNull: false,
@@ -22,7 +39,7 @@ export const initIncomeCategoryAllocationModel = (sequelize) => {
           max: 1,
         },
       },
-      amount: {
+      amountAllocated: {
         type: DataTypes.FLOAT,
         allowNull: false,
       },

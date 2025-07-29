@@ -12,12 +12,19 @@ export const initCategoryModel = (sequelize: Sequelize) => {
       },
       userId: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
       },
       name: {
         type: DataTypes.STRING,
         unique: true,
         allowNull: false,
+      },
+      createdAt: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      updatedAt: {
+        type: DataTypes.DATE,
       },
     },
     { sequelize, underscored: true }

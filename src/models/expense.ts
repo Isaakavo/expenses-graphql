@@ -33,6 +33,7 @@ export function initExpenseModel(sequelize: Sequelize) {
           model: 'categories',
           key: 'id',
         },
+        onDelete: 'SET NULL'
       },
       concept: {
         type: DataTypes.STRING,

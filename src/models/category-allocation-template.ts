@@ -17,6 +17,14 @@ export const initUserCategoryAllocationTemplateModel = (
         type: DataTypes.STRING,
         allowNull: false,
       },
+      categoryId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+          model: 'categories',
+          key: 'id',
+        },
+      },
       percentage: {
         type: DataTypes.FLOAT,
         allowNull: false,
