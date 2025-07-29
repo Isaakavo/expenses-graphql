@@ -4,6 +4,7 @@ import { Card } from './card';
 export class Expense extends Model {
   public id!: string;
   public userId!: string;
+  public SubCategoryId!: ForeignKey<string>;
   public concept!: string;
   public total!: number;
   public comments!: string;

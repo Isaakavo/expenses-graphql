@@ -28,7 +28,8 @@ export const adaptMultipleIncomes = (incomes: Income[]) => incomes.map((x) => ad
 
 export function adaptExpensesWithCard(
   x: Expense,
-  card?: Card
+  subCategory: string,
+  card?: Card,
 ): GraphqlExpense {
   try {
     return {
@@ -41,7 +42,8 @@ export function adaptExpensesWithCard(
       createdAt: x.createdAt,
       updatedAt: x.updatedAt,
       card: card ? adaptCard(card) : null,
-      category: GraphqlCategory[x.category]
+      category: GraphqlCategory[x.category],
+      subCategory: subCategory,
     };
   } catch (error) {
     logger.error(error)

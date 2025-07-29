@@ -17,5 +17,5 @@ export const expenseById: QueryResolvers['expenseById'] = async (_, { id }, cont
     },
   });
 
-  return adaptExpensesWithCard(expense, card);
+  return adaptExpensesWithCard(expense, '',card);
 };

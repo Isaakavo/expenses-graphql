@@ -8,7 +8,10 @@ import {
   adaptExpensesWithCard,
   categoryAdapter,
 } from '../../../adapters/index.js';
-import { FixedExpenseFrequency, MutationResolvers } from '../../../generated/graphql.js';
+import {
+  FixedExpenseFrequency,
+  MutationResolvers,
+} from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Card, Expense } from '../../../models/index.js';
 import { Date as CustomDate } from '../../../scalars/date.js';
@@ -83,5 +86,7 @@ export const createFixedExpense: MutationResolvers['createFixedExpense'] =
     const expensesList = await Expense.bulkCreate(expensesArr);
     logger.info(`${expensesList.length} Expenses were created ${frequency}`);
 
-    return expensesList.map((expense) => adaptExpensesWithCard(expense, card));
+    return expensesList.map((expense) =>
+      adaptExpensesWithCard(expense, '', card)
+    );
   };

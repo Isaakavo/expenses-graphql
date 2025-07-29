@@ -762,6 +762,18 @@
             "deprecationReason": null
           },
           {
+            "name": "subCategory",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "total",
             "description": null,
             "args": [],

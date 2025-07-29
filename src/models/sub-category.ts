@@ -1,6 +1,13 @@
 import { Model, Sequelize, DataTypes } from 'sequelize';
 
-export class SubCategory extends Model {}
+export class SubCategory extends Model {
+  public id!: string;
+  public userId!: string | null;
+  public name!: string;
+  public categoryId!: string;
+  public createdAt!: Date;
+  public updatedAt!: Date;
+}
 
 export const initSubCategoryModel = (sequelize: Sequelize) => {
   SubCategory.init(

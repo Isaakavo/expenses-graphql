@@ -33,7 +33,7 @@ export const findCard = async (expenses: Expense[]) => {
           },
         });
 
-        return adaptExpensesWithCard(expense, expensesCard);
+        return adaptExpensesWithCard(expense, '', expensesCard);
       })
     );
   } catch (error) {

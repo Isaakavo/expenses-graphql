@@ -105,6 +105,7 @@ type Expense {
   card: Card
   comment: String
   category: Category!
+  subCategory: String
 }
 
 type FinancialBalance {

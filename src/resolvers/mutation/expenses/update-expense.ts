@@ -43,7 +43,7 @@ export const updateExpense: MutationResolvers['updateExpense'] = async (
       where: { userId, id: updatedExpense[0].cardId },
     });
 
-    return adaptExpensesWithCard(updatedExpense[0], card);
+    return adaptExpensesWithCard(updatedExpense[0],'', card);
   } catch (error) {
     logger.error(error);
     return error;
