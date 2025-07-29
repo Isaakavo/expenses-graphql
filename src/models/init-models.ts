@@ -10,12 +10,15 @@ import {
   UserCategoryAllocationTemplate,
   initUserCategoryAllocationTemplateModel,
 } from './category-allocation-template.js';
-import { Category } from './category.js';
+import { Category, initCategoryModel } from './category.js';
+import { SubCategory, initSubCategoryModel } from './sub-category.js';
 
 export const initModels = (sequelize: Sequelize) => {
   initExpenseModel(sequelize);
   initCardModel(sequelize);
   initIncomeModel(sequelize);
+  initCategoryModel(sequelize);
+  initSubCategoryModel(sequelize);
   initIncomeCategoryAllocationModel(sequelize);
   initUserCategoryAllocationTemplateModel(sequelize);
 
@@ -24,6 +27,7 @@ export const initModels = (sequelize: Sequelize) => {
     as: 'cards',
   });
   Expense.belongsTo(Card, { foreignKey: 'cardId' });
+  Expense.belongsTo(SubCategory, { foreignKey: 'subcategory_id' });
 
   UserCategoryAllocationTemplate.belongsTo(Category);
   Category.hasMany(UserCategoryAllocationTemplate);
@@ -33,4 +37,7 @@ export const initModels = (sequelize: Sequelize) => {
 
   IncomeCategoryAllocation.belongsTo(Category);
   Category.hasMany(IncomeCategoryAllocation);
+
+  Category.hasMany(SubCategory);
+  SubCategory.belongsTo(Category);
 };

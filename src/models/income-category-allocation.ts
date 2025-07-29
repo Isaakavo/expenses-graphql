@@ -44,6 +44,6 @@ export const initIncomeCategoryAllocationModel = (sequelize) => {
         allowNull: false,
       },
     },
-    { sequelize, modelName: 'IncomeCategoryAllocation' }
+    { sequelize, underscored: true }
   );
 };

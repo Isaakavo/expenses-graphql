@@ -7,7 +7,6 @@ module.exports = {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
-        defaultValue: Sequelize.literal('gen_random_uuid()'),
       },
       user_id: {
         type: Sequelize.STRING,
@@ -27,12 +26,36 @@ module.exports = {
       },
     });
 
-    // 2. Crear UserCategoryAllocationTemplate
+    await queryInterface.createTable('sub_categories', {
+      id: {
+        type: Sequelize.UUID,
+        primaryKey: true,
+      },
+      name: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      category_id: {
+        type: Sequelize.UUID,
+        allowNull: false,
+        references: {
+          model: 'categories',
+          key: 'id',
+        },
+        onDelete: 'CASCADE',
+      },
+      user_id: {
+        type: Sequelize.UUID,
+        allowNull: true,
+      },
+      created_at: Sequelize.DATE,
+      updated_at: Sequelize.DATE,
+    });
+
     await queryInterface.createTable('user_category_allocation_templates', {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
-        defaultValue: Sequelize.literal('gen_random_uuid()'),
       },
       user_id: {
         type: Sequelize.STRING,
@@ -67,12 +90,14 @@ module.exports = {
       name: 'unique_user_category_template',
     });
 
-    // 3. Crear UserCategoryAllocationInstance
     await queryInterface.createTable('income_category_allocation', {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
-        defaultValue: Sequelize.literal('gen_random_uuid()'),
+      },
+      user_id: {
+        type: Sequelize.STRING,
+        allowNull: false,
       },
       income_id: {
         type: Sequelize.UUID,
@@ -116,12 +141,11 @@ module.exports = {
       name: 'unique_income_category_instance',
     });
 
-    // 4. Agregar columna category_id a expenses (si vas a reemplazar ENUM)
-    await queryInterface.addColumn('expenses', 'category_id', {
+    await queryInterface.addColumn('expenses', 'subcategory_id', {
       type: Sequelize.UUID,
       allowNull: true, // temporalmente true para migración
       references: {
-        model: 'categories',
+        model: 'sub_categories',
         key: 'id',
       },
       onDelete: 'SET NULL',
@@ -129,9 +153,10 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('expenses', 'category_id');
+    await queryInterface.removeColumn('expenses', 'subcategory_id');
     await queryInterface.dropTable('user_category_allocation_instances');
     await queryInterface.dropTable('user_category_allocation_templates');
     await queryInterface.dropTable('categories');
+    await queryInterface.dropTable('subcategories');
   },
 };

@@ -1,50 +1,75 @@
 'use strict';
-
 const { v4: uuidv4 } = require('uuid');
 
-const categories = [
-  'BILLS',
-  'CAR',
-  'CLOTHES',
-  'COMMUNICATION',
-  'EATING_OUT',
-  'ENTERTAINMENT',
-  'FOOD',
-  'GIFTS',
-  'HEALTH',
-  'HOUSE',
-  'INSURANCE',
-  'MONTHS_WITHOUT_INTEREST',
-  'PETS',
-  'SPORTS',
-  'TRANSPORT',
-  'SUPER_MARKET',
-  'HANG_OUT',
-  'SAVINGS',
-  'SUBSCRIPTION',
-  'FIXED_EXPENSE'
-];
+const PARENT_CHILD = {
+  LIFESTYLE: [
+    'CLOTHES',
+    'ENTERTAINMENT',
+    'EATING_OUT',
+    'SPORTS',
+    'HANG_OUT',
+    'GIFTS',
+  ],
+  HOUSEHOLD: [
+    'FOOD',
+    'SUPER_MARKET',
+    'HOUSE',
+    'INSURANCE',
+    'FIXED_EXPENSE',
+    'BILLS',
+  ],
+  TRANSPORT: ['CAR', 'TRANSPORT'],
+  COMMUNICATION: ['COMMUNICATION', 'SUBSCRIPTION'],
+  FINANCIAL: ['SAVINGS', 'MONTHS_WITHOUT_INTEREST'],
+  HEALTH: ['HEALTH', 'PETS'],
+};
 
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
-    const now = new Date();
-    const rows = categories.map((name) => ({
-      id: uuidv4(),
-      name,
-      user_id: null, // Cambia si deseas asociarlas a un usuario específico
-      created_at: now,
-      updated_at: now,
-    }));
+  async up(queryInterface, Sequelize) {
+    const categoriesMap = {};
+    for (const [parent, children] of Object.entries(PARENT_CHILD)) {
+      const [category] = await queryInterface.bulkInsert(
+        'categories',
+        [
+          {
+            id: uuidv4(),
+            name: parent,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        ],
+        { returning: true }
+      );
 
-    await queryInterface.bulkInsert('categories', rows, {
-      ignoreDuplicates: true, // Para evitar conflictos si ya existen
-    });
+      categoriesMap[parent] = category.id;
+
+      for (const child of children) {
+        const [subcat] = await queryInterface.bulkInsert(
+          'sub_categories',
+          [
+            {
+              id: uuidv4(),
+              name: child,
+              category_id: category.id,
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          ],
+          { returning: true }
+        );
+
+        // update existing expenses
+        await queryInterface.sequelize.query(`
+          UPDATE expenses
+          SET subcategory_id = '${subcat.id}'
+          WHERE category = '${child}'
+        `);
+      }
+    }
   },
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.bulkDelete('categories', {
-      name: categories,
-      user_id: null,
-    });
+  async down(queryInterface) {
+    await queryInterface.bulkDelete('subcategories', null, {});
+    await queryInterface.bulkDelete('categories', null, {});
   },
 };

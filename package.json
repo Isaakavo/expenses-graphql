@@ -44,7 +44,8 @@
     "deploy:prod": "pnpm delete:dist && pnpm codegen && pnpm compile && fly deploy",
     "dev": "NODE_ENV=dev nodemon --esm src/index.ts",
     "lint": "eslint . --ext .ts",
-    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \""
+    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \"",
+    "migrate": "npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
   },
   "type": "module",
   "version": "1.0.0"

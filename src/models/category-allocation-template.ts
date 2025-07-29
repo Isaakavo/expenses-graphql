@@ -36,7 +36,7 @@ export const initUserCategoryAllocationTemplateModel = (
     },
     {
       sequelize,
-      modelName: 'UserCategoryAllocationTemplate',
+      underscored: true,
       indexes: [
         {
           unique: true,

@@ -26,11 +26,11 @@ export function initExpenseModel(sequelize: Sequelize) {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      categoryId: {
+      SubCategoryId: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: 'categories',
+          model: 'sub_categories',
           key: 'id',
         },
         onDelete: 'SET NULL'
