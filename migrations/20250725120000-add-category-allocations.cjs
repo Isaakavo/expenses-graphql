@@ -141,7 +141,7 @@ module.exports = {
       name: 'unique_income_category_instance',
     });
 
-    await queryInterface.addColumn('expenses', 'subcategory_id', {
+    await queryInterface.addColumn('expenses', 'sub_category_id', {
       type: Sequelize.UUID,
       allowNull: true, // temporalmente true para migración
       references: {
@@ -153,7 +153,7 @@ module.exports = {
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('expenses', 'subcategory_id');
+    await queryInterface.removeColumn('expenses', 'sub_category_id');
     await queryInterface.dropTable('user_category_allocation_instances');
     await queryInterface.dropTable('user_category_allocation_templates');
     await queryInterface.dropTable('categories');

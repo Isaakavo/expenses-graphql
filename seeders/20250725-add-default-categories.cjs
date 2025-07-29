@@ -61,7 +61,7 @@ module.exports = {
         // update existing expenses
         await queryInterface.sequelize.query(`
           UPDATE expenses
-          SET subcategory_id = '${subcat.id}'
+          SET sub_category_id = '${subcat.id}'
           WHERE category = '${child}'
         `);
       }
