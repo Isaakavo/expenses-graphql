@@ -681,8 +681,8 @@
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "ENUM",
-                "name": "Category",
+                "kind": "SCALAR",
+                "name": "String",
                 "ofType": null
               }
             },

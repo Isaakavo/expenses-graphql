@@ -27,7 +27,10 @@ export const initModels = (sequelize: Sequelize) => {
     as: 'cards',
   });
   Expense.belongsTo(Card, { foreignKey: 'cardId' });
-  Expense.belongsTo(SubCategory, { foreignKey: 'sub_category_id' });
+  Expense.belongsTo(SubCategory, {
+    foreignKey: 'subCategoryId',
+    as: 'sub_category',
+  });
 
   UserCategoryAllocationTemplate.belongsTo(Category);
   Category.hasMany(UserCategoryAllocationTemplate);
@@ -39,5 +42,5 @@ export const initModels = (sequelize: Sequelize) => {
   Category.hasMany(IncomeCategoryAllocation);
 
   Category.hasMany(SubCategory);
-  SubCategory.belongsTo(Category);
+  SubCategory.belongsTo(Category, { as: 'category', foreignKey: 'categoryId' });
 };

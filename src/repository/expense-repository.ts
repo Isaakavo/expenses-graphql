@@ -1,4 +1,6 @@
-import { Expense } from '../models/expense.js';
+import { Category } from '../models/category.js';
+import { SubCategory } from '../models/sub-category.js';
+import { Expense, ExpenseWithCategory } from '../models/expense.js';
 import { FindOptions } from 'sequelize';
 
 export class ExpenseRepository {
@@ -9,8 +11,20 @@ export class ExpenseRepository {
         ...where,
         userId,
       },
+      include: [
+        {
+          model: SubCategory,
+          as: 'sub_category',
+          include: [
+            {
+              model: Category,
+              as: 'category',
+            },
+          ],
+        },
+      ],
       order: [['payBefore', 'DESC']],
       limit,
-    });
+    }) as ExpenseWithCategory[];
   }
 }

@@ -98,7 +98,7 @@ export type CreateIncomeInput = {
 export type Expense = {
   __typename?: 'Expense';
   card?: Maybe<Card>;
-  category: Category;
+  category: Scalars['String']['output'];
   comment?: Maybe<Scalars['String']['output']>;
   concept: Scalars['String']['output'];
   createdAt?: Maybe<Scalars['Date']['output']>;
@@ -540,7 +540,7 @@ export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 
 export type ExpenseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Expense'] = ResolversParentTypes['Expense']> = ResolversObject<{
   card?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType>;
-  category?: Resolver<ResolversTypes['Category'], ParentType, ContextType>;
+  category?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   comment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;

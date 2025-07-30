@@ -1,10 +1,20 @@
 import { DataTypes, ForeignKey, Model, Sequelize } from 'sequelize';
 import { Card } from './card';
+import { SubCategory } from './sub-category.js';
+import { Category } from './category.js';
+
+export type ExpenseWithCategory = Expense & {
+  sub_category: SubCategory & {
+    category: Category;
+  };
+};
+
+
 //TODO include a column for check (if a paymet was already done and when it was done)
 export class Expense extends Model {
   public id!: string;
   public userId!: string;
-  public SubCategoryId!: ForeignKey<string>;
+  public subCategoryId!: ForeignKey<string>;
   public concept!: string;
   public total!: number;
   public comments!: string;
@@ -27,7 +37,7 @@ export function initExpenseModel(sequelize: Sequelize) {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      SubCategoryId: {
+      subCategoryId: {
         type: DataTypes.UUID,
         allowNull: false,
         references: {

@@ -5,7 +5,7 @@ import {
 } from '../generated/graphql.js';
 import { Income } from '../models/income';
 import { calculateFortnight } from '../utils/date-utils.js';
-import { Expense } from '../models/expense';
+import { Expense, ExpenseWithCategory } from '../models/expense';
 import { Card } from 'models/card';
 import { logger } from '../logger.js';
 
@@ -20,18 +20,20 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
       fortnight: calculateFortnight(x.paymentDate),
     },
     createdAt: x.createdAt,
-    updatedAt: x.updatedAt
+    updatedAt: x.updatedAt,
   };
 }
 
-export const adaptMultipleIncomes = (incomes: Income[]) => incomes.map((x) => adaptSingleIncome(x))
+export const adaptMultipleIncomes = (incomes: Income[]) =>
+  incomes.map((x) => adaptSingleIncome(x));
 
 export function adaptExpensesWithCard(
   x: Expense,
-  subCategory: string,
-  card?: Card,
+  subCategory: string | undefined,
+  card?: Card
 ): GraphqlExpense {
   try {
+    const expenseWithCategory = x as ExpenseWithCategory;
     return {
       id: x.id.toString(),
       concept: x.concept,
@@ -42,13 +44,12 @@ export function adaptExpensesWithCard(
       createdAt: x.createdAt,
       updatedAt: x.updatedAt,
       card: card ? adaptCard(card) : null,
-      category: GraphqlCategory[x.category],
-      subCategory: subCategory,
+      category: expenseWithCategory.sub_category.category.name,
+      subCategory: expenseWithCategory.sub_category.name,
     };
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
-  
 }
 
 export function adaptCard(card: Card) {
@@ -62,7 +63,6 @@ export function adaptCard(card: Card) {
       isDebit: card.isDebit,
     };
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
-  
 }

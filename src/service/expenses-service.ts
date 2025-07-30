@@ -1,4 +1,3 @@
-import { SubCategory } from '../models/sub-category.js';
 import { adaptExpensesWithCard } from '../adapters/income-adapter.js';
 import { CardRepository } from '../repository/card-repository.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
@@ -14,23 +13,14 @@ export class ExpensesService {
       queryOptions
     );
 
-    const subCategories = await Promise.all(
-      expenses.map(async (expense) => {
-        const subCategory = await SubCategory.findByPk(expense.SubCategoryId);
-        return subCategory;
-      })
-    );
-
     return await Promise.all(
       expenses.map(async (expense) => {
         const expenseCard = await this.cardRepository.findCardByUserId(
           userId,
           expense.id
         );
-        const subCategory = subCategories.find(
-          (subCat) => subCat.id === expense.SubCategoryId
-        );
-        return adaptExpensesWithCard(expense, subCategory.name, expenseCard);
+
+        return adaptExpensesWithCard(expense, undefined, expenseCard);
       })
     );
   }
