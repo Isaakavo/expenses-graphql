@@ -1,7 +1,5 @@
-import { Category } from '../models/category.js';
-import { SubCategory } from '../models/sub-category.js';
-import { Expense, ExpenseWithCategory } from '../models/expense.js';
 import { FindOptions } from 'sequelize';
+import { Card, Category, Expense, ExpenseWithCategory, SubCategory } from '../models/index.js';
 
 export class ExpenseRepository {
   async getAllExpenses(userId: string, queryOptions?: FindOptions) {
@@ -22,6 +20,10 @@ export class ExpenseRepository {
             },
           ],
         },
+        {
+          model: Card,
+          as: 'card',
+        }
       ],
       order: [['payBefore', 'DESC']],
       limit,

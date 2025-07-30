@@ -4,6 +4,7 @@ import { SubCategory } from './sub-category.js';
 import { Category } from './category.js';
 
 export type ExpenseWithCategory = Expense & {
+  card: Card;
   sub_category: SubCategory & {
     category: Category;
   };

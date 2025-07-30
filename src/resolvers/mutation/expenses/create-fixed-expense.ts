@@ -86,7 +86,5 @@ export const createFixedExpense: MutationResolvers['createFixedExpense'] =
     const expensesList = await Expense.bulkCreate(expensesArr);
     logger.info(`${expensesList.length} Expenses were created ${frequency}`);
 
-    return expensesList.map((expense) =>
-      adaptExpensesWithCard(expense, '', card)
-    );
+    return expensesList.map((expense) => adaptExpensesWithCard(expense, card));
   };
