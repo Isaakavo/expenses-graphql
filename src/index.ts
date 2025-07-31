@@ -58,5 +58,5 @@ const startServer = async () => {
 };
 
 startServer().then(({ url }) => {
-  logger.info(`🚀 Server ready at: ${url}`);
+  logger.info(`Server ready at: ${url}`);
 });
