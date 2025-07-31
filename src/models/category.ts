@@ -1,4 +1,7 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
+import { UserCategoryAllocationTemplate } from './category-allocation-template.js';
+import { IncomeCategoryAllocation } from './income-category-allocation.js';
+import { SubCategory } from './sub-category.js';
 
 export class Category extends Model {
   public id!: string;
@@ -6,6 +9,12 @@ export class Category extends Model {
   public name!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
+
+  static associate() {
+    this.hasMany(UserCategoryAllocationTemplate);
+    this.hasMany(IncomeCategoryAllocation);
+    this.hasMany(SubCategory);
+  }
 }
 
 export const initCategoryModel = (sequelize: Sequelize) => {
@@ -29,11 +38,11 @@ export const initCategoryModel = (sequelize: Sequelize) => {
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        field: 'created_at'
+        field: 'created_at',
       },
       updatedAt: {
         type: DataTypes.DATE,
-        field: 'updated_at'
+        field: 'updated_at',
       },
     },
     { sequelize, underscored: true }

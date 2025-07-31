@@ -45,7 +45,8 @@
     "dev": "NODE_ENV=dev nodemon --esm src/index.ts",
     "lint": "eslint . --ext .ts",
     "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \"",
-    "migrate": "npx sequelize-cli db:migrate && npx sequelize-cli db:seed:all"
+    "migrate": "npx sequelize-cli db:migrate",
+    "seeds": "npx sequelize-cli db:seed:all"
   },
   "type": "module",
   "version": "1.0.0"

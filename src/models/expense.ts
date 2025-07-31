@@ -1,7 +1,8 @@
 import { DataTypes, ForeignKey, Model, Sequelize } from 'sequelize';
-import { Card } from './card';
+import { Card } from './card.js';
 import { SubCategory } from './sub-category.js';
 import { Category } from './category.js';
+import { Period } from './periods.js';
 
 export type ExpenseWithCategory = Expense & {
   card: Card;
@@ -13,7 +14,8 @@ export type ExpenseWithCategory = Expense & {
 export class Expense extends Model {
   public id!: string;
   public userId!: string;
-  public cardId!: ForeignKey<string>;  
+  public cardId!: ForeignKey<string>;
+  public periodId!: ForeignKey<string>;
   public subCategoryId!: ForeignKey<string>;
   public concept!: string;
   public total!: number;
@@ -21,6 +23,15 @@ export class Expense extends Model {
   public payBefore!: Date;
   public createdAt!: Date;
   public updatedAt!: Date;
+
+  static associate() {
+    this.belongsTo(Card, { foreignKey: 'cardId', as: 'card' });
+    this.belongsTo(SubCategory, {
+      foreignKey: 'subCategoryId',
+      as: 'sub_category',
+    });
+    this.belongsTo(Period, { foreignKey: 'periodId', as: 'period' });
+  }
 }
 
 export function initExpenseModel(sequelize: Sequelize) {
@@ -34,7 +45,7 @@ export function initExpenseModel(sequelize: Sequelize) {
       userId: {
         type: DataTypes.UUID,
         allowNull: false,
-        field: 'user_id'
+        field: 'user_id',
       },
       subCategoryId: {
         type: DataTypes.UUID,
@@ -44,7 +55,17 @@ export function initExpenseModel(sequelize: Sequelize) {
           model: 'sub_categories',
           key: 'id',
         },
-        onDelete: 'SET NULL'
+        onDelete: 'SET NULL',
+      },
+      periodId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        field: 'period_id',
+        references: {
+          model: 'periods',
+          key: 'id',
+        },
+        onDelete: 'SET NULL',
       },
       concept: {
         type: DataTypes.STRING,
@@ -57,21 +78,21 @@ export function initExpenseModel(sequelize: Sequelize) {
       comments: {
         type: DataTypes.STRING,
         allowNull: true,
-        field: 'comments'
+        field: 'comments',
       },
       payBefore: {
         type: DataTypes.DATE,
         allowNull: false,
-        field: 'pay_before'
+        field: 'pay_before',
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        field: 'created_at'
+        field: 'created_at',
       },
       updatedAt: {
         type: DataTypes.DATE,
-        field: 'updated_at'
+        field: 'updated_at',
       },
     },
     { sequelize, underscored: true }

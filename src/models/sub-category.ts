@@ -1,4 +1,5 @@
-import { Model, Sequelize, DataTypes } from 'sequelize';
+import { Category } from './category.js';
+import { DataTypes, Model, Sequelize } from 'sequelize';
 
 export class SubCategory extends Model {
   public id!: string;
@@ -7,6 +8,10 @@ export class SubCategory extends Model {
   public categoryId!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
+
+  static associate() {
+    this.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
+  }
 }
 
 export const initSubCategoryModel = (sequelize: Sequelize) => {
@@ -20,7 +25,7 @@ export const initSubCategoryModel = (sequelize: Sequelize) => {
       userId: {
         type: DataTypes.UUID,
         allowNull: true,
-        field: 'user_id'
+        field: 'user_id',
       },
       name: {
         type: DataTypes.STRING,
@@ -39,11 +44,11 @@ export const initSubCategoryModel = (sequelize: Sequelize) => {
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        field: 'created_at'
+        field: 'created_at',
       },
       updatedAt: {
         type: DataTypes.DATE,
-        field: 'updated_at'
+        field: 'updated_at',
       },
     },
     { sequelize, underscored: true }

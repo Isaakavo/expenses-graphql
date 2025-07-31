@@ -1,6 +1,16 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
+import { Category } from './category.js';
 
-export class UserCategoryAllocationTemplate extends Model {}
+export class UserCategoryAllocationTemplate extends Model {
+  public id!: string;
+  public userId!: string;
+  public categoryId!: string;
+  public percentage!: number;
+
+  static associate() {
+    this.belongsTo(Category);
+  }
+}
 
 export const initUserCategoryAllocationTemplateModel = (
   sequelize: Sequelize

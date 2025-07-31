@@ -1,12 +1,14 @@
-import { initModels } from '../models/init-models.js';
-import { logger } from '../logger.js';
+import { associateModels } from '../models/associations.js';
 import { Sequelize } from 'sequelize';
+import { logger } from '../logger.js';
+import { initModels } from '../models/init-models.js';
 
 export const syncTables = async (sequelize: Sequelize) => {
   try {
     logger.info('Starting data base connection...');
     await sequelize.authenticate();
     initModels(sequelize);
+    associateModels();
     // await sequelize.sync({ force: true });
     await sequelize.sync();
     logger.info('Synced tables', 'syncTables');
