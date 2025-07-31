@@ -45,10 +45,20 @@ type PaymentDate {
   fortnight: Fortnight!
 }
 
+type Period {
+  id: ID!
+  userId: String!
+  startDate: Date!
+  endDate: Date!
+  createdAt: Date
+  updatedAt: Date
+}
+
 type Income {
   id: ID!
   userId: String!
   total: Float!
+  period: Period
   createdAt: Date
   updatedAt: Date
   comment: String
@@ -197,7 +207,8 @@ input UpdateCardInput {
 
 input PayBeforeInput {
   # input used to get all the expenses matching this date (from 1st to 15th or from 15th to 30th)
-  payBefore: Date!
+  payBefore: Date
+  periodId: String
   cardId: ID
 }
 

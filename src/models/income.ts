@@ -2,6 +2,10 @@ import { DataTypes, Model, Sequelize } from 'sequelize';
 import { IncomeCategoryAllocation } from './income-category-allocation.js';
 import { Period } from './periods.js';
 
+export type IncomeWithPeriod = Income & {
+  period_id: string;
+};
+
 export class Income extends Model {
   public id!: string;
   public total!: number;
@@ -11,6 +15,7 @@ export class Income extends Model {
   public periodId!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
+  public period?: Period;
 
   static associate() {
     this.belongsTo(Period, { foreignKey: 'periodId', as: 'period' });

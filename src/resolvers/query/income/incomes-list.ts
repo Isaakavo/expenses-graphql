@@ -4,6 +4,7 @@ import { QueryResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Income } from '../../../models/index.js';
 import { calcualteTotalByMonth } from '../../../utils/calculate-total.js';
+import { Period } from '../../../models/periods.js';
 
 export const incomesList: QueryResolvers['incomesList'] = async (
   _,
@@ -20,6 +21,15 @@ export const incomesList: QueryResolvers['incomesList'] = async (
       where: {
         userId,
       },
+      include: [
+        {
+          model: Period,
+          as: 'period',
+          where: {
+            userId,
+          },
+        },
+      ],
       order: [['paymentDate', 'DESC']],
     });
 

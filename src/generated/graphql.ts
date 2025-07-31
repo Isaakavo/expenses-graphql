@@ -138,6 +138,7 @@ export type Income = {
   createdAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   paymentDate: PaymentDate;
+  period?: Maybe<Period>;
   total: Scalars['Float']['output'];
   updatedAt?: Maybe<Scalars['Date']['output']>;
   userId: Scalars['String']['output'];
@@ -230,13 +231,24 @@ export type MutationUpdateIncomeArgs = {
 
 export type PayBeforeInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
-  payBefore: Scalars['Date']['input'];
+  payBefore?: InputMaybe<Scalars['Date']['input']>;
+  periodId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type PaymentDate = {
   __typename?: 'PaymentDate';
   date: Scalars['Date']['output'];
   fortnight: Fortnight;
+};
+
+export type Period = {
+  __typename?: 'Period';
+  createdAt?: Maybe<Scalars['Date']['output']>;
+  endDate: Scalars['Date']['output'];
+  id: Scalars['ID']['output'];
+  startDate: Scalars['Date']['output'];
+  updatedAt?: Maybe<Scalars['Date']['output']>;
+  userId: Scalars['String']['output'];
 };
 
 export type Query = {
@@ -475,6 +487,7 @@ export type ResolversTypes = ResolversObject<{
   Mutation: ResolverTypeWrapper<{}>;
   PayBeforeInput: PayBeforeInput;
   PaymentDate: ResolverTypeWrapper<PaymentDate>;
+  Period: ResolverTypeWrapper<Period>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Total: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Total']>;
@@ -511,6 +524,7 @@ export type ResolversParentTypes = ResolversObject<{
   Mutation: {};
   PayBeforeInput: PayBeforeInput;
   PaymentDate: PaymentDate;
+  Period: Period;
   Query: {};
   String: Scalars['String']['output'];
   Total: ResolversInterfaceTypes<ResolversParentTypes>['Total'];
@@ -570,6 +584,7 @@ export type IncomeResolvers<ContextType = Context, ParentType extends ResolversP
   createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   paymentDate?: Resolver<ResolversTypes['PaymentDate'], ParentType, ContextType>;
+  period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -613,6 +628,16 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 export type PaymentDateResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PaymentDate'] = ResolversParentTypes['PaymentDate']> = ResolversObject<{
   date?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   fortnight?: Resolver<ResolversTypes['Fortnight'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type PeriodResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Period'] = ResolversParentTypes['Period']> = ResolversObject<{
+  createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  endDate?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  startDate?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -676,6 +701,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   LoginResponse?: LoginResponseResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   PaymentDate?: PaymentDateResolvers<ContextType>;
+  Period?: PeriodResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   Total?: TotalResolvers<ContextType>;
   TotalByCardId?: TotalByCardIdResolvers<ContextType>;

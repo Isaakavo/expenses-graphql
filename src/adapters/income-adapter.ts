@@ -14,6 +14,7 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
     userId: x.userId,
     total: x.total,
     comment: x.comment,
+    period: x.period,
     paymentDate: {
       date: x.paymentDate,
       fortnight: calculateFortnight(x.paymentDate),
