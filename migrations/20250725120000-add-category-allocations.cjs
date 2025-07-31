@@ -9,7 +9,7 @@ module.exports = {
         primaryKey: true,
       },
       user_id: {
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
         allowNull: true,
       },
       name: {
@@ -26,6 +26,7 @@ module.exports = {
       },
     });
 
+    // 2. Crear sub_categories
     await queryInterface.createTable('sub_categories', {
       id: {
         type: Sequelize.UUID,
@@ -33,6 +34,7 @@ module.exports = {
       },
       name: {
         type: Sequelize.STRING,
+        unique: true,
         allowNull: false,
       },
       category_id: {
@@ -52,13 +54,14 @@ module.exports = {
       updated_at: Sequelize.DATE,
     });
 
+    // 3. Plantilla de asignación de categorías de usuario
     await queryInterface.createTable('user_category_allocation_templates', {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
       },
       user_id: {
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
         allowNull: false,
       },
       category_id: {
@@ -90,13 +93,14 @@ module.exports = {
       name: 'unique_user_category_template',
     });
 
+    // 4. Instancia de asignación por ingreso
     await queryInterface.createTable('income_category_allocation', {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
       },
       user_id: {
-        type: Sequelize.STRING,
+        type: Sequelize.UUID,
         allowNull: false,
       },
       income_id: {
@@ -141,9 +145,10 @@ module.exports = {
       name: 'unique_income_category_instance',
     });
 
+    // 5. Agregar sub_category_id a expenses (allowNull: true)
     await queryInterface.addColumn('expenses', 'sub_category_id', {
       type: Sequelize.UUID,
-      allowNull: true, // temporalmente true para migración
+      allowNull: true, // Temporalmente true para la migración
       references: {
         model: 'sub_categories',
         key: 'id',
@@ -152,11 +157,11 @@ module.exports = {
     });
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
     await queryInterface.removeColumn('expenses', 'sub_category_id');
-    await queryInterface.dropTable('user_category_allocation_instances');
+    await queryInterface.dropTable('income_category_allocation');
     await queryInterface.dropTable('user_category_allocation_templates');
+    await queryInterface.dropTable('sub_categories');
     await queryInterface.dropTable('categories');
-    await queryInterface.dropTable('subcategories');
   },
 };

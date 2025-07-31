@@ -17,8 +17,9 @@ export const initCategoryModel = (sequelize: Sequelize) => {
         primaryKey: true,
       },
       userId: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: true,
+        field: 'user_id',
       },
       name: {
         type: DataTypes.STRING,
@@ -28,9 +29,11 @@ export const initCategoryModel = (sequelize: Sequelize) => {
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
+        field: 'created_at'
       },
       updatedAt: {
         type: DataTypes.DATE,
+        field: 'updated_at'
       },
     },
     { sequelize, underscored: true }

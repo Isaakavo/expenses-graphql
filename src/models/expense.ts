@@ -10,11 +10,10 @@ export type ExpenseWithCategory = Expense & {
   };
 };
 
-
-//TODO include a column for check (if a paymet was already done and when it was done)
 export class Expense extends Model {
   public id!: string;
   public userId!: string;
+  public cardId!: ForeignKey<string>;  
   public subCategoryId!: ForeignKey<string>;
   public concept!: string;
   public total!: number;
@@ -22,8 +21,6 @@ export class Expense extends Model {
   public payBefore!: Date;
   public createdAt!: Date;
   public updatedAt!: Date;
-  public category!: string;
-  declare cardId: ForeignKey<Card['id']>;
 }
 
 export function initExpenseModel(sequelize: Sequelize) {
@@ -35,12 +32,14 @@ export function initExpenseModel(sequelize: Sequelize) {
         primaryKey: true,
       },
       userId: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
+        field: 'user_id'
       },
       subCategoryId: {
         type: DataTypes.UUID,
         allowNull: false,
+        field: 'sub_category_id',
         references: {
           model: 'sub_categories',
           key: 'id',
@@ -52,23 +51,27 @@ export function initExpenseModel(sequelize: Sequelize) {
         allowNull: false,
       },
       total: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(12, 2),
         allowNull: false,
       },
       comments: {
         type: DataTypes.STRING,
         allowNull: true,
+        field: 'comments'
       },
       payBefore: {
         type: DataTypes.DATE,
         allowNull: false,
+        field: 'pay_before'
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
+        field: 'created_at'
       },
       updatedAt: {
         type: DataTypes.DATE,
+        field: 'updated_at'
       },
     },
     { sequelize, underscored: true }

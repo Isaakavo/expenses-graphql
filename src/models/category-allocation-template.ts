@@ -2,7 +2,6 @@ import { Model, DataTypes, Sequelize } from 'sequelize';
 
 export class UserCategoryAllocationTemplate extends Model {}
 
-// Config table from where the income categoru allocation will take the % of the category
 export const initUserCategoryAllocationTemplateModel = (
   sequelize: Sequelize
 ) => {
@@ -14,23 +13,25 @@ export const initUserCategoryAllocationTemplateModel = (
         primaryKey: true,
       },
       userId: {
-        type: DataTypes.STRING,
+        type: DataTypes.UUID,
         allowNull: false,
+        field: 'user_id'
       },
       categoryId: {
         type: DataTypes.UUID,
         allowNull: false,
+        field: 'category_id',
         references: {
           model: 'categories',
           key: 'id',
         },
       },
       percentage: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(5, 2),
         allowNull: false,
         validate: {
           min: 0,
-          max: 1,
+          max: 100,
         },
       },
     },
@@ -40,7 +41,7 @@ export const initUserCategoryAllocationTemplateModel = (
       indexes: [
         {
           unique: true,
-          fields: ['user_id', 'category_id'], // 🔐 Previene duplicados
+          fields: ['user_id', 'category_id'],
         },
       ],
     }
