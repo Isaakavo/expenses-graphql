@@ -104,7 +104,8 @@ type Expense {
   updatedAt: Date
   card: Card
   comment: String
-  category: Category!
+  category: String!
+  subCategory: String
 }
 
 type FinancialBalance {

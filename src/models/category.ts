@@ -1,45 +1,39 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 
-export class Income extends Model {
+export class Category extends Model {
   public id!: string;
-  public total!: number;
-  public paymentDate!: Date;
-  public comment!: string;
-  public userId!: string;
+  public userId!: string | null;
+  public name!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
 }
 
-export const initIncomeModel = (sequelize: Sequelize) => {
-  Income.init(
+export const initCategoryModel = (sequelize: Sequelize) => {
+  Category.init(
     {
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
       },
-      total: {
-        type: DataTypes.FLOAT,
-        allowNull: false,
-      },
-      comment: {
-        type: DataTypes.STRING,
-        allowNull: true,
-      },
-      paymentDate: {
-        type: DataTypes.DATE,
-        allowNull: false,
-      },
       userId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'user_id',
+      },
+      name: {
         type: DataTypes.STRING,
+        unique: true,
         allowNull: false,
       },
       createdAt: {
         type: DataTypes.DATE,
         allowNull: false,
+        field: 'created_at'
       },
       updatedAt: {
         type: DataTypes.DATE,
+        field: 'updated_at'
       },
     },
     { sequelize, underscored: true }

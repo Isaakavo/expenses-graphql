@@ -1,13 +1,12 @@
+import { Card } from 'models/card';
 import {
-  Income as GraphqlIncome,
   Expense as GraphqlExpense,
-  Category as GraphqlCategory,
+  Income as GraphqlIncome,
 } from '../generated/graphql.js';
+import { logger } from '../logger.js';
+import { Expense, ExpenseWithCategory } from '../models/expense';
 import { Income } from '../models/income';
 import { calculateFortnight } from '../utils/date-utils.js';
-import { Expense } from '../models/expense';
-import { Card } from 'models/card';
-import { logger } from '../logger.js';
 
 export function adaptSingleIncome(x: Income): GraphqlIncome {
   return {
@@ -20,16 +19,15 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
       fortnight: calculateFortnight(x.paymentDate),
     },
     createdAt: x.createdAt,
-    updatedAt: x.updatedAt
+    updatedAt: x.updatedAt,
   };
 }
 
-export const adaptMultipleIncomes = (incomes: Income[]) => incomes.map((x) => adaptSingleIncome(x))
+export const adaptMultipleIncomes = (incomes: Income[]) =>
+  incomes.map((x) => adaptSingleIncome(x));
 
-export function adaptExpensesWithCard(
-  x: Expense,
-  card?: Card
-): GraphqlExpense {
+// TODO refactor this to avoid code duplication
+export function adaptExpensesWithCard(x: Expense, card?: Card) {
   try {
     return {
       id: x.id.toString(),
@@ -41,12 +39,35 @@ export function adaptExpensesWithCard(
       createdAt: x.createdAt,
       updatedAt: x.updatedAt,
       card: card ? adaptCard(card) : null,
-      category: GraphqlCategory[x.category]
+      category: '',
+      subCategory: '',
     };
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
-  
+}
+
+export function adaptExpenses(x: Expense): GraphqlExpense {
+  try {
+    const expenseWithCategory = x as ExpenseWithCategory;
+    return {
+      id: x.id.toString(),
+      concept: x.concept,
+      payBefore: x.payBefore,
+      total: x.total,
+      userId: x.userId,
+      comment: x.comments,
+      createdAt: x.createdAt,
+      updatedAt: x.updatedAt,
+      card: expenseWithCategory.card
+        ? adaptCard(expenseWithCategory.card)
+        : null,
+      category: expenseWithCategory.sub_category.category.name,
+      subCategory: expenseWithCategory.sub_category.name,
+    };
+  } catch (error) {
+    logger.error(error);
+  }
 }
 
 export function adaptCard(card: Card) {
@@ -60,7 +81,6 @@ export function adaptCard(card: Card) {
       isDebit: card.isDebit,
     };
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
-  
 }

@@ -8,7 +8,10 @@ import {
   adaptExpensesWithCard,
   categoryAdapter,
 } from '../../../adapters/index.js';
-import { FixedExpenseFrequency, MutationResolvers } from '../../../generated/graphql.js';
+import {
+  FixedExpenseFrequency,
+  MutationResolvers,
+} from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Card, Expense } from '../../../models/index.js';
 import { Date as CustomDate } from '../../../scalars/date.js';
