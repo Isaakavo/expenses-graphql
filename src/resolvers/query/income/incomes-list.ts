@@ -2,9 +2,8 @@ import { GraphQLError } from 'graphql';
 import { adaptSingleIncome } from '../../../adapters/index.js';
 import { QueryResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
-import { Income } from '../../../models/index.js';
 import { calcualteTotalByMonth } from '../../../utils/calculate-total.js';
-import { Period } from '../../../models/periods.js';
+import { IncomeService } from '../../../service/income-service.js';
 
 export const incomesList: QueryResolvers['incomesList'] = async (
   _,
@@ -16,22 +15,10 @@ export const incomesList: QueryResolvers['incomesList'] = async (
       user: { userId },
     } = context;
 
+    const incomeService = new IncomeService(userId);
+
     //TODO implement logic in the query to receive the order of filtering from the client
-    const allIncomes = await Income.findAll({
-      where: {
-        userId,
-      },
-      include: [
-        {
-          model: Period,
-          as: 'period',
-          where: {
-            userId,
-          },
-        },
-      ],
-      order: [['paymentDate', 'DESC']],
-    });
+    const allIncomes = await incomeService.getAllIncomes();
 
     logger.info(`returning ${allIncomes.length} incomes`);
 

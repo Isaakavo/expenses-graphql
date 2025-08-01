@@ -11,8 +11,8 @@ export const createIncome: MutationResolvers['createIncome'] = async (
   context
 ) => {
 
-  const incomeService = new IncomeService();
-  const newIncome = await incomeService.createIncome(input, context);
+  const incomeService = new IncomeService(context.user.userId);
+  const newIncome = await incomeService.createIncome(input);
 
   logger.info(`Income added with id ${newIncome.id}`);
   return adaptSingleIncome(newIncome);
