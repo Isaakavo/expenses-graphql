@@ -1,7 +1,7 @@
 import { Card } from './card.js';
 import {
-  UserCategoryAllocationTemplate
-} from './category-allocation-template.js';
+  CategorySettings
+} from './category-settings.js';
 import { Category } from './category.js';
 import { Expense } from './expense.js';
 import {
@@ -24,5 +24,5 @@ export const associateModels = () => {
   Period.associate();
   SubCategory.associate();
   IncomeCategoryAllocation.associate();
-  UserCategoryAllocationTemplate.associate();
+  CategorySettings.associate();
 }

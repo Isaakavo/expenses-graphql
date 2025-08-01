@@ -1,5 +1,5 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import { UserCategoryAllocationTemplate } from './category-allocation-template.js';
+import { CategorySettings } from './category-settings.js';
 import { IncomeCategoryAllocation } from './income-category-allocation.js';
 import { SubCategory } from './sub-category.js';
 
@@ -11,7 +11,7 @@ export class Category extends Model {
   public updatedAt!: Date;
 
   static associate() {
-    this.hasMany(UserCategoryAllocationTemplate);
+    this.hasMany(CategorySettings);
     this.hasMany(IncomeCategoryAllocation);
     this.hasMany(SubCategory);
   }

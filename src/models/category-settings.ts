@@ -1,11 +1,12 @@
 import { Model, DataTypes, Sequelize } from 'sequelize';
 import { Category } from './category.js';
 
-export class UserCategoryAllocationTemplate extends Model {
+export class CategorySettings extends Model {
   public id!: string;
   public userId!: string;
   public categoryId!: string;
   public percentage!: number;
+  // public periodType!: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY';
 
   static associate() {
     this.belongsTo(Category);
@@ -15,7 +16,7 @@ export class UserCategoryAllocationTemplate extends Model {
 export const initUserCategoryAllocationTemplateModel = (
   sequelize: Sequelize
 ) => {
-  UserCategoryAllocationTemplate.init(
+  CategorySettings.init(
     {
       id: {
         type: DataTypes.UUID,
@@ -44,6 +45,10 @@ export const initUserCategoryAllocationTemplateModel = (
           max: 100,
         },
       },
+      // periodType: {
+      //   type: DataTypes.ENUM('WEEKLY', 'FORTNIGHTLY', 'MONTHLY'),
+      //   allowNull: false,
+      // }
     },
     {
       sequelize,

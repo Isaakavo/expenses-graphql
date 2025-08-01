@@ -2,7 +2,7 @@ import { Sequelize } from 'sequelize';
 import { initCardModel } from './card.js';
 import {
   initUserCategoryAllocationTemplateModel
-} from './category-allocation-template.js';
+} from './category-settings.js';
 import { initCategoryModel } from './category.js';
 import { initExpenseModel } from './expense.js';
 import {
