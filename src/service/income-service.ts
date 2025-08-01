@@ -27,14 +27,15 @@ export class IncomeService {
     const { total, paymentDate, comment } = input;
     const parsedPaymentDay = CustomDate.parseValue(paymentDate);
     const parsedCreatedAt = CustomDate.parseValue(new Date().toISOString());
-
-    return await Income.create({
+    const incomeData = {
       userId: this.userId,
       total,
       comment: comment?.trim() ?? '',
       paymentDate: parsedPaymentDay,
       createdAt: parsedCreatedAt,
-    });
+    };
+
+    return await this.incomeRepository.createIncome(incomeData);
   }
 
   async deleteIncome(input: MutationDeleteIncomeByIdArgs) {
