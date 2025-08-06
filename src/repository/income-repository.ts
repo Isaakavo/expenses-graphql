@@ -1,3 +1,4 @@
+import { logger } from '../logger.js';
 import { sequelize } from '../database/index.js';
 import { Income } from '../models/index.js';
 import { Period } from '../models/periods.js';
@@ -32,34 +33,25 @@ export class IncomeRepository {
 
   async createIncome(incomeData: Partial<Income>) {
     return await sequelize.transaction(async (t) => {
-      const periodType = 'WEEKLY';
-      let period: Period;
+      const period: Period = await this.periodRepository.createPeriod(
+        incomeData.paymentDate,
+        { transaction: t }
+      );
 
-      switch (periodType) {
-      case 'WEEKLY':
-        period = await this.periodRepository.createWeeklyPeriod(
-          incomeData.paymentDate,
-          { type: periodType },
-          { transaction: t }
-        );
-        break;
-      // case 'FORTNIGHTLY':
-      //   break;
-      // case 'MONTHLY':
-      //   break;
-      default:
-        throw new Error('Invalid period type');
-      }
+      logger.info(`Period created with id ${period.id} for income`);
 
-      // const period = await this.periodRepository.createWeeklyPeriod(
-      //   incomeData.paymentDate,
-      //   { transaction: t }
-      // );
       const income = await Income.create(
         { ...incomeData, periodId: period.id },
         { transaction: t }
       );
-      return { income, period };
+
+      const incomeWithPeriod = {
+        ...income.get(),
+        period_id: period.id,
+        period: period,
+      } as Income;
+
+      return incomeWithPeriod;
     });
   }
 }

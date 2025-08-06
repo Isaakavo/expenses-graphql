@@ -35,6 +35,12 @@ module.exports = {
       updated_at: Sequelize.DATE,
     });
 
+    await queryInterface.addConstraint('periods', {
+      fields: ['user_id', 'type', 'start_date'],
+      type: 'unique',
+      name: 'unique_period_per_user_type_startdate',
+    });
+
     await queryInterface.addColumn('expenses', 'period_id', {
       type: Sequelize.UUID,
       allowNull: true,
