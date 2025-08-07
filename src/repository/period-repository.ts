@@ -21,6 +21,9 @@ export class PeriodRepository {
 
   async createPeriod(startDate: Date, options?: CreateOptions) {
     const endDate = new Date(startDate);
+    // TODO create table for user settings where the period type can be stored
+    // and retrieved dynamically based on user preferences.
+    // For now, we will use a hardcoded value for the period type.
     // Default value for now, this value should come from user settings or input
     const periodType: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY' = 'FORTNIGHTLY';
 
