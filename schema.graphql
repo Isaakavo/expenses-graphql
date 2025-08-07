@@ -206,10 +206,18 @@ input UpdateCardInput {
 }
 
 input PayBeforeInput {
-  # input used to get all the expenses matching this date (from 1st to 15th or from 15th to 30th)
   payBefore: Date
   periodId: String
   cardId: ID
+}
+
+input FilterInput {
+  cardId: ID
+  startDate: Date
+  endDate: Date
+  # inputs used t filter granualiry
+  month: String
+  year: String
 }
 
 input initialDate {
@@ -232,18 +240,16 @@ input AllExpensesByDateRangeInput {
 type Query {
   login: LoginResponse!
   incomesList: IncomesList
+  # TODO use this query to filter the incomes
   incomeById(incomeId: ID!): Income
-  incomesByMonth(date: Date!): [Income] # Validate if this query is necessary
-  expensesByFortnight(input: PayBeforeInput!): ExpensesBy
-  expensesByMonth(input: PayBeforeInput!): ExpensesBy
+  # TODO use this query to filter the expenses
   expenseById(id: ID!): Expense
-  incomesAndExpensesByFortnight(input: PayBeforeInput!): IncomesListAndExpenses!
+  incomesWithExpenses(input: FilterInput!): IncomesListAndExpenses!
   allExpenses: [Expense]
-  allExpensesByDateRange(input: AllExpensesByDateRangeInput): [Expense]
+  # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   cardList: [Card]
   cardById(cardId: ID!): Card
-  expensesTotalByCardId(cardId: ID!): TotalByCardId
 }
 
 type Mutation {

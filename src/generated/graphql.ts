@@ -116,6 +116,14 @@ export type ExpensesBy = {
   expensesTotal?: Maybe<Scalars['Float']['output']>;
 };
 
+export type FilterInput = {
+  cardId?: InputMaybe<Scalars['ID']['input']>;
+  endDate?: InputMaybe<Scalars['Date']['input']>;
+  month?: InputMaybe<Scalars['String']['input']>;
+  startDate?: InputMaybe<Scalars['Date']['input']>;
+  year?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type FinancialBalance = {
   __typename?: 'FinancialBalance';
   debts: Scalars['Float']['output'];
@@ -254,24 +262,14 @@ export type Period = {
 export type Query = {
   __typename?: 'Query';
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
-  allExpensesByDateRange?: Maybe<Array<Maybe<Expense>>>;
   cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
   expenseById?: Maybe<Expense>;
-  expensesByFortnight?: Maybe<ExpensesBy>;
-  expensesByMonth?: Maybe<ExpensesBy>;
-  expensesTotalByCardId?: Maybe<TotalByCardId>;
   financialBalanceByFortnight?: Maybe<FinancialBalance>;
   incomeById?: Maybe<Income>;
-  incomesAndExpensesByFortnight: IncomesListAndExpenses;
-  incomesByMonth?: Maybe<Array<Maybe<Income>>>;
   incomesList?: Maybe<IncomesList>;
+  incomesWithExpenses: IncomesListAndExpenses;
   login: LoginResponse;
-};
-
-
-export type QueryAllExpensesByDateRangeArgs = {
-  input?: InputMaybe<AllExpensesByDateRangeInput>;
 };
 
 
@@ -285,21 +283,6 @@ export type QueryExpenseByIdArgs = {
 };
 
 
-export type QueryExpensesByFortnightArgs = {
-  input: PayBeforeInput;
-};
-
-
-export type QueryExpensesByMonthArgs = {
-  input: PayBeforeInput;
-};
-
-
-export type QueryExpensesTotalByCardIdArgs = {
-  cardId: Scalars['ID']['input'];
-};
-
-
 export type QueryFinancialBalanceByFortnightArgs = {
   input: PayBeforeInput;
 };
@@ -310,13 +293,8 @@ export type QueryIncomeByIdArgs = {
 };
 
 
-export type QueryIncomesAndExpensesByFortnightArgs = {
-  input: PayBeforeInput;
-};
-
-
-export type QueryIncomesByMonthArgs = {
-  date: Scalars['Date']['input'];
+export type QueryIncomesWithExpensesArgs = {
+  input: FilterInput;
 };
 
 export type Total = {
@@ -474,6 +452,7 @@ export type ResolversTypes = ResolversObject<{
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
   ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
+  FilterInput: FilterInput;
   FinancialBalance: ResolverTypeWrapper<FinancialBalance>;
   FixedExpenseFrequency: FixedExpenseFrequency;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
@@ -513,6 +492,7 @@ export type ResolversParentTypes = ResolversObject<{
   Date: Scalars['Date']['output'];
   Expense: Expense;
   ExpensesBy: ExpensesBy;
+  FilterInput: FilterInput;
   FinancialBalance: FinancialBalance;
   Float: Scalars['Float']['output'];
   ID: Scalars['ID']['output'];
@@ -643,18 +623,13 @@ export type PeriodResolvers<ContextType = Context, ParentType extends ResolversP
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
-  allExpensesByDateRange?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<QueryAllExpensesByDateRangeArgs>>;
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
   expenseById?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<QueryExpenseByIdArgs, 'id'>>;
-  expensesByFortnight?: Resolver<Maybe<ResolversTypes['ExpensesBy']>, ParentType, ContextType, RequireFields<QueryExpensesByFortnightArgs, 'input'>>;
-  expensesByMonth?: Resolver<Maybe<ResolversTypes['ExpensesBy']>, ParentType, ContextType, RequireFields<QueryExpensesByMonthArgs, 'input'>>;
-  expensesTotalByCardId?: Resolver<Maybe<ResolversTypes['TotalByCardId']>, ParentType, ContextType, RequireFields<QueryExpensesTotalByCardIdArgs, 'cardId'>>;
   financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'input'>>;
   incomeById?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, RequireFields<QueryIncomeByIdArgs, 'incomeId'>>;
-  incomesAndExpensesByFortnight?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesAndExpensesByFortnightArgs, 'input'>>;
-  incomesByMonth?: Resolver<Maybe<Array<Maybe<ResolversTypes['Income']>>>, ParentType, ContextType, RequireFields<QueryIncomesByMonthArgs, 'date'>>;
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
+  incomesWithExpenses?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesWithExpensesArgs, 'input'>>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
 }>;
 
