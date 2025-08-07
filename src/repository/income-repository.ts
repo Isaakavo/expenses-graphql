@@ -38,12 +38,36 @@ export class IncomeRepository {
         { transaction: t }
       );
 
-      logger.info(`Period created with id ${period.id} for income`);
+      let income = await Income.findOne({
+        where: {
+          userId: this.userId,
+          periodId: period.id,
+        },
+      });
 
-      const income = await Income.create(
-        { ...incomeData, periodId: period.id },
-        { transaction: t }
-      );
+      if (!income) {
+        income = await Income.create(
+          { ...incomeData, periodId: period.id },
+          { transaction: t }
+        );
+        logger.info(
+          `Created new income for user ${this.userId} on date ${incomeData.paymentDate}`
+        );
+      }
+
+      if (income.total !== incomeData.total) {
+        logger.info(
+          `Updating existing income with id ${income.id} for user ${this.userId}`
+        );
+        income = await income.update(
+          { total: incomeData.total },
+          { transaction: t }
+        );
+      } else {
+        logger.info(
+          `Income already exists for user ${this.userId} on date ${incomeData.paymentDate}`
+        );
+      }
 
       const incomeWithPeriod = {
         ...income.get(),
