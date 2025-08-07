@@ -120,6 +120,7 @@ export type FilterInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
   endDate?: InputMaybe<Scalars['Date']['input']>;
   month?: InputMaybe<Scalars['String']['input']>;
+  periodId?: InputMaybe<Scalars['ID']['input']>;
   startDate?: InputMaybe<Scalars['Date']['input']>;
   year?: InputMaybe<Scalars['String']['input']>;
 };

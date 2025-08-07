@@ -10,7 +10,7 @@ export const allExpenses: QueryResolvers['allExpenses'] = async (
     user: { userId },
   } = context;
 
-  const service = new ExpensesService();
+  const service = new ExpensesService(userId);
 
-  return service.getAllExpenses(userId);
+  return service.getAllExpenses();
 };

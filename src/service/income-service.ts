@@ -9,6 +9,7 @@ import { Income } from '../models/income.js';
 import { Date as CustomDate } from '../scalars/date.js';
 import { validateId } from '../utils/sequilize-utils.js';
 import { IncomeRepository } from '../repository/income-repository.js';
+import { adaptSingleIncome } from '../adapters/income-adapter.js';
 
 export class IncomeService {
   private incomeRepository: IncomeRepository;
@@ -21,6 +22,26 @@ export class IncomeService {
 
   async getAllIncomes() {
     return this.incomeRepository.getAllIncomes();
+  }
+
+  async getIncomeByPeriod(periodId?: string, startDate?: Date, endDate?: Date) {
+    const parsedStartDate = startDate
+      ? CustomDate.parseValue(startDate)
+      : undefined;
+    const parsedEndDate = endDate ? CustomDate.parseValue(endDate) : undefined;
+
+    const incomes = await this.incomeRepository.getIncomeByPeriod(
+      this.userId,
+      periodId,
+      parsedStartDate,
+      parsedEndDate
+    );    
+
+    return await Promise.all(
+      incomes.map(async (income) => {
+        return adaptSingleIncome(income);
+      })
+    );
   }
 
   async createIncome(input: CreateIncomeInput) {

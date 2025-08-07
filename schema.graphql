@@ -213,6 +213,7 @@ input PayBeforeInput {
 
 input FilterInput {
   cardId: ID
+  periodId: ID
   startDate: Date
   endDate: Date
   # inputs used t filter granualiry

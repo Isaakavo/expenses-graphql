@@ -38,4 +38,45 @@ export class ExpenseRepository {
       limit,
     })) as ExpenseWithCategory[];
   }
+
+  async getExpensesByPeriod(
+    userId: string,
+    periodId?: string,
+    startDate?: Date,
+    endDate?: Date
+  ) { 
+    const where: FindOptions['where'] = { userId };
+
+    if (periodId) {
+      where.periodId = periodId;
+    } else if (startDate && endDate) {
+      where.payBefore = {
+        [Op.between]: [startDate, endDate],
+      };
+    }
+
+    return (await Expense.findAll({
+      where,
+      include: [
+        {
+          model: SubCategory,
+          as: 'sub_category',
+          include: [
+            {
+              model: Category,
+              as: 'category',
+              where: {
+                [Op.or]: [{ userId: null }, { userId }],
+              },
+            },
+          ],
+        },
+        {
+          model: Card,
+          as: 'card',
+        },
+      ],
+      order: [['payBefore', 'DESC']],
+    })) as ExpenseWithCategory[];
+  }
 }

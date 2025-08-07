@@ -9,7 +9,8 @@ import {
   financialBalanceByFortnight,
   incomeById,
   incomesList,
-  login
+  login,
+  incomesWithExpenses
 } from './query/index.js';
 
 const queries: QueryResolvers = {
@@ -20,7 +21,8 @@ const queries: QueryResolvers = {
   incomeById,
   cardList,
   cardById,
-  login
+  login,
+  incomesWithExpenses
 };
 
 export default queries;

@@ -3,6 +3,7 @@ import { sequelize } from '../database/index.js';
 import { Income } from '../models/index.js';
 import { Period } from '../models/periods.js';
 import { PeriodRepository } from './period-repository.js';
+import { FindOptions, Op } from 'sequelize';
 
 export class IncomeRepository {
   private periodRepository: PeriodRepository;
@@ -25,6 +26,35 @@ export class IncomeRepository {
           where: {
             userId: this.userId,
           },
+        },
+      ],
+      order: [['paymentDate', 'DESC']],
+    });
+  }
+
+  async getIncomeByPeriod(
+    userId: string,
+    periodId?: string,
+    startDate?: Date,
+    endDate?: Date
+  ) {
+    const where: FindOptions['where'] = { userId };
+
+    if (periodId) {
+      where.periodId = periodId;
+    } else if (startDate && endDate) {
+      where.paymentDate = {
+        [Op.between]: [startDate, endDate],
+      };
+    }    
+
+    return Income.findAll({
+      where,
+      include: [
+        {
+          model: Period,
+          as: 'period',
+          where: { userId },
         },
       ],
       order: [['paymentDate', 'DESC']],
