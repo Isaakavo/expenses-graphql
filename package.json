@@ -29,8 +29,11 @@
     "eslint": "^8.52.0",
     "nodemon": "^3.0.1",
     "sequelize-cli": "^6.6.3",
+    "sqlite3": "^5.1.7",
     "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.4"
   },
   "keywords": [],
   "license": "ISC",
@@ -46,7 +49,8 @@
     "lint": "eslint . --ext .ts",
     "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \"",
     "migrate": "npx sequelize-cli db:migrate",
-    "seeds": "npx sequelize-cli db:seed:all"
+    "seeds": "npx sequelize-cli db:seed:all",
+    "test": "vitest"
   },
   "type": "module",
   "version": "1.0.0"
