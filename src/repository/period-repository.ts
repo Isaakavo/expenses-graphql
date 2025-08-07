@@ -4,6 +4,7 @@ import { logger } from '../logger.js';
 
 export class PeriodRepository {
   userId: string;
+  FORTNIGHTLY_NUMBER_OF_DAYS = 13;
 
   constructor(userId: string) {
     this.userId = userId;
@@ -28,7 +29,8 @@ export class PeriodRepository {
     //   endDate.setDate(endDate.getDate() + 7);
     //   break;
     case 'FORTNIGHTLY':
-      endDate.setDate(endDate.getDate() + 15);
+      endDate.setDate(endDate.getDate() + this.FORTNIGHTLY_NUMBER_OF_DAYS);
+      logger.info(`Creating fortnightly period from ${startDate.toISOString()} to ${endDate.toISOString()}`);
       break;
     // case 'MONTHLY':
     //   endDate.setMonth(endDate.getMonth() + 1);
@@ -48,7 +50,10 @@ export class PeriodRepository {
 
     if (period) {
       logger.info(`Found existing period: ${period.id} ${startDate} to ${endDate}`);
-      return period;
+      if(startDate > period.startDate) {
+        await period.update({startDate, endDate})
+      }
+      return period.reload();
     }
 
     const result = await Period.create(
@@ -61,7 +66,7 @@ export class PeriodRepository {
       options
     );
 
-    logger.info(`Period created: ${result.id} - ${startDate} to ${endDate}`);
+    logger.info(`Period created: ${result.id} - ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
     return result;
   }
