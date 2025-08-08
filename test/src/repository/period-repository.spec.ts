@@ -1,4 +1,3 @@
-import { sequelize as databaseSequelize } from 'database';
 import { Sequelize } from 'sequelize';
 import { initPeriodsModel } from 'models/periods.js';
 import { Period } from 'models/periods';
