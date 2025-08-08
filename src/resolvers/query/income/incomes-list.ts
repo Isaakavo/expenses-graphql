@@ -2,8 +2,8 @@ import { GraphQLError } from 'graphql';
 import { adaptMultipleIncomes as adaptIncomeList } from '../../../adapters/index.js';
 import { QueryResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
-import { calcualteTotalByMonth } from '../../../utils/calculate-total.js';
 import { IncomeService } from '../../../service/income-service.js';
+import { calcualteTotalByMonth } from '../../../utils/calculate-total.js';
 
 export const incomesList: QueryResolvers['incomesList'] = async (
   _,
@@ -13,9 +13,10 @@ export const incomesList: QueryResolvers['incomesList'] = async (
   try {
     const {
       user: { userId },
+      sequilizeClient,
     } = context;
 
-    const incomeService = new IncomeService(userId);
+    const incomeService = new IncomeService(userId, sequilizeClient);
 
     //TODO implement logic in the query to receive the order of filtering from the client
     const allIncomes = await incomeService.getAllIncomes();

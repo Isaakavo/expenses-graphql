@@ -9,8 +9,12 @@ export const createIncome: MutationResolvers['createIncome'] = async (
   { input },
   context
 ) => {
+  const {
+    user: { userId },
+    sequilizeClient,
+  } = context;
 
-  const incomeService = new IncomeService(context.user.userId);
+  const incomeService = new IncomeService(userId, sequilizeClient);
   const newIncome = await incomeService.createIncome(input);
 
   return adaptSingleIncome(newIncome);

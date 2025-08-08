@@ -10,14 +10,15 @@ import { Date as CustomDate } from '../scalars/date.js';
 import { validateId } from '../utils/sequilize-utils.js';
 import { IncomeRepository } from '../repository/income-repository.js';
 import { adaptSingleIncome } from '../adapters/income-adapter.js';
+import { Sequelize } from 'sequelize';
 
 export class IncomeService {
   private incomeRepository: IncomeRepository;
   userId: string;
 
-  constructor(userId: string) {
+  constructor(userId: string, sequelize: Sequelize) {
     this.userId = userId;
-    this.incomeRepository = new IncomeRepository(userId);
+    this.incomeRepository = new IncomeRepository(userId, sequelize);
   }
 
   async getAllIncomes() {

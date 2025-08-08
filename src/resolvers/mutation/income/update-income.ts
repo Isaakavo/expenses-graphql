@@ -7,7 +7,9 @@ export const updateIncome: MutationResolvers['updateIncome'] = async (
   { input },
   context
 ) => {
-  const incomeService = new IncomeService(context.user.userId);
+
+  const { user: { userId }, sequilizeClient } = context;
+  const incomeService = new IncomeService(userId, sequilizeClient);
 
   const updatedIncome = await incomeService.updateIncome(input);  
 

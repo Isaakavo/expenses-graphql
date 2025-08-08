@@ -3,8 +3,8 @@ import { Income } from '../models/index.js';
 import { Period } from '../models/periods.js';
 import { PeriodRepository } from './period-repository.js';
 import { FindOptions, Op, Sequelize } from 'sequelize';
-import { CategorySettings } from 'models/category-settings.js';
-import { IncomeCategoryAllocation } from 'models/income-category-allocation.js';
+import { CategorySettings } from '../models/category-settings.js';
+import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
 
 export class IncomeRepository {
   private periodRepository: PeriodRepository;
@@ -112,7 +112,7 @@ export class IncomeRepository {
       await Promise.all(
         categorySetting.map(async (setting) => {
           const [allocation, created] =
-          // TODO this should be its own respository
+            // TODO this should be its own respository
             await IncomeCategoryAllocation.findOrCreate({
               where: {
                 userId: this.userId,

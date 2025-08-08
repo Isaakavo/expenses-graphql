@@ -13,9 +13,10 @@ export const deleteIncomeById: MutationResolvers['deleteIncomeById'] = async (
     const { id } = input;
     const {
       user: { userId },
+      sequilizeClient
     } = context;
 
-    const incomeService = new IncomeService(context.user.userId);
+    const incomeService = new IncomeService(userId, sequilizeClient);
 
     await validateId(Income, userId, id);
 

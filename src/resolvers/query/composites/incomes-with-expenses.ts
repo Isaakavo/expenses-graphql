@@ -6,11 +6,12 @@ export const incomesWithExpenses: QueryResolvers['incomesWithExpenses'] =
   async (_, { input }, context) => {
     const {
       user: { userId },
+      sequilizeClient
     } = context;
 
     const { startDate, endDate, periodId } = input;
 
-    const incomesService = new IncomeService(userId);
+    const incomesService = new IncomeService(userId, sequilizeClient);
     const expensesService = new ExpensesService(userId);    
 
     const incomes = await incomesService.getIncomeByPeriod(
