@@ -5,6 +5,7 @@ enum Fortnight {
   SECOND
 }
 
+# Deprecated: Use new Category type instead
 enum Category {
   BILLS
   CAR
@@ -31,6 +32,19 @@ enum Category {
 enum FixedExpenseFrequency {
   Biweekly
   Monthly
+}
+
+type CategoryType {
+  id: ID!
+  userId: ID!
+  categoryId: ID!
+  name: String!
+  percentage: Float!
+}
+
+type CategorySettings {
+  settings: [CategoryType!]
+  percentageTotal: Float!
 }
 
 interface Total {
@@ -249,6 +263,7 @@ type Query {
   allExpenses: [Expense]
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
+  categorySettings: CategorySettings
   cardList: [Card]
   cardById(cardId: ID!): Card
 }

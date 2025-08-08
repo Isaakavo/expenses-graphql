@@ -7,3 +7,4 @@ export { incomeById } from './income/income-by-id.js';
 export { incomesList } from './income/incomes-list.js';
 export { login } from './login/login.js';
 export { incomesWithExpenses } from './composites/incomes-with-expenses.js';
+export { categorySettings } from './category/category-settings.js';

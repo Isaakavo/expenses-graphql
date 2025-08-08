@@ -10,7 +10,8 @@ import {
   incomeById,
   incomesList,
   login,
-  incomesWithExpenses
+  incomesWithExpenses,
+  categorySettings
 } from './query/index.js';
 
 const queries: QueryResolvers = {
@@ -22,7 +23,8 @@ const queries: QueryResolvers = {
   cardList,
   cardById,
   login,
-  incomesWithExpenses
+  incomesWithExpenses,
+  categorySettings
 };
 
 export default queries;
