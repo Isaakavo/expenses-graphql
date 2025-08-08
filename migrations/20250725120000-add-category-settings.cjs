@@ -55,7 +55,7 @@ module.exports = {
     });
 
     // 3. Plantilla de asignación de categorías de usuario
-    await queryInterface.createTable('category_settings_template', {
+    await queryInterface.createTable('category_settings', {
       id: {
         type: Sequelize.UUID,
         primaryKey: true,
@@ -87,10 +87,10 @@ module.exports = {
       },
     });
 
-    await queryInterface.addConstraint('category_settings_template', {
+    await queryInterface.addConstraint('category_settings', {
       fields: ['user_id', 'category_id'],
       type: 'unique',
-      name: 'unique_category_settings_template',
+      name: 'unique_category_settings',
     });
 
     // 4. Instancia de asignación por ingreso
@@ -160,7 +160,7 @@ module.exports = {
   down: async (queryInterface) => {
     await queryInterface.removeColumn('expenses', 'sub_category_id');
     await queryInterface.dropTable('income_category_allocation');
-    await queryInterface.dropTable('category_settings_template');
+    await queryInterface.dropTable('category_settings');
     await queryInterface.dropTable('sub_categories');
     await queryInterface.dropTable('categories');
   },
