@@ -1,10 +1,20 @@
+import { formatInTimeZone } from 'date-fns-tz';
+import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
+import { adaptSingleIncome } from '../adapters/income-adapter.js';
 import { logger } from '../logger.js';
-import { Income } from '../models/index.js';
-import { Period } from '../models/periods.js';
-import { PeriodRepository } from './period-repository.js';
-import { FindOptions, Op, Sequelize } from 'sequelize';
 import { CategorySettings } from '../models/category-settings.js';
 import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
+import { Income } from '../models/index.js';
+import { Period } from '../models/periods.js';
+import { toCamelCaseDeep } from '../utils/case-converter.js';
+import { PeriodRepository } from './period-repository.js';
+
+//TODO move this own file
+interface IncomByMonth {
+  total: number;
+  month: Date;
+  incomes: Income[];
+}
 
 export class IncomeRepository {
   private periodRepository: PeriodRepository;
@@ -61,6 +71,35 @@ export class IncomeRepository {
         },
       ],
       order: [['paymentDate', 'DESC']],
+    });
+  }
+
+  async getIncomeByMonth() {
+    const results = (await this.sequelize.query(
+      `
+      SELECT
+        DATE_TRUNC('month', "payment_date") AS month,
+        SUM(total) AS total,
+        JSON_AGG(incomes.* ORDER BY payment_date DESC) AS incomes
+      FROM incomes
+      WHERE "user_id" = :userId
+      GROUP BY month
+      ORDER BY month DESC
+    `,
+      {
+        replacements: { userId: this.userId },
+        type: QueryTypes.SELECT,
+      }
+    )) as IncomByMonth[];
+
+    logger.info(`returning ${results.length} incomes`);
+
+    return toCamelCaseDeep(results).map((r) => {
+      return {
+        month: formatInTimeZone(new Date(r.month), 'UTC', 'MMMM'),
+        total: r.total,
+        incomes: r.incomes.map((x) => adaptSingleIncome(x)),
+      };
     });
   }
 

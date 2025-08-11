@@ -103,6 +103,13 @@ type IncomesList {
   total: Float!
 }
 
+type IncomesGroupedBy {
+  month: String!
+  # year: String!
+  total: Float!
+  incomes: [Income!]!
+}
+
 # TODO add query to return total of card expenses by fortnight
 type Card {
   id: ID!
@@ -259,6 +266,7 @@ type Query {
   incomeById(incomeId: ID!): Income
   # TODO use this query to filter the expenses
   expenseById(id: ID!): Expense
+  incomesGroupedBy: [IncomesGroupedBy]!
   incomesWithExpenses(input: FilterInput!): IncomesListAndExpenses!
   allExpenses: [Expense]
   # TODO refine this query

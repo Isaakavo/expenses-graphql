@@ -1,6 +1,4 @@
-import {
-  QueryResolvers
-} from '../generated/graphql.js';
+import { QueryResolvers } from '../generated/graphql.js';
 import {
   allExpenses,
   cardById,
@@ -11,20 +9,22 @@ import {
   incomesList,
   login,
   incomesWithExpenses,
-  categorySettings
+  categorySettings,
+  incomesGroupedBy,
 } from './query/index.js';
 
 const queries: QueryResolvers = {
   allExpenses,
   expenseById,
   financialBalanceByFortnight,
+  incomesGroupedBy,
   incomesList,
   incomeById,
   cardList,
   cardById,
   login,
   incomesWithExpenses,
-  categorySettings
+  categorySettings,
 };
 
 export default queries;

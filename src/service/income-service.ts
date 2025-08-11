@@ -45,6 +45,11 @@ export class IncomeService {
     );
   }
 
+  async getIncomeBy() {
+    // TODO add logic to handle different type of grouping income by period
+    return this.incomeRepository.getIncomeByMonth();
+  }
+
   async createIncome(input: CreateIncomeInput) {
     const { total, paymentDate, comment } = input;
     const parsedPaymentDay = CustomDate.parseValue(paymentDate);
