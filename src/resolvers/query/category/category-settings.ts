@@ -18,10 +18,6 @@ export const categorySettings: QueryResolvers['categorySettings'] = async (
 
   const settings = await categorySettingsService.getCategorySettings();
 
-  console.log(
-    settings.reduce((total, setting) => total + setting.percentage, 0)
-  );
-
   return {
     settings: settings.map((setting) => ({
       id: setting.id,
