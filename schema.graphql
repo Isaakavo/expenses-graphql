@@ -128,6 +128,7 @@ type TotalByCardId {
 type Expense {
   id: ID!
   userId: String
+  periodId:String
   concept: String!
   total: Float!
   payBefore: Date!

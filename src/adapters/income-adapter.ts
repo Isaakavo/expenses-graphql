@@ -57,6 +57,7 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
       payBefore: x.payBefore,
       total: x.total,
       userId: x.userId,
+      periodId: x.periodId,
       comment: x.comments,
       createdAt: x.createdAt,
       updatedAt: x.updatedAt,
