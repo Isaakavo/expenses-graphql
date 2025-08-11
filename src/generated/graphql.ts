@@ -173,6 +173,7 @@ export type IncomesGroupedBy = {
   incomes: Array<Income>;
   month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
+  year: Scalars['String']['output'];
 };
 
 export type IncomesList = {
@@ -291,7 +292,7 @@ export type Query = {
   expenseById?: Maybe<Expense>;
   financialBalanceByFortnight?: Maybe<FinancialBalance>;
   incomeById?: Maybe<Income>;
-  incomesGroupedBy: Array<Maybe<IncomesGroupedBy>>;
+  incomesGroupedBy?: Maybe<Array<IncomesGroupedBy>>;
   incomesList?: Maybe<IncomesList>;
   incomesWithExpenses: IncomesListAndExpenses;
   login: LoginResponse;
@@ -621,6 +622,7 @@ export type IncomesGroupedByResolvers<ContextType = Context, ParentType extends 
   incomes?: Resolver<Array<ResolversTypes['Income']>, ParentType, ContextType>;
   month?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  year?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -682,7 +684,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   expenseById?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<QueryExpenseByIdArgs, 'id'>>;
   financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'input'>>;
   incomeById?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, RequireFields<QueryIncomeByIdArgs, 'incomeId'>>;
-  incomesGroupedBy?: Resolver<Array<Maybe<ResolversTypes['IncomesGroupedBy']>>, ParentType, ContextType>;
+  incomesGroupedBy?: Resolver<Maybe<Array<ResolversTypes['IncomesGroupedBy']>>, ParentType, ContextType>;
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
   incomesWithExpenses?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesWithExpensesArgs, 'input'>>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;

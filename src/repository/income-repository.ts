@@ -97,6 +97,7 @@ export class IncomeRepository {
     return toCamelCaseDeep(results).map((r) => {
       return {
         month: formatInTimeZone(new Date(r.month), 'UTC', 'MMMM'),
+        year: formatInTimeZone(new Date(r.month), 'UTC', 'yyyy'),
         total: r.total,
         incomes: r.incomes.map((x) => adaptSingleIncome(x)),
       };

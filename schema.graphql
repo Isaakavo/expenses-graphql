@@ -105,7 +105,7 @@ type IncomesList {
 
 type IncomesGroupedBy {
   month: String!
-  # year: String!
+  year: String!
   total: Float!
   incomes: [Income!]!
 }
@@ -266,7 +266,7 @@ type Query {
   incomeById(incomeId: ID!): Income
   # TODO use this query to filter the expenses
   expenseById(id: ID!): Expense
-  incomesGroupedBy: [IncomesGroupedBy]!
+  incomesGroupedBy: [IncomesGroupedBy!]
   incomesWithExpenses(input: FilterInput!): IncomesListAndExpenses!
   allExpenses: [Expense]
   # TODO refine this query
