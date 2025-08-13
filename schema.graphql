@@ -55,7 +55,7 @@ interface Total {
 }
 
 type PaymentDate {
-  date: Date!
+  date: String!
   fortnight: Fortnight!
 }
 

@@ -270,7 +270,7 @@ export type PayBeforeInput = {
 
 export type PaymentDate = {
   __typename?: 'PaymentDate';
-  date: Scalars['Date']['output'];
+  date: Scalars['String']['output'];
   fortnight: Fortnight;
 };
 
@@ -663,7 +663,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
 }>;
 
 export type PaymentDateResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PaymentDate'] = ResolversParentTypes['PaymentDate']> = ResolversObject<{
-  date?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  date?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   fortnight?: Resolver<ResolversTypes['Fortnight'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
