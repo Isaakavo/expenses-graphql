@@ -7,10 +7,11 @@ import { logger } from '../logger.js';
 import { Expense, ExpenseWithCategory } from '../models/expense';
 import { Income } from '../models/income';
 import { calculateFortnight } from '../utils/date-utils.js';
+import { Period } from 'models/periods.js';
 
 export function adaptSingleIncome(x: Income): GraphqlIncome {
   return {
-    id: x.id.toString(),
+    id: x.id,
     userId: x.userId,
     total: x.total,
     comment: x.comment,
@@ -21,6 +22,28 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
     },
     createdAt: x.createdAt,
     updatedAt: x.updatedAt,
+  };
+}
+
+export function adaptIncome(
+  x: Income | { income: Income; period: Period }
+): GraphqlIncome {
+  // If x has an 'income' property, it's the object form
+  const income = 'income' in x ? x.income : x;
+  const period = 'period' in x ? x.period : income.period;
+
+  return {
+    id: income.id,
+    userId: income.userId,
+    total: income.total,
+    comment: income.comment,
+    period,
+    paymentDate: {
+      date: income.paymentDate,
+      fortnight: calculateFortnight(income.paymentDate),
+    },
+    createdAt: income.createdAt,
+    updatedAt: income.updatedAt,
   };
 }
 

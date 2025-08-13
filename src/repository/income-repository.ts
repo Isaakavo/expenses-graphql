@@ -1,6 +1,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
-import { adaptSingleIncome } from '../adapters/income-adapter.js';
+import { adaptIncome, } from '../adapters/income-adapter.js';
 import { logger } from '../logger.js';
 import { CategorySettings } from '../models/category-settings.js';
 import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
@@ -8,13 +8,6 @@ import { Income } from '../models/index.js';
 import { Period } from '../models/periods.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
 import { PeriodRepository } from './period-repository.js';
-
-//TODO move this own file
-interface IncomByMonth {
-  total: number;
-  month: Date;
-  incomes: Income[];
-}
 
 export class IncomeRepository {
   private periodRepository: PeriodRepository;
@@ -78,19 +71,25 @@ export class IncomeRepository {
     const results = (await this.sequelize.query(
       `
       SELECT
-        DATE_TRUNC('month', "payment_date") AS month,
-        SUM(total) AS total,
-        JSON_AGG(incomes.* ORDER BY payment_date DESC) AS incomes
-      FROM incomes
-      WHERE "user_id" = :userId
+      DATE_TRUNC('month', i."payment_date") AS month,
+      SUM(i.total) AS total,
+      JSON_AGG(
+        jsonb_build_object(
+          'income', i,
+          'period', p
+        )
+        ORDER BY i.payment_date DESC
+      ) AS incomes
+      FROM incomes i
+      LEFT JOIN periods p ON i.period_id = p.id
       GROUP BY month
-      ORDER BY month DESC
+      ORDER BY month DESC;
     `,
       {
         replacements: { userId: this.userId },
         type: QueryTypes.SELECT,
       }
-    )) as IncomByMonth[];
+    ));
 
     logger.info(`returning ${results.length} incomes`);
 
@@ -99,7 +98,7 @@ export class IncomeRepository {
         month: formatInTimeZone(new Date(r.month), 'UTC', 'MMMM'),
         year: formatInTimeZone(new Date(r.month), 'UTC', 'yyyy'),
         total: r.total,
-        incomes: r.incomes.map((x) => adaptSingleIncome(x)),
+        incomes: r.incomes.map((x) => adaptIncome(x)),
       };
     });
   }

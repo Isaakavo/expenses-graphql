@@ -8,10 +8,7 @@ export const incomesGroupedBy = async (_, __, context) => {
 
   const incomeService = new IncomeService(userId, sequilizeClient);
 
-  const groupedIncomes = await incomeService.getIncomeBy();
-
-  console.log('Grouped Incomes:', groupedIncomes);
-  
+  const groupedIncomes = incomeService.getIncomeBy();
 
   return groupedIncomes;
 };
