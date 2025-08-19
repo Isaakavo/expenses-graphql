@@ -35,11 +35,11 @@ enum FixedExpenseFrequency {
 }
 
 type CategoryType {
-  id: ID!
-  userId: ID!
-  categoryId: ID!
-  name: String!
-  percentage: Float!
+  id: ID
+  userId: ID
+  categoryId: ID
+  name: String
+  percentage: Float
 }
 
 type CategorySettings {
@@ -48,11 +48,16 @@ type CategorySettings {
 }
 
 type CategoryAllocation {
-  sum: String!
+  categorySum: [CategorySum]
+  income: Income
+  expenses: [Expense]
+}
+
+type CategorySum {
   category: CategoryType!
-  period: Period!
-  income: Income!
-  expenses: [Expense]!
+  allocated: String!
+  remaining: String!
+  sum: String!
 }
 
 interface Total {
@@ -281,7 +286,7 @@ type Query {
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   categorySettings: CategorySettings
-  categoryAllocation: [CategoryAllocation]!
+  categoryAllocation: CategoryAllocation
   cardList: [Card]
   cardById(cardId: ID!): Card
 }

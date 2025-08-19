@@ -1,13 +1,14 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
-import { adaptIncome, formatCurrency, } from '../adapters/income-adapter.js';
+import { adaptIncome, formatCurrency } from '../adapters/income-adapter.js';
 import { logger } from '../logger.js';
 import { CategorySettings } from '../models/category-settings.js';
 import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
-import { Income } from '../models/index.js';
+import { Category, Income } from '../models/index.js';
 import { Period } from '../models/periods.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
 import { PeriodRepository } from './period-repository.js';
+
 
 export class IncomeRepository {
   private periodRepository: PeriodRepository;
@@ -68,7 +69,7 @@ export class IncomeRepository {
   }
 
   async getIncomeByMonth() {
-    const results = (await this.sequelize.query(
+    const results = await this.sequelize.query(
       `
       SELECT
       DATE_TRUNC('month', i."payment_date") AS month,
@@ -89,7 +90,7 @@ export class IncomeRepository {
         replacements: { userId: this.userId },
         type: QueryTypes.SELECT,
       }
-    ));
+    );
 
     logger.info(`returning ${results.length} incomes`);
 
@@ -100,6 +101,26 @@ export class IncomeRepository {
         total: formatCurrency(r.total),
         incomes: r.incomes.map((x) => adaptIncome(x)),
       };
+    });
+  }
+
+  async getIncomeSumCategoryById(incomeId: string) {
+    return IncomeCategoryAllocation.findAll({
+      include: [
+        {
+          model: Category,
+          as: 'category',
+          where: {
+            [Op.or]: [{ userId: null }, { userId: this.userId }],
+          },
+        },
+        {
+          model: Income,
+          as: 'income',
+          where: { userId: this.userId, id: incomeId },
+        }
+      ],
+      where: { incomeId, userId: this.userId },
     });
   }
 

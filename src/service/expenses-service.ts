@@ -4,10 +4,11 @@ import { ExpenseRepository } from '../repository/expense-repository.js';
 import { FindOptions } from 'sequelize';
 
 export class ExpensesService {
-  private expenseRepository = new ExpenseRepository();
+  private expenseRepository: ExpenseRepository
   userId: string;
 
   constructor(userId: string) {
+    this.expenseRepository = new ExpenseRepository(userId);
     this.userId = userId;
   }
 
@@ -33,7 +34,6 @@ export class ExpensesService {
     const parsedEndDate = endDate ? new Date(endDate) : undefined;
 
     const expenses = await this.expenseRepository.getExpensesByPeriod(
-      this.userId,
       periodId,
       parsedStartDate,
       parsedEndDate
