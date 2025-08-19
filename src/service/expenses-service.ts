@@ -1,3 +1,4 @@
+import { Expense } from '../models/expense.js';
 import { adaptExpenses } from '../adapters/income-adapter.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 import { FindOptions } from 'sequelize';
@@ -28,7 +29,6 @@ export class ExpensesService {
     startDate?: Date,
     endDate?: Date
   ) {
-
     const parsedStartDate = startDate ? new Date(startDate) : undefined;
     const parsedEndDate = endDate ? new Date(endDate) : undefined;
 
@@ -39,10 +39,19 @@ export class ExpensesService {
       parsedEndDate
     );
 
-    return await Promise.all(
-      expenses.map(async (expense) => {
-        return adaptExpenses(expense);
-      })
-    );
+    const expensesTotal = this.calculateTotal(expenses);
+
+    return {
+      expenses: await Promise.all(
+        expenses.map(async (expense) => {
+          return adaptExpenses(expense);
+        })
+      ),
+      expensesTotal,
+    };
+  }
+
+  calculateTotal(expenses: Expense[]) {
+    return expenses.reduce((acc, expense) => acc + expense.total, 0);
   }
 }

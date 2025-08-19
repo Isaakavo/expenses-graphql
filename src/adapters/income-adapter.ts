@@ -14,7 +14,7 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
   return {
     id: x.id,
     userId: x.userId,
-    total: x.total,
+    total: formatCurrency(x.total),
     comment: x.comment,
     period: x.period,
     paymentDate: {
@@ -36,7 +36,7 @@ export function adaptIncome(
   return {
     id: income.id,
     userId: income.userId,
-    total: income.total,
+    total: formatCurrency(income.total),
     comment: income.comment,
     period,
     paymentDate: {
@@ -58,7 +58,7 @@ export function adaptExpensesWithCard(x: Expense, card?: Card) {
       id: x.id.toString(),
       concept: x.concept,
       payBefore: x.payBefore,
-      total: x.total,
+      total: formatCurrency(x.total),
       userId: x.userId,
       comment: x.comments,
       createdAt: x.createdAt,
@@ -79,7 +79,7 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
       id: x.id.toString(),
       concept: x.concept,
       payBefore: x.payBefore,
-      total: x.total,
+      total: formatCurrency(x.total),
       userId: x.userId,
       periodId: x.periodId,
       comment: x.comments,
@@ -109,4 +109,13 @@ export function adaptCard(card: Card) {
   } catch (error) {
     logger.error(error);
   }
+}
+
+export const formatCurrency = (amount: number) => {
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  });
+
+  return formatter.format(amount);
 }

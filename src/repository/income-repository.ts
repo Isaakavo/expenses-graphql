@@ -1,6 +1,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
-import { adaptIncome, } from '../adapters/income-adapter.js';
+import { adaptIncome, formatCurrency, } from '../adapters/income-adapter.js';
 import { logger } from '../logger.js';
 import { CategorySettings } from '../models/category-settings.js';
 import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
@@ -97,7 +97,7 @@ export class IncomeRepository {
       return {
         month: formatInTimeZone(new Date(r.month), 'UTC', 'MMMM'),
         year: formatInTimeZone(new Date(r.month), 'UTC', 'yyyy'),
-        total: r.total,
+        total: formatCurrency(r.total),
         incomes: r.incomes.map((x) => adaptIncome(x)),
       };
     });

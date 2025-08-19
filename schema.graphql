@@ -71,7 +71,7 @@ type Period {
 type Income {
   id: ID!
   userId: String!
-  total: Float!
+  total: String!
   period: Period
   createdAt: Date
   updatedAt: Date
@@ -106,7 +106,7 @@ type IncomesList {
 type IncomesGroupedBy {
   month: String!
   year: String!
-  total: Float!
+  total: String!
   incomes: [Income!]!
 }
 
@@ -130,7 +130,7 @@ type Expense {
   userId: String
   periodId:String
   concept: String!
-  total: Float!
+  total: String!
   payBefore: Date!
   createdAt: Date
   updatedAt: Date
@@ -150,9 +150,9 @@ type FinancialBalance {
 type IncomesListAndExpenses {
   incomes: [Income!]
   expenses: [Expense!]
-  incomesTotal: Float!
-  expensesTotal: Float
-  remaining: Float
+  incomesTotal: String!
+  expensesTotal: String
+  remaining: String
 }
 
 type ExpensesBy {

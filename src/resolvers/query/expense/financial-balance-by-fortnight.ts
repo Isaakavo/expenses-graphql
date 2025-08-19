@@ -16,19 +16,20 @@ export const financialBalanceByFortnight: QueryResolvers['financialBalanceByFort
     const allExpenses = findAllExpensesWithCards(whereExpenses);
     const income = await Income.findOne({ where: whereIncome });
 
-    const debts = Number(
-      (await allExpenses)
-        .reduce(
-          (accumulator, currentValue) => accumulator + currentValue.total,
-          0
-        )
-        .toFixed(2)
-    );
+    // TODO make this work with the new string type for totals
+    // const debts = Number(
+    //   (await allExpenses)
+    //     .reduce(
+    //       (accumulator, currentValue) => accumulator + currentValue.total,
+    //       0
+    //     )
+    //     .toFixed(2)
+    // );
 
-    const remaining = Number((income.total - debts).toFixed(2));
+    // const remaining = Number((income.total - debts).toFixed(2));
 
     return {
-      debts,
-      remaining,
+      debts: 0.0,
+      remaining: 0.0,
     };
   };

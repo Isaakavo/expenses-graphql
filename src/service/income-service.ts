@@ -25,7 +25,11 @@ export class IncomeService {
     return this.incomeRepository.getAllIncomes();
   }
 
-  async getIncomeByPeriod(periodId?: string, startDate?: Date, endDate?: Date) {
+  async getIncomeByPeriod(
+    periodId?: string,
+    startDate?: Date,
+    endDate?: Date
+  ) {
     const parsedStartDate = startDate
       ? CustomDate.parseValue(startDate)
       : undefined;
@@ -36,13 +40,19 @@ export class IncomeService {
       periodId,
       parsedStartDate,
       parsedEndDate
-    );    
+    );
 
-    return await Promise.all(
+    const incomesTotal = this.calculateTotal(incomes)
+    const adaptedIncome = await Promise.all(
       incomes.map(async (income) => {
         return adaptSingleIncome(income);
       })
     );
+
+    return Promise.resolve({
+      incomes: adaptedIncome,
+      incomesTotal
+    })
   }
 
   async getIncomeBy() {
@@ -120,5 +130,9 @@ export class IncomeService {
     logger.info(`Updated Income, affectedCount ${affectedCount}`);
 
     return updatedElement;
+  }
+
+  calculateTotal(incomes: Income[]) {
+    return incomes.reduce((acc, income) => acc + income.total, 0);
   }
 }
