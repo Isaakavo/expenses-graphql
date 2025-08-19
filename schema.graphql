@@ -47,6 +47,14 @@ type CategorySettings {
   percentageTotal: Float!
 }
 
+type CategoryAllocation {
+  sum: String!
+  category: CategoryType!
+  period: Period!
+  income: Income!
+  expenses: [Expense]!
+}
+
 interface Total {
   date: String!
   total: Float!
@@ -273,6 +281,7 @@ type Query {
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   categorySettings: CategorySettings
+  categoryAllocation: [CategoryAllocation]!
   cardList: [Card]
   cardById(cardId: ID!): Card
 }

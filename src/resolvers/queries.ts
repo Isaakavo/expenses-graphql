@@ -11,6 +11,7 @@ import {
   incomesWithExpenses,
   categorySettings,
   incomesGroupedBy,
+  categoryAllocation
 } from './query/index.js';
 
 const queries: QueryResolvers = {
@@ -25,6 +26,7 @@ const queries: QueryResolvers = {
   login,
   incomesWithExpenses,
   categorySettings,
+  categoryAllocation
 };
 
 export default queries;
