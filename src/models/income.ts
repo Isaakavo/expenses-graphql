@@ -1,4 +1,10 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
+import { IncomeCategoryAllocation } from './income-category-allocation.js';
+import { Period } from './periods.js';
+
+export type IncomeWithPeriod = Income & {
+  period_id: string;
+};
 
 export class Income extends Model {
   public id!: string;
@@ -6,8 +12,18 @@ export class Income extends Model {
   public paymentDate!: Date;
   public comment!: string;
   public userId!: string;
+  public periodId!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
+  public period?: Period;
+
+  static associate() {
+    this.belongsTo(Period, { foreignKey: 'periodId', as: 'period' });
+    this.hasMany(IncomeCategoryAllocation, {
+      foreignKey: 'incomeId',
+      as: 'categoryAllocations',
+    });
+  }
 }
 
 export const initIncomeModel = (sequelize: Sequelize) => {
@@ -37,7 +53,7 @@ export const initIncomeModel = (sequelize: Sequelize) => {
       periodId: {
         type: DataTypes.UUID,
         allowNull: false,
-        references: { model: 'periods', key: 'id' },
+        field: 'period_id',
       },
       createdAt: {
         type: DataTypes.DATE,

@@ -5,6 +5,7 @@ enum Fortnight {
   SECOND
 }
 
+# Deprecated: Use new Category type instead
 enum Category {
   BILLS
   CAR
@@ -33,6 +34,19 @@ enum FixedExpenseFrequency {
   Monthly
 }
 
+type CategoryType {
+  id: ID!
+  userId: ID!
+  categoryId: ID!
+  name: String!
+  percentage: Float!
+}
+
+type CategorySettings {
+  settings: [CategoryType!]
+  percentageTotal: Float!
+}
+
 interface Total {
   date: String!
   total: Float!
@@ -41,14 +55,24 @@ interface Total {
 }
 
 type PaymentDate {
-  date: Date!
+  date: String!
   fortnight: Fortnight!
+}
+
+type Period {
+  id: ID!
+  userId: String!
+  startDate: Date!
+  endDate: Date!
+  createdAt: Date
+  updatedAt: Date
 }
 
 type Income {
   id: ID!
   userId: String!
-  total: Float!
+  total: String!
+  period: Period
   createdAt: Date
   updatedAt: Date
   comment: String
@@ -79,6 +103,13 @@ type IncomesList {
   total: Float!
 }
 
+type IncomesGroupedBy {
+  month: String!
+  year: String!
+  total: String!
+  incomes: [Income!]!
+}
+
 # TODO add query to return total of card expenses by fortnight
 type Card {
   id: ID!
@@ -97,14 +128,16 @@ type TotalByCardId {
 type Expense {
   id: ID!
   userId: String
+  periodId:String
   concept: String!
-  total: Float!
+  total: String!
   payBefore: Date!
   createdAt: Date
   updatedAt: Date
   card: Card
   comment: String
-  category: Category!
+  category: String!
+  subCategory: String
 }
 
 type FinancialBalance {
@@ -117,9 +150,9 @@ type FinancialBalance {
 type IncomesListAndExpenses {
   incomes: [Income!]
   expenses: [Expense!]
-  incomesTotal: Float!
-  expensesTotal: Float
-  remaining: Float
+  incomesTotal: String!
+  expensesTotal: String
+  remaining: String
 }
 
 type ExpensesBy {
@@ -195,9 +228,19 @@ input UpdateCardInput {
 }
 
 input PayBeforeInput {
-  # input used to get all the expenses matching this date (from 1st to 15th or from 15th to 30th)
-  payBefore: Date!
+  payBefore: Date
+  periodId: String
   cardId: ID
+}
+
+input FilterInput {
+  cardId: ID
+  periodId: ID
+  startDate: Date
+  endDate: Date
+  # inputs used t filter granualiry
+  month: String
+  year: String
 }
 
 input initialDate {
@@ -220,18 +263,18 @@ input AllExpensesByDateRangeInput {
 type Query {
   login: LoginResponse!
   incomesList: IncomesList
+  # TODO use this query to filter the incomes
   incomeById(incomeId: ID!): Income
-  incomesByMonth(date: Date!): [Income] # Validate if this query is necessary
-  expensesByFortnight(input: PayBeforeInput!): ExpensesBy
-  expensesByMonth(input: PayBeforeInput!): ExpensesBy
+  # TODO use this query to filter the expenses
   expenseById(id: ID!): Expense
-  incomesAndExpensesByFortnight(input: PayBeforeInput!): IncomesListAndExpenses!
+  incomesGroupedBy: [IncomesGroupedBy!]
+  incomesWithExpenses(input: FilterInput!): IncomesListAndExpenses!
   allExpenses: [Expense]
-  allExpensesByDateRange(input: AllExpensesByDateRangeInput): [Expense]
+  # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
+  categorySettings: CategorySettings
   cardList: [Card]
   cardById(cardId: ID!): Card
-  expensesTotalByCardId(cardId: ID!): TotalByCardId
 }
 
 type Mutation {

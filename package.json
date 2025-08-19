@@ -3,10 +3,12 @@
   "dependencies": {
     "@apollo/server": "^4.9.3",
     "axios": "^1.5.1",
-    "date-fns": "^2.30.0",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "graphql": "^16.8.0",
     "jsonwebtoken": "9.0.1",
     "jwks-rsa": "^3.0.1",
+    "lodash": "^4.17.21",
     "pg": "^8.11.3",
     "sequelize": "^6.33.0",
     "winston": "^3.11.0"
@@ -28,8 +30,12 @@
     "concurrently": "^8.2.1",
     "eslint": "^8.52.0",
     "nodemon": "^3.0.1",
+    "sequelize-cli": "^6.6.3",
+    "sqlite3": "^5.1.7",
     "ts-node": "^10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.2.4"
   },
   "keywords": [],
   "license": "ISC",
@@ -43,7 +49,14 @@
     "deploy:prod": "pnpm delete:dist && pnpm codegen && pnpm compile && fly deploy",
     "dev": "NODE_ENV=dev nodemon --esm src/index.ts",
     "lint": "eslint . --ext .ts",
-    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \""
+    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \"",
+    "migrate": "npx sequelize-cli db:migrate",
+    "seeds": "npx sequelize-cli db:seed:all",
+    "test": "vitest"
+  },
+  "graphql": {
+    "schema": "http://localhost:4000/graphql",
+    "documents": "**/*.{graphql,js,ts}"
   },
   "type": "module",
   "version": "1.0.0"

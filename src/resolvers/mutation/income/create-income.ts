@@ -1,6 +1,5 @@
 import { IncomeService } from '../../../service/income-service.js';
 import { MutationResolvers } from '../../../generated/graphql.js';
-import { logger } from '../../../logger.js';
 import { adaptSingleIncome } from '../../../adapters/income-adapter.js';
 
 //TODO implement logic to handle the create of incomes for 1 year
@@ -10,10 +9,13 @@ export const createIncome: MutationResolvers['createIncome'] = async (
   { input },
   context
 ) => {
+  const {
+    user: { userId },
+    sequilizeClient,
+  } = context;
 
-  const incomeService = new IncomeService();
-  const newIncome = await incomeService.createIncome(input, context);
+  const incomeService = new IncomeService(userId, sequilizeClient);
+  const newIncome = await incomeService.createIncome(input);
 
-  logger.info(`Income added with id ${newIncome.id}`);
   return adaptSingleIncome(newIncome);
 };

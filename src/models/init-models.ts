@@ -1,16 +1,24 @@
 import { Sequelize } from 'sequelize';
-import { Card, initCardModel } from './card.js';
-import { Expense, initExpenseModel } from './expense.js';
+import { initCardModel } from './card.js';
+import {
+  initUserCategoryAllocationTemplateModel
+} from './category-settings.js';
+import { initCategoryModel } from './category.js';
+import { initExpenseModel } from './expense.js';
+import {
+  initIncomeCategoryAllocationModel
+} from './income-category-allocation.js';
 import { initIncomeModel } from './income.js';
+import { initPeriodsModel } from './periods.js';
+import { initSubCategoryModel } from './sub-category.js';
 
 export const initModels = (sequelize: Sequelize) => {
   initExpenseModel(sequelize);
   initCardModel(sequelize);
   initIncomeModel(sequelize);
-
-  Card.hasMany(Expense, {
-    foreignKey: 'cardId',
-    as: 'cards',
-  });
-  Expense.belongsTo(Card, { foreignKey: 'cardId' });
+  initCategoryModel(sequelize);
+  initSubCategoryModel(sequelize);
+  initIncomeCategoryAllocationModel(sequelize);
+  initUserCategoryAllocationTemplateModel(sequelize);
+  initPeriodsModel(sequelize);
 };

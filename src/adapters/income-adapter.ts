@@ -1,52 +1,99 @@
+import { Card } from 'models/card';
 import {
-  Income as GraphqlIncome,
   Expense as GraphqlExpense,
-  Category as GraphqlCategory,
+  Income as GraphqlIncome,
 } from '../generated/graphql.js';
+import { logger } from '../logger.js';
+import { Expense, ExpenseWithCategory } from '../models/expense';
 import { Income } from '../models/income';
 import { calculateFortnight } from '../utils/date-utils.js';
-import { Expense } from '../models/expense';
-import { Card } from 'models/card';
-import { logger } from '../logger.js';
+import { Period } from 'models/periods.js';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export function adaptSingleIncome(x: Income): GraphqlIncome {
   return {
-    id: x.id.toString(),
+    id: x.id,
     userId: x.userId,
-    total: x.total,
+    total: formatCurrency(x.total),
     comment: x.comment,
+    period: x.period,
     paymentDate: {
-      date: x.paymentDate,
+      date: formatInTimeZone(x.paymentDate, 'UTC', 'MMMM yyyy'),
       fortnight: calculateFortnight(x.paymentDate),
     },
     createdAt: x.createdAt,
-    updatedAt: x.updatedAt
+    updatedAt: x.updatedAt,
   };
 }
 
-export const adaptMultipleIncomes = (incomes: Income[]) => incomes.map((x) => adaptSingleIncome(x))
+export function adaptIncome(
+  x: Income | { income: Income; period: Period }
+): GraphqlIncome {
+  // If x has an 'income' property, it's the object form
+  const income = 'income' in x ? x.income : x;
+  const period = 'period' in x ? x.period : income.period;
 
-export function adaptExpensesWithCard(
-  x: Expense,
-  card?: Card
-): GraphqlExpense {
+  return {
+    id: income.id,
+    userId: income.userId,
+    total: formatCurrency(income.total),
+    comment: income.comment,
+    period,
+    paymentDate: {
+      date: formatInTimeZone(income.paymentDate, 'UTC', 'MMMM yyyy'),
+      fortnight: calculateFortnight(income.paymentDate),
+    },
+    createdAt: income.createdAt,
+    updatedAt: income.updatedAt,
+  };
+}
+
+export const adaptMultipleIncomes = (incomes: Income[]) =>
+  incomes.map((x) => adaptSingleIncome(x));
+
+// TODO refactor this to avoid code duplication
+export function adaptExpensesWithCard(x: Expense, card?: Card) {
   try {
     return {
       id: x.id.toString(),
       concept: x.concept,
       payBefore: x.payBefore,
-      total: x.total,
+      total: formatCurrency(x.total),
       userId: x.userId,
       comment: x.comments,
       createdAt: x.createdAt,
       updatedAt: x.updatedAt,
       card: card ? adaptCard(card) : null,
-      category: GraphqlCategory[x.category]
+      category: '',
+      subCategory: '',
     };
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
-  
+}
+
+export function adaptExpenses(x: Expense): GraphqlExpense {
+  try {
+    const expenseWithCategory = x as ExpenseWithCategory;
+    return {
+      id: x.id.toString(),
+      concept: x.concept,
+      payBefore: x.payBefore,
+      total: formatCurrency(x.total),
+      userId: x.userId,
+      periodId: x.periodId,
+      comment: x.comments,
+      createdAt: x.createdAt,
+      updatedAt: x.updatedAt,
+      card: expenseWithCategory.card
+        ? adaptCard(expenseWithCategory.card)
+        : null,
+      category: expenseWithCategory.sub_category.category.name,
+      subCategory: expenseWithCategory.sub_category.name,
+    };
+  } catch (error) {
+    logger.error(error);
+  }
 }
 
 export function adaptCard(card: Card) {
@@ -60,7 +107,15 @@ export function adaptCard(card: Card) {
       isDebit: card.isDebit,
     };
   } catch (error) {
-    logger.error(error)
+    logger.error(error);
   }
-  
+}
+
+export const formatCurrency = (amount: number) => {
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  });
+
+  return formatter.format(amount);
 }

@@ -1,4 +1,5 @@
-import { adaptCard, categoryAdapter } from '../../../adapters/index.js';
+import { formatCurrency } from '../../../adapters/income-adapter.js';
+import { adaptCard, categoryAdapter, } from '../../../adapters/index.js';
 import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Card, Expense } from '../../../models/index.js';
@@ -62,7 +63,7 @@ export const createExpense: MutationResolvers['createExpense'] = async (
     userId: newExpense.userId,
     concept: newExpense.concept,
     category,
-    total: newExpense.total,
+    total: formatCurrency(newExpense.total),
     comment: newExpense.comments,
     payBefore: newExpense.payBefore,
     createdAt: newExpense.createdAt,

@@ -1,23 +1,57 @@
-import { adaptExpensesWithCard } from '../adapters/income-adapter.js';
-import { CardRepository } from '../repository/card-repository.js';
+import { Expense } from '../models/expense.js';
+import { adaptExpenses } from '../adapters/income-adapter.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 import { FindOptions } from 'sequelize';
 
 export class ExpensesService {
   private expenseRepository = new ExpenseRepository();
-  private cardRepository = new CardRepository();
+  userId: string;
 
-  async getAllExpenses(userId: string, queryOptions?: FindOptions) {
-    const expenses = await this.expenseRepository.getAllExpenses(userId, queryOptions);    
+  constructor(userId: string) {
+    this.userId = userId;
+  }
+
+  async getAllExpenses(queryOptions?: FindOptions) {
+    const expenses = await this.expenseRepository.getAllExpenses(
+      this.userId,
+      queryOptions
+    );
 
     return await Promise.all(
       expenses.map(async (expense) => {
-        const expenseCard = await this.cardRepository.findCardByUserId(
-          userId,
-          expense.id
-        );
-        return adaptExpensesWithCard(expense, expenseCard);
+        return adaptExpenses(expense);
       })
     );
+  }
+
+  async getExpensesByPeriod(
+    periodId?: string,
+    startDate?: Date,
+    endDate?: Date
+  ) {
+    const parsedStartDate = startDate ? new Date(startDate) : undefined;
+    const parsedEndDate = endDate ? new Date(endDate) : undefined;
+
+    const expenses = await this.expenseRepository.getExpensesByPeriod(
+      this.userId,
+      periodId,
+      parsedStartDate,
+      parsedEndDate
+    );
+
+    const expensesTotal = this.calculateTotal(expenses);
+
+    return {
+      expenses: await Promise.all(
+        expenses.map(async (expense) => {
+          return adaptExpenses(expense);
+        })
+      ),
+      expensesTotal,
+    };
+  }
+
+  calculateTotal(expenses: Expense[]) {
+    return expenses.reduce((acc, expense) => acc + expense.total, 0);
   }
 }
