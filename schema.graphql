@@ -273,6 +273,11 @@ input AllExpensesByDateRangeInput {
   endDate: endDate
 }
 
+input CategoryAllocationInput {
+  periodId: String!
+  incomeId: String!
+}
+
 type Query {
   login: LoginResponse!
   incomesList: IncomesList
@@ -286,7 +291,7 @@ type Query {
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   categorySettings: CategorySettings
-  categoryAllocation: CategoryAllocation
+  categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
   cardById(cardId: ID!): Card
 }
