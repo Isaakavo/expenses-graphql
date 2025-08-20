@@ -8,3 +8,4 @@ export { deleteIncomeById } from './income/delete-income.js';
 export { updateIncome } from './income/update-income.js';
 export { updateCard } from './card/update-card.js';
 export { deleteCard } from './card/delete-card.js';
+export { createCategorySetting } from './category/create-category-setting.js';

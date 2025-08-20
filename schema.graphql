@@ -173,6 +173,11 @@ type ExpensesBy {
   expensesTotal: Float
 }
 
+type CategorySetting {
+  id: ID!
+  message: String!
+}
+
 enum AUTH_STATUS {
   AUTHENTICATED
   UNAUTHENTICATED
@@ -278,6 +283,11 @@ input CategoryAllocationInput {
   incomeId: String!
 }
 
+input CreateCategorySettingInput {
+  categoryId: ID!
+  allocationPercentage: Float!
+}
+
 type Query {
   login: LoginResponse!
   incomesList: IncomesList
@@ -307,4 +317,5 @@ type Mutation {
   createCard(input: CreateCardInput): Card
   updateCard(input: UpdateCardInput): Card!
   deleteCard(id: ID!): Boolean!
+  createCategorySetting(input: CreateCategorySettingInput!): CategorySetting!
 }

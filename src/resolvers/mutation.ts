@@ -10,6 +10,7 @@ import {
   updateCard,
   updateExpense,
   updateIncome,
+  createCategorySetting
 } from './mutation/index.js';
 
 //TODO add mutation for deletion
@@ -18,6 +19,7 @@ const mutations: MutationResolvers = {
   updateIncome,
   deleteIncomeById,
   createExpense,
+  createCategorySetting,
   // TODO add logic to handle weekly expenses
   createFixedExpense,
   updateExpense,

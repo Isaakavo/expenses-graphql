@@ -74,6 +74,12 @@ export type CategoryAllocationInput = {
   periodId: Scalars['String']['input'];
 };
 
+export type CategorySetting = {
+  __typename?: 'CategorySetting';
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+};
+
 export type CategorySettings = {
   __typename?: 'CategorySettings';
   percentageTotal: Scalars['Float']['output'];
@@ -102,6 +108,11 @@ export type CreateCardInput = {
   bank: Scalars['String']['input'];
   isDebit?: InputMaybe<Scalars['Boolean']['input']>;
   isDigital?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type CreateCategorySettingInput = {
+  allocationPercentage: Scalars['Float']['input'];
+  categoryId: Scalars['ID']['input'];
 };
 
 export type CreateExpenseInput = {
@@ -221,6 +232,7 @@ export type LoginResponse = {
 export type Mutation = {
   __typename?: 'Mutation';
   createCard?: Maybe<Card>;
+  createCategorySetting: CategorySetting;
   createExpense?: Maybe<Expense>;
   createFixedExpense?: Maybe<Array<Maybe<Expense>>>;
   createIncome: Income;
@@ -235,6 +247,11 @@ export type Mutation = {
 
 export type MutationCreateCardArgs = {
   input?: InputMaybe<CreateCardInput>;
+};
+
+
+export type MutationCreateCategorySettingArgs = {
+  input: CreateCategorySettingInput;
 };
 
 
@@ -500,10 +517,12 @@ export type ResolversTypes = ResolversObject<{
   Category: Category;
   CategoryAllocation: ResolverTypeWrapper<CategoryAllocation>;
   CategoryAllocationInput: CategoryAllocationInput;
+  CategorySetting: ResolverTypeWrapper<CategorySetting>;
   CategorySettings: ResolverTypeWrapper<CategorySettings>;
   CategorySum: ResolverTypeWrapper<CategorySum>;
   CategoryType: ResolverTypeWrapper<CategoryType>;
   CreateCardInput: CreateCardInput;
+  CreateCategorySettingInput: CreateCategorySettingInput;
   CreateExpenseInput: CreateExpenseInput;
   CreateFixedExpenseInput: CreateFixedExpenseInput;
   CreateIncomeInput: CreateIncomeInput;
@@ -546,10 +565,12 @@ export type ResolversParentTypes = ResolversObject<{
   Card: Card;
   CategoryAllocation: CategoryAllocation;
   CategoryAllocationInput: CategoryAllocationInput;
+  CategorySetting: CategorySetting;
   CategorySettings: CategorySettings;
   CategorySum: CategorySum;
   CategoryType: CategoryType;
   CreateCardInput: CreateCardInput;
+  CreateCategorySettingInput: CreateCategorySettingInput;
   CreateExpenseInput: CreateExpenseInput;
   CreateFixedExpenseInput: CreateFixedExpenseInput;
   CreateIncomeInput: CreateIncomeInput;
@@ -597,6 +618,12 @@ export type CategoryAllocationResolvers<ContextType = Context, ParentType extend
   categorySum?: Resolver<Maybe<Array<Maybe<ResolversTypes['CategorySum']>>>, ParentType, ContextType>;
   expenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
   income?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type CategorySettingResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CategorySetting'] = ResolversParentTypes['CategorySetting']> = ResolversObject<{
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -698,6 +725,7 @@ export type LoginResponseResolvers<ContextType = Context, ParentType extends Res
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   createCard?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, Partial<MutationCreateCardArgs>>;
+  createCategorySetting?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, RequireFields<MutationCreateCategorySettingArgs, 'input'>>;
   createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'input'>>;
   createFixedExpense?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<MutationCreateFixedExpenseArgs>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
@@ -774,6 +802,7 @@ export type TotalByMonthResolvers<ContextType = Context, ParentType extends Reso
 export type Resolvers<ContextType = Context> = ResolversObject<{
   Card?: CardResolvers<ContextType>;
   CategoryAllocation?: CategoryAllocationResolvers<ContextType>;
+  CategorySetting?: CategorySettingResolvers<ContextType>;
   CategorySettings?: CategorySettingsResolvers<ContextType>;
   CategorySum?: CategorySumResolvers<ContextType>;
   CategoryType?: CategoryTypeResolvers<ContextType>;
