@@ -2,6 +2,16 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+    await queryInterface.sequelize.query(`
+      ALTER TABLE expenses
+      ALTER COLUMN category TYPE VARCHAR
+      USING category::VARCHAR;
+    `);
+
+    await queryInterface.sequelize.query(`
+      DROP TYPE IF EXISTS enum_expenses_category;
+    `);
+
     // 1. Crear tabla categories si no existe
     await queryInterface.createTable('categories', {
       id: {
