@@ -33,8 +33,8 @@ export class CategoryAllocationService {
           percentage: income.percentage * 100,
         },
         allocated: income.amountAllocated,
-        sum: expense.totalSpent,
-        remaining: income.amountAllocated - expense.totalSpent,
+        sum: expense?.totalSpent || 0,
+        remaining: income.amountAllocated - (expense?.totalSpent || 0),
       };
     });
 
