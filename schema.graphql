@@ -300,6 +300,7 @@ type Query {
   allExpenses: [Expense]
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
+  categoryList: [CategoryType!]
   categorySettings: CategorySettings
   categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]

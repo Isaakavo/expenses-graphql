@@ -26,9 +26,16 @@ export const categorySettings: QueryResolvers['categorySettings'] = async (
       categoryId: setting.categoryId,
       percentage: setting.percentage * 100,
     })),
-    percentageTotal: settings.reduce(
-      (total, setting) => total + Number(setting.percentage),
-      0
-    ) * 100,
+    percentageTotal: formatNumber(
+      settings.reduce(
+        (total, setting) => total + Number(setting.percentage),
+        0
+      ) * 100
+    ),
   };
 };
+
+function formatNumber(num: number): number {
+  const EPSILON = 1e-8;
+  return Math.abs(num % 1) < EPSILON ? Math.trunc(num) : num;
+}

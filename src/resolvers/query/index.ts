@@ -10,3 +10,4 @@ export { incomesWithExpenses } from './composites/incomes-with-expenses.js';
 export { categorySettings } from './category/category-settings.js';
 export { incomesGroupedBy } from './income/incomes-grouped.js';
 export { categoryAllocation } from './category/category-allocation.js';
+export { categoryList } from './category/category-list.js'

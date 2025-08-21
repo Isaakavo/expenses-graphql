@@ -327,6 +327,7 @@ export type Query = {
   cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
   categoryAllocation?: Maybe<CategoryAllocation>;
+  categoryList?: Maybe<Array<CategoryType>>;
   categorySettings?: Maybe<CategorySettings>;
   expenseById?: Maybe<Expense>;
   financialBalanceByFortnight?: Maybe<FinancialBalance>;
@@ -758,6 +759,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
   categoryAllocation?: Resolver<Maybe<ResolversTypes['CategoryAllocation']>, ParentType, ContextType, RequireFields<QueryCategoryAllocationArgs, 'input'>>;
+  categoryList?: Resolver<Maybe<Array<ResolversTypes['CategoryType']>>, ParentType, ContextType>;
   categorySettings?: Resolver<Maybe<ResolversTypes['CategorySettings']>, ParentType, ContextType>;
   expenseById?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<QueryExpenseByIdArgs, 'id'>>;
   financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'input'>>;
