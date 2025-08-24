@@ -237,6 +237,7 @@ export type Mutation = {
   createFixedExpense?: Maybe<Array<Maybe<Expense>>>;
   createIncome: Income;
   deleteCard: Scalars['Boolean']['output'];
+  deleteCategorySetting: CategorySetting;
   deleteExpense: Scalars['Boolean']['output'];
   deleteIncomeById: Scalars['Boolean']['output'];
   updateCard: Card;
@@ -272,6 +273,11 @@ export type MutationCreateIncomeArgs = {
 
 export type MutationDeleteCardArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCategorySettingArgs = {
+  categoryId: Scalars['ID']['input'];
 };
 
 
@@ -731,6 +737,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createFixedExpense?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<MutationCreateFixedExpenseArgs>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
   deleteCard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteCardArgs, 'id'>>;
+  deleteCategorySetting?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, RequireFields<MutationDeleteCategorySettingArgs, 'categoryId'>>;
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
   deleteIncomeById?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
   updateCard?: Resolver<ResolversTypes['Card'], ParentType, ContextType, Partial<MutationUpdateCardArgs>>;

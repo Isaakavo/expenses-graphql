@@ -45,4 +45,22 @@ export class CategorySettingsService {
       categorySettingData
     );
   }
+
+  async deleteCategorySetting(categoryId: string) {
+    const deleted = await this.categorySettingsRepository.deleteCategorySetting(
+      categoryId
+    );
+
+    if (deleted == 0) {
+      return {
+        id: '',
+        message: 'Could not delete the setting',
+      };
+    }
+
+    return {
+      id: categoryId,
+      message: 'Setting deleted',
+    };
+  }
 }
