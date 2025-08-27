@@ -8,12 +8,18 @@ export const categoryList: QueryResolvers['categoryList'] = async (
 ) => {
   const categoryService = new CategoryService(userId, sequilizeClient);
 
-  const categories = await categoryService.getCategoryList();
+  const categories = await categoryService.getCategoryList();  
 
   return categories.map((category) => ({
     id: category.id,
-    useId: category.userId,
+    userId: category.userId,
     name: category.name,
+    subCategory: category?.subCategory?.map((sub) => ({
+      id: sub.id,
+      name: sub.name,
+      createdAt: sub.createdAt,
+      updatedAt: sub.updatedAt,
+    })),
     createdAt: category.createdAt,
     updatedAt: category.createdAt,
   }));

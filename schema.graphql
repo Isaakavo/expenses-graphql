@@ -42,6 +42,19 @@ type CategoryType {
   percentage: Float
 }
 
+type SubCategory {
+  id: ID
+  userId: ID
+  name: String
+}
+
+type Categories {
+  id: ID
+  userId: ID
+  name: String
+  subCategory: [SubCategory!]
+}
+
 type CategorySettings {
   settings: [CategoryType!]
   percentageTotal: Float!
@@ -300,7 +313,7 @@ type Query {
   allExpenses: [Expense]
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
-  categoryList: [CategoryType!]
+  categoryList: [Categories!]
   categorySettings: CategorySettings
   categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
