@@ -7,13 +7,14 @@ export class Category extends Model {
   public id!: string;
   public userId!: string | null;
   public name!: string;
+  public subCategory!: SubCategory[];
   public createdAt!: Date;
   public updatedAt!: Date;
 
   static associate() {
     this.hasMany(CategorySettings);
     this.hasMany(IncomeCategoryAllocation);
-    this.hasMany(SubCategory);
+    this.hasMany(SubCategory, { as: 'subCategory', foreignKey: 'category_id' });
   }
 }
 

@@ -24,4 +24,13 @@ export class CategorySettingsRepository {
       userId: this.userId,
     });
   }
+
+  async deleteCategorySetting(categoryId: string) {
+    return CategorySettings.destroy({
+      where: {
+        userId: this.userId,
+        id: categoryId
+      }
+    })
+  }
 }

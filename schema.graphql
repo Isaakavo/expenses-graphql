@@ -35,16 +35,42 @@ enum FixedExpenseFrequency {
 }
 
 type CategoryType {
-  id: ID!
-  userId: ID!
-  categoryId: ID!
-  name: String!
-  percentage: Float!
+  id: ID
+  userId: ID
+  categoryId: ID
+  name: String
+  percentage: Float
+}
+
+type SubCategory {
+  id: ID
+  userId: ID
+  name: String
+}
+
+type Categories {
+  id: ID
+  userId: ID
+  name: String
+  subCategory: [SubCategory!]
 }
 
 type CategorySettings {
   settings: [CategoryType!]
   percentageTotal: Float!
+}
+
+type CategoryAllocation {
+  categorySum: [CategorySum]
+  income: Income
+  expenses: [Expense]
+}
+
+type CategorySum {
+  category: CategoryType!
+  allocated: String!
+  remaining: String!
+  sum: String!
 }
 
 interface Total {
@@ -160,6 +186,11 @@ type ExpensesBy {
   expensesTotal: Float
 }
 
+type CategorySetting {
+  id: ID!
+  message: String!
+}
+
 enum AUTH_STATUS {
   AUTHENTICATED
   UNAUTHENTICATED
@@ -260,6 +291,16 @@ input AllExpensesByDateRangeInput {
   endDate: endDate
 }
 
+input CategoryAllocationInput {
+  periodId: String!
+  incomeId: String!
+}
+
+input CreateCategorySettingInput {
+  categoryId: ID!
+  allocationPercentage: Float!
+}
+
 type Query {
   login: LoginResponse!
   incomesList: IncomesList
@@ -272,7 +313,9 @@ type Query {
   allExpenses: [Expense]
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
+  categoryList: [Categories!]
   categorySettings: CategorySettings
+  categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
   cardById(cardId: ID!): Card
 }
@@ -288,4 +331,6 @@ type Mutation {
   createCard(input: CreateCardInput): Card
   updateCard(input: UpdateCardInput): Card!
   deleteCard(id: ID!): Boolean!
+  createCategorySetting(input: CreateCategorySettingInput!): CategorySetting!
+  deleteCategorySetting(categoryId: ID!): CategorySetting!
 }

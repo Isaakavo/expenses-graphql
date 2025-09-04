@@ -1,4 +1,4 @@
-import { FindOptions, Op } from 'sequelize';
+import { FindOptions, Op, Sequelize } from 'sequelize';
 import {
   Card,
   Category,
@@ -8,6 +8,12 @@ import {
 } from '../models/index.js';
 
 export class ExpenseRepository {
+  userId: string;
+
+  constructor(userId: string) {
+    this.userId = userId;
+  }
+
   async getAllExpenses(userId: string, queryOptions?: FindOptions) {
     const { limit, where } = queryOptions ?? {};
     return (await Expense.findAll({
@@ -40,12 +46,11 @@ export class ExpenseRepository {
   }
 
   async getExpensesByPeriod(
-    userId: string,
     periodId?: string,
     startDate?: Date,
     endDate?: Date
-  ) { 
-    const where: FindOptions['where'] = { userId };
+  ) {
+    const where: FindOptions['where'] = { userId: this.userId };
 
     if (periodId) {
       where.periodId = periodId;
@@ -66,7 +71,7 @@ export class ExpenseRepository {
               model: Category,
               as: 'category',
               where: {
-                [Op.or]: [{ userId: null }, { userId }],
+                [Op.or]: [{ userId: null }, { userId: this.userId }],
               },
             },
           ],
@@ -78,5 +83,35 @@ export class ExpenseRepository {
       ],
       order: [['payBefore', 'DESC']],
     })) as ExpenseWithCategory[];
+  }
+
+  async getExpensesSumByCategory(periodId: string) {
+    return Expense.findAll({
+      attributes: [
+        [Sequelize.col('sub_category.category.name'), 'categoryName'],
+        [Sequelize.col('sub_category.category.id'), 'categoryId'],
+        [Sequelize.fn('SUM', Sequelize.col('Expense.total')), 'totalSpent'],
+      ],
+      include: [
+        {
+          model: SubCategory,
+          as: 'sub_category',
+          attributes: [],
+          include: [
+            {
+              model: Category,
+              as: 'category',
+              attributes: [],
+            },
+          ],
+        },
+      ],
+      where: { periodId, userId: this.userId },
+      group: [
+        Sequelize.col('sub_category.category.id'),
+        Sequelize.col('sub_category.category.name'),
+      ],
+      raw: true,
+    });
   }
 }

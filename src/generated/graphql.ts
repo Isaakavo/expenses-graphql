@@ -39,6 +39,14 @@ export type Card = {
   userId: Scalars['ID']['output'];
 };
 
+export type Categories = {
+  __typename?: 'Categories';
+  id?: Maybe<Scalars['ID']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  subCategory?: Maybe<Array<SubCategory>>;
+  userId?: Maybe<Scalars['ID']['output']>;
+};
+
 export enum Category {
   BILLS = 'BILLS',
   CAR = 'CAR',
@@ -62,19 +70,45 @@ export enum Category {
   TRANSPORT = 'TRANSPORT'
 }
 
+export type CategoryAllocation = {
+  __typename?: 'CategoryAllocation';
+  categorySum?: Maybe<Array<Maybe<CategorySum>>>;
+  expenses?: Maybe<Array<Maybe<Expense>>>;
+  income?: Maybe<Income>;
+};
+
+export type CategoryAllocationInput = {
+  incomeId: Scalars['String']['input'];
+  periodId: Scalars['String']['input'];
+};
+
+export type CategorySetting = {
+  __typename?: 'CategorySetting';
+  id: Scalars['ID']['output'];
+  message: Scalars['String']['output'];
+};
+
 export type CategorySettings = {
   __typename?: 'CategorySettings';
   percentageTotal: Scalars['Float']['output'];
   settings?: Maybe<Array<CategoryType>>;
 };
 
+export type CategorySum = {
+  __typename?: 'CategorySum';
+  allocated: Scalars['String']['output'];
+  category: CategoryType;
+  remaining: Scalars['String']['output'];
+  sum: Scalars['String']['output'];
+};
+
 export type CategoryType = {
   __typename?: 'CategoryType';
-  categoryId: Scalars['ID']['output'];
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  percentage: Scalars['Float']['output'];
-  userId: Scalars['ID']['output'];
+  categoryId?: Maybe<Scalars['ID']['output']>;
+  id?: Maybe<Scalars['ID']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  percentage?: Maybe<Scalars['Float']['output']>;
+  userId?: Maybe<Scalars['ID']['output']>;
 };
 
 export type CreateCardInput = {
@@ -82,6 +116,11 @@ export type CreateCardInput = {
   bank: Scalars['String']['input'];
   isDebit?: InputMaybe<Scalars['Boolean']['input']>;
   isDigital?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type CreateCategorySettingInput = {
+  allocationPercentage: Scalars['Float']['input'];
+  categoryId: Scalars['ID']['input'];
 };
 
 export type CreateExpenseInput = {
@@ -201,10 +240,12 @@ export type LoginResponse = {
 export type Mutation = {
   __typename?: 'Mutation';
   createCard?: Maybe<Card>;
+  createCategorySetting: CategorySetting;
   createExpense?: Maybe<Expense>;
   createFixedExpense?: Maybe<Array<Maybe<Expense>>>;
   createIncome: Income;
   deleteCard: Scalars['Boolean']['output'];
+  deleteCategorySetting: CategorySetting;
   deleteExpense: Scalars['Boolean']['output'];
   deleteIncomeById: Scalars['Boolean']['output'];
   updateCard: Card;
@@ -215,6 +256,11 @@ export type Mutation = {
 
 export type MutationCreateCardArgs = {
   input?: InputMaybe<CreateCardInput>;
+};
+
+
+export type MutationCreateCategorySettingArgs = {
+  input: CreateCategorySettingInput;
 };
 
 
@@ -235,6 +281,11 @@ export type MutationCreateIncomeArgs = {
 
 export type MutationDeleteCardArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteCategorySettingArgs = {
+  categoryId: Scalars['ID']['input'];
 };
 
 
@@ -289,6 +340,8 @@ export type Query = {
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
   cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
+  categoryAllocation?: Maybe<CategoryAllocation>;
+  categoryList?: Maybe<Array<Categories>>;
   categorySettings?: Maybe<CategorySettings>;
   expenseById?: Maybe<Expense>;
   financialBalanceByFortnight?: Maybe<FinancialBalance>;
@@ -302,6 +355,11 @@ export type Query = {
 
 export type QueryCardByIdArgs = {
   cardId: Scalars['ID']['input'];
+};
+
+
+export type QueryCategoryAllocationArgs = {
+  input: CategoryAllocationInput;
 };
 
 
@@ -322,6 +380,13 @@ export type QueryIncomeByIdArgs = {
 
 export type QueryIncomesWithExpensesArgs = {
   input: FilterInput;
+};
+
+export type SubCategory = {
+  __typename?: 'SubCategory';
+  id?: Maybe<Scalars['ID']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  userId?: Maybe<Scalars['ID']['output']>;
 };
 
 export type Total = {
@@ -471,10 +536,16 @@ export type ResolversTypes = ResolversObject<{
   AllExpensesByDateRangeInput: AllExpensesByDateRangeInput;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
   Card: ResolverTypeWrapper<Card>;
+  Categories: ResolverTypeWrapper<Categories>;
   Category: Category;
+  CategoryAllocation: ResolverTypeWrapper<CategoryAllocation>;
+  CategoryAllocationInput: CategoryAllocationInput;
+  CategorySetting: ResolverTypeWrapper<CategorySetting>;
   CategorySettings: ResolverTypeWrapper<CategorySettings>;
+  CategorySum: ResolverTypeWrapper<CategorySum>;
   CategoryType: ResolverTypeWrapper<CategoryType>;
   CreateCardInput: CreateCardInput;
+  CreateCategorySettingInput: CreateCategorySettingInput;
   CreateExpenseInput: CreateExpenseInput;
   CreateFixedExpenseInput: CreateFixedExpenseInput;
   CreateIncomeInput: CreateIncomeInput;
@@ -499,6 +570,7 @@ export type ResolversTypes = ResolversObject<{
   Period: ResolverTypeWrapper<Period>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  SubCategory: ResolverTypeWrapper<SubCategory>;
   Total: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Total']>;
   TotalByCardId: ResolverTypeWrapper<TotalByCardId>;
   TotalByFortnight: ResolverTypeWrapper<TotalByFortnight>;
@@ -515,9 +587,15 @@ export type ResolversParentTypes = ResolversObject<{
   AllExpensesByDateRangeInput: AllExpensesByDateRangeInput;
   Boolean: Scalars['Boolean']['output'];
   Card: Card;
+  Categories: Categories;
+  CategoryAllocation: CategoryAllocation;
+  CategoryAllocationInput: CategoryAllocationInput;
+  CategorySetting: CategorySetting;
   CategorySettings: CategorySettings;
+  CategorySum: CategorySum;
   CategoryType: CategoryType;
   CreateCardInput: CreateCardInput;
+  CreateCategorySettingInput: CreateCategorySettingInput;
   CreateExpenseInput: CreateExpenseInput;
   CreateFixedExpenseInput: CreateFixedExpenseInput;
   CreateIncomeInput: CreateIncomeInput;
@@ -540,6 +618,7 @@ export type ResolversParentTypes = ResolversObject<{
   Period: Period;
   Query: {};
   String: Scalars['String']['output'];
+  SubCategory: SubCategory;
   Total: ResolversInterfaceTypes<ResolversParentTypes>['Total'];
   TotalByCardId: TotalByCardId;
   TotalByFortnight: TotalByFortnight;
@@ -561,18 +640,47 @@ export type CardResolvers<ContextType = Context, ParentType extends ResolversPar
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type CategoriesResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Categories'] = ResolversParentTypes['Categories']> = ResolversObject<{
+  id?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  subCategory?: Resolver<Maybe<Array<ResolversTypes['SubCategory']>>, ParentType, ContextType>;
+  userId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type CategoryAllocationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CategoryAllocation'] = ResolversParentTypes['CategoryAllocation']> = ResolversObject<{
+  categorySum?: Resolver<Maybe<Array<Maybe<ResolversTypes['CategorySum']>>>, ParentType, ContextType>;
+  expenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  income?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type CategorySettingResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CategorySetting'] = ResolversParentTypes['CategorySetting']> = ResolversObject<{
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type CategorySettingsResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CategorySettings'] = ResolversParentTypes['CategorySettings']> = ResolversObject<{
   percentageTotal?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   settings?: Resolver<Maybe<Array<ResolversTypes['CategoryType']>>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type CategorySumResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CategorySum'] = ResolversParentTypes['CategorySum']> = ResolversObject<{
+  allocated?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  category?: Resolver<ResolversTypes['CategoryType'], ParentType, ContextType>;
+  remaining?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  sum?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type CategoryTypeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CategoryType'] = ResolversParentTypes['CategoryType']> = ResolversObject<{
-  categoryId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  percentage?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  categoryId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  id?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  percentage?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  userId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -651,10 +759,12 @@ export type LoginResponseResolvers<ContextType = Context, ParentType extends Res
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = ResolversObject<{
   createCard?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, Partial<MutationCreateCardArgs>>;
+  createCategorySetting?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, RequireFields<MutationCreateCategorySettingArgs, 'input'>>;
   createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'input'>>;
   createFixedExpense?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<MutationCreateFixedExpenseArgs>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
   deleteCard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteCardArgs, 'id'>>;
+  deleteCategorySetting?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, RequireFields<MutationDeleteCategorySettingArgs, 'categoryId'>>;
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
   deleteIncomeById?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
   updateCard?: Resolver<ResolversTypes['Card'], ParentType, ContextType, Partial<MutationUpdateCardArgs>>;
@@ -682,6 +792,8 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
+  categoryAllocation?: Resolver<Maybe<ResolversTypes['CategoryAllocation']>, ParentType, ContextType, RequireFields<QueryCategoryAllocationArgs, 'input'>>;
+  categoryList?: Resolver<Maybe<Array<ResolversTypes['Categories']>>, ParentType, ContextType>;
   categorySettings?: Resolver<Maybe<ResolversTypes['CategorySettings']>, ParentType, ContextType>;
   expenseById?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<QueryExpenseByIdArgs, 'id'>>;
   financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'input'>>;
@@ -690,6 +802,13 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
   incomesWithExpenses?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesWithExpensesArgs, 'input'>>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
+}>;
+
+export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
+  id?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  userId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type TotalResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Total'] = ResolversParentTypes['Total']> = ResolversObject<{
@@ -725,7 +844,11 @@ export type TotalByMonthResolvers<ContextType = Context, ParentType extends Reso
 
 export type Resolvers<ContextType = Context> = ResolversObject<{
   Card?: CardResolvers<ContextType>;
+  Categories?: CategoriesResolvers<ContextType>;
+  CategoryAllocation?: CategoryAllocationResolvers<ContextType>;
+  CategorySetting?: CategorySettingResolvers<ContextType>;
   CategorySettings?: CategorySettingsResolvers<ContextType>;
+  CategorySum?: CategorySumResolvers<ContextType>;
   CategoryType?: CategoryTypeResolvers<ContextType>;
   Date?: GraphQLScalarType;
   Expense?: ExpenseResolvers<ContextType>;
@@ -740,6 +863,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   PaymentDate?: PaymentDateResolvers<ContextType>;
   Period?: PeriodResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  SubCategory?: SubCategoryResolvers<ContextType>;
   Total?: TotalResolvers<ContextType>;
   TotalByCardId?: TotalByCardIdResolvers<ContextType>;
   TotalByFortnight?: TotalByFortnightResolvers<ContextType>;

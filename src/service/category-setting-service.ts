@@ -2,7 +2,7 @@ import { CategorySettingsRepository } from '../repository/category-settings-repo
 import { Sequelize } from 'sequelize';
 
 export class CategorySettingsService {
-  private categorySettingsRepository: CategorySettingsRepository;
+  categorySettingsRepository: CategorySettingsRepository;
   userId: string;
 
   constructor(userId: string, sequelize: Sequelize) {
@@ -19,8 +19,23 @@ export class CategorySettingsService {
 
   //TODO add logic to validate that the percetage of the category does not exceed 100%
   // and that the category is not already set for the user
-  async createCategorySetting(input: any) {
+  async createCategorySetting(input: {
+    categoryId: string;
+    percentage: number;
+  }) {
     const { categoryId, percentage } = input;
+
+    const allSettings = await this.getCategorySettings();
+
+    // Sum of percentage validation
+    const percentageTotal = allSettings.reduce((total, setting) => {
+      return total + Number(setting.percentage);
+    }, 0);
+
+    if (percentageTotal + percentage > 1) {
+      throw new Error('Total percentage exceeds 100%');
+    }
+
     const categorySettingData = {
       userId: this.userId,
       categoryId,
@@ -29,5 +44,23 @@ export class CategorySettingsService {
     return this.categorySettingsRepository.createCategorySetting(
       categorySettingData
     );
+  }
+
+  async deleteCategorySetting(categoryId: string) {
+    const deleted = await this.categorySettingsRepository.deleteCategorySetting(
+      categoryId
+    );
+
+    if (deleted == 0) {
+      return {
+        id: '',
+        message: 'Could not delete the setting',
+      };
+    }
+
+    return {
+      id: categoryId,
+      message: 'Setting deleted',
+    };
   }
 }
