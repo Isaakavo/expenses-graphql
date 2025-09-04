@@ -18,7 +18,7 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
     comment: x.comment,
     period: x.period,
     paymentDate: {
-      date: formatInTimeZone(x.paymentDate, 'UTC', 'MMMM yyyy'),
+      date: formatInTimeZone(x.paymentDate, 'UTC', 'dd MMMM'),
       fortnight: calculateFortnight(x.paymentDate),
     },
     createdAt: x.createdAt,
@@ -40,7 +40,7 @@ export function adaptIncome(
     comment: income.comment,
     period,
     paymentDate: {
-      date: formatInTimeZone(income.paymentDate, 'UTC', 'MMMM yyyy'),
+      date: formatInTimeZone(income.paymentDate, 'UTC', 'dd MMMM'),
       fortnight: calculateFortnight(income.paymentDate),
     },
     createdAt: income.createdAt,
