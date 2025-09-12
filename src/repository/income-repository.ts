@@ -9,7 +9,6 @@ import { Period } from '../models/periods.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
 import { PeriodRepository } from './period-repository.js';
 
-
 export class IncomeRepository {
   private periodRepository: PeriodRepository;
   userId: string;
@@ -118,7 +117,7 @@ export class IncomeRepository {
           model: Income,
           as: 'income',
           where: { userId: this.userId, id: incomeId },
-        }
+        },
       ],
       where: { incomeId, userId: this.userId },
     });
@@ -181,7 +180,10 @@ export class IncomeRepository {
               },
               defaults: {
                 percentage: setting.percentage,
-                amountAllocated: income.total * setting.percentage,
+                amountAllocated:
+                  setting.amount !== 0
+                    ? setting.amount
+                    : income.total * setting.percentage,
               },
               transaction: t,
             });

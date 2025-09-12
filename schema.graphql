@@ -40,6 +40,7 @@ type CategoryType {
   categoryId: ID
   name: String
   percentage: Float
+  amount: String
 }
 
 type SubCategory {
@@ -57,7 +58,8 @@ type Categories {
 
 type CategorySettings {
   settings: [CategoryType!]
-  percentageTotal: Float!
+  percentageTotal: Float
+  amountTotal: Float
 }
 
 type CategoryAllocation {

@@ -1,5 +1,6 @@
 import { QueryResolvers } from 'generated/graphql';
 import { CategorySettingsService } from '../../../service/category-setting-service.js';
+import { formatCurrency } from '../../../adapters/income-adapter.js';
 
 export const categorySettings: QueryResolvers['categorySettings'] = async (
   _,
@@ -25,6 +26,7 @@ export const categorySettings: QueryResolvers['categorySettings'] = async (
       name: setting.category.name,
       categoryId: setting.categoryId,
       percentage: setting.percentage * 100,
+      amount: formatCurrency(setting.amount),
     })),
     percentageTotal: formatNumber(
       settings.reduce(
