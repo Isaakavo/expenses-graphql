@@ -10,6 +10,7 @@ export class CategorySettings extends Model {
   public userId!: string;
   public categoryId!: string;
   public percentage!: number;
+  public amount!: number;
   // public periodType!: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY';
 
   static associate() {
@@ -43,12 +44,14 @@ export const initUserCategoryAllocationTemplateModel = (
       },
       percentage: {
         type: DataTypes.DECIMAL(5, 2),
-        allowNull: false,
         validate: {
           min: 0,
           max: 100,
         },
       },
+      amount: {
+        type: DataTypes.DECIMAL(5,2)
+      }
       // periodType: {
       //   type: DataTypes.ENUM('WEEKLY', 'FORTNIGHTLY', 'MONTHLY'),
       //   allowNull: false,

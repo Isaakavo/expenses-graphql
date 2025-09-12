@@ -21,25 +21,28 @@ export class CategorySettingsService {
   // and that the category is not already set for the user
   async createCategorySetting(input: {
     categoryId: string;
-    percentage: number;
+    percentage: number | undefined;
+    amount: number | undefined;
   }) {
-    const { categoryId, percentage } = input;
+    const { categoryId, percentage, amount } = input;
 
     const allSettings = await this.getCategorySettings();
 
-    // Sum of percentage validation
-    const percentageTotal = allSettings.reduce((total, setting) => {
-      return total + Number(setting.percentage);
-    }, 0);
-
-    if (percentageTotal + percentage > 1) {
-      throw new Error('Total percentage exceeds 100%');
+    if (percentage) {
+      // Sum of percentage validation
+      const percentageTotal = allSettings.reduce((total, setting) => {
+        return total + Number(setting.percentage);
+      }, 0);
+      if (percentageTotal + percentage > 1) {
+        throw new Error('Total percentage exceeds 100%');
+      }
     }
 
     const categorySettingData = {
       userId: this.userId,
       categoryId,
       percentage,
+      amount
     };
     return this.categorySettingsRepository.createCategorySetting(
       categorySettingData

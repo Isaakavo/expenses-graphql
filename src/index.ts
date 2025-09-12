@@ -42,7 +42,7 @@ const startServer = async () => {
         return {
           sequilizeClient: sequelizeClient,
           axiosClient: instance,
-          user: await resolverUser(req),
+          // user: await resolverUser(req),
         };
       } catch (error) {
         if (error instanceof GraphQLError) {

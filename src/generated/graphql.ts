@@ -119,7 +119,8 @@ export type CreateCardInput = {
 };
 
 export type CreateCategorySettingInput = {
-  allocationPercentage: Scalars['Float']['input'];
+  allocatedAmount?: InputMaybe<Scalars['Float']['input']>;
+  allocationPercentage?: InputMaybe<Scalars['Float']['input']>;
   categoryId: Scalars['ID']['input'];
 };
 
