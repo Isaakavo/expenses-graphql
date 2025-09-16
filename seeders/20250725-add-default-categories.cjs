@@ -3,26 +3,41 @@ const { v4: uuidv4 } = require('uuid');
 
 const PARENT_CHILD = {
   HOUSEHOLD: [
+    'BILLS',
     'RENT',
     'MORTGAGE',
     'SUPERMARKET',
+    'SUPER_MARKET',
+    'FOOD',
     'UTILITIES',
     'HOME_MAINTENANCE',
     'HOME_INSURANCE',
+    'HOUSE',
   ],
-  FOOD_AND_DRINKS: ['GROCERIES', 'DINING_OUT', 'COFFEE', 'DELIVERY', 'SNACKS'],
+  FOOD_AND_DRINKS: [
+    'GROCERIES',
+    'DINING_OUT',
+    'COFFEE',
+    'DELIVERY',
+    'SNACKS',
+    'EATING_OUT',
+  ],
   TRANSPORTATION: [
+    'CAR',
     'FUEL',
     'PUBLIC_TRANSPORT',
     'TAXI_RIDES',
     'CAR_MAINTENANCE',
     'CAR_INSURANCE',
     'TOLLS_PARKING',
+    'TRANSPORT',
   ],
   COMMUNICATION_SUBSCRIPTIONS: [
+    'COMMUNICATION',
     'MOBILE_PHONE',
     'INTERNET',
     'STREAMING_SERVICES',
+    'SUBSCRIPTION',
     'OTHER_SUBSCRIPTIONS',
   ],
   FINANCIAL: [
@@ -31,6 +46,7 @@ const PARENT_CHILD = {
     'LOANS_DEBTS',
     'CREDIT_PAYMENTS',
     'TAXES',
+    'INSURANCE',
   ],
   HEALTH_WELLNESS: [
     'DOCTOR',
@@ -38,15 +54,30 @@ const PARENT_CHILD = {
     'HEALTH_INSURANCE',
     'GYM_FITNESS',
     'PETS',
+    'HEALTH',
+    'SPORTS',
   ],
-  LIFESTYLE: ['CLOTHES', 'ENTERTAINMENT', 'SOCIAL_OUTINGS', 'GIFTS', 'TRAVEL'],
+  LIFESTYLE: [
+    'CLOTHES',
+    'ENTERTAINMENT',
+    'SOCIAL_OUTINGS',
+    'GIFTS',
+    'TRAVEL',
+    'HANG_OUT',
+  ],
   EDUCATION_DEVELOPMENT: [
     'COURSES',
     'BOOKS',
     'ACADEMIC_MATERIALS',
     'EDUCATIONAL_SOFTWARE',
   ],
-  OTHERS: ['DONATIONS', 'UNEXPECTED_EXPENSES', 'MISC'],
+  OTHERS: [
+    'DONATIONS',
+    'UNEXPECTED_EXPENSES',
+    'MISC',
+    'MONTHS_WITHOUT_INTEREST',
+    'FIXED_EXPENSE',
+  ],
 };
 
 module.exports = {
