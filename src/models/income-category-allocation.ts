@@ -51,7 +51,7 @@ export const initIncomeCategoryAllocationModel = (sequelize: Sequelize) => {
       },
       percentage: {
         type: DataTypes.DECIMAL(5, 2),
-        allowNull: true,
+        allowNull: false,
         validate: {
           min: 0,
           max: 100,
