@@ -85,9 +85,7 @@ module.exports = {
       },
       percentage: {
         type: Sequelize.DECIMAL(5, 2),
-      },
-      amount: {
-        type: Sequelize.DECIMAL(5, 2),
+        allowNull: false,
       },
       created_at: {
         type: Sequelize.DATE,

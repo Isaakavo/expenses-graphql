@@ -4,7 +4,7 @@ import { CategorySettingsService } from '../../../service/category-setting-servi
 export const createCategorySetting: MutationResolvers['createCategorySetting'] =
   async (
     _,
-    { input: { categoryId, allocationPercentage, allocatedAmount } },
+    { input: { categoryId, allocationPercentage } },
     { user: { userId }, sequilizeClient }
   ) => {
     try {
@@ -17,7 +17,6 @@ export const createCategorySetting: MutationResolvers['createCategorySetting'] =
         await categorySettingsService.createCategorySetting({
           categoryId,
           percentage: allocationPercentage,
-          amount: allocatedAmount,
         });
 
       return {

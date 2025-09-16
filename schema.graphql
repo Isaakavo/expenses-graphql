@@ -298,8 +298,7 @@ input CategoryAllocationInput {
 
 input CreateCategorySettingInput {
   categoryId: ID!
-  allocationPercentage: Float
-  allocatedAmount: Float
+  allocationPercentage: Float!
 }
 
 type Query {
