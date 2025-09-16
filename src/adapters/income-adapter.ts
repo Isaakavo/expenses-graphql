@@ -64,8 +64,16 @@ export function adaptExpensesWithCard(x: Expense, card?: Card) {
       createdAt: x.createdAt,
       updatedAt: x.updatedAt,
       card: card ? adaptCard(card) : null,
-      category: '',
-      subCategory: '',
+      category: {
+        id: '',
+        name: '',
+        userId: '',
+      },
+      subCategory: {
+        id: '',
+        name: '',
+        userId: '',
+      },
     };
   } catch (error) {
     logger.error(error);
@@ -88,8 +96,16 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
       card: expenseWithCategory.card
         ? adaptCard(expenseWithCategory.card)
         : null,
-      category: expenseWithCategory.sub_category.category.name,
-      subCategory: expenseWithCategory.sub_category.name,
+      category: {
+        id: expenseWithCategory.sub_category.category.id,
+        name: expenseWithCategory.sub_category.category.name,
+        userId: expenseWithCategory.sub_category.category.userId,
+      },
+      subCategory: {
+        id: expenseWithCategory.sub_category.id,
+        name: expenseWithCategory.sub_category.name,
+        userId: expenseWithCategory.sub_category.userId,
+      },
     };
   } catch (error) {
     logger.error(error);

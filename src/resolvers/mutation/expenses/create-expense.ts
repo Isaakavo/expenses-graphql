@@ -62,7 +62,7 @@ export const createExpense: MutationResolvers['createExpense'] = async (
     id: newExpense.id.toString(),
     userId: newExpense.userId,
     concept: newExpense.concept,
-    category,
+    category: categoryAdapter(category),
     total: formatCurrency(newExpense.total),
     comment: newExpense.comments,
     payBefore: newExpense.payBefore,

@@ -162,8 +162,8 @@ type Expense {
   updatedAt: Date
   card: Card
   comment: String
-  category: String!
-  subCategory: String
+  category: CategoryType!
+  subCategory: SubCategory
 }
 
 type FinancialBalance {
@@ -269,6 +269,7 @@ input FilterInput {
   periodId: ID
   startDate: Date
   endDate: Date
+  subCategoryIds: [ID!]
   # inputs used t filter granualiry
   month: String
   year: String
