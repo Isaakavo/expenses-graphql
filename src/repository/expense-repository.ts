@@ -78,7 +78,7 @@ export class ExpenseRepository {
           ],
           // TODO add logic to handle how to get by category
           where: {
-            name: subCategoryIds ? { [Op.in]: subCategoryIds } : { [Op.ne]: null },
+            id: subCategoryIds ? { [Op.in]: subCategoryIds } : { [Op.ne]: null },
           },
         },
         {
