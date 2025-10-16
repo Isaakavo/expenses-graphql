@@ -18,7 +18,7 @@ export class IncomeRepository {
   constructor(userId: string, sequelize: Sequelize) {
     this.userId = userId;
     this.sequelize = sequelize;
-    this.periodRepository = new PeriodRepository(userId);
+    this.periodRepository = new PeriodRepository(userId, sequelize);
   }
 
   async getAllIncomes() {

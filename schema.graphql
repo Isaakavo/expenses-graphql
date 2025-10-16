@@ -320,6 +320,8 @@ type Query {
   categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
   cardById(cardId: ID!): Card
+  periodsList: [Period!]
+  period(input: FilterInput!): Period
 }
 
 type Mutation {

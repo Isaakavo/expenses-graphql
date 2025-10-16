@@ -352,6 +352,8 @@ export type Query = {
   incomesList?: Maybe<IncomesList>;
   incomesWithExpenses: IncomesListAndExpenses;
   login: LoginResponse;
+  period?: Maybe<Period>;
+  periodsList?: Maybe<Array<Period>>;
 };
 
 
@@ -381,6 +383,11 @@ export type QueryIncomeByIdArgs = {
 
 
 export type QueryIncomesWithExpensesArgs = {
+  input: FilterInput;
+};
+
+
+export type QueryPeriodArgs = {
   input: FilterInput;
 };
 
@@ -804,6 +811,8 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
   incomesWithExpenses?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesWithExpensesArgs, 'input'>>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
+  period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType, RequireFields<QueryPeriodArgs, 'input'>>;
+  periodsList?: Resolver<Maybe<Array<ResolversTypes['Period']>>, ParentType, ContextType>;
 }>;
 
 export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
