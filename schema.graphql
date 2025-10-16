@@ -218,8 +218,10 @@ input CreateExpenseInput {
   concept: String!
   total: Float!
   payBefore: Date!
+  periodId: String!
   comment: String
-  category: Category!
+  categoryId: String!
+  subCategoryId: String!
 }
 
 input CreateFixedExpenseInput {

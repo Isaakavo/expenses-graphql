@@ -6,12 +6,43 @@ import {
   ExpenseWithCategory,
   SubCategory,
 } from '../models/index.js';
+import { ExpenseInput } from '../service/expenses-service.js';
 
 export class ExpenseRepository {
   userId: string;
 
   constructor(userId: string) {
     this.userId = userId;
+  }
+
+  async createExpense(input: ExpenseInput) {
+    // TODO make this return the id instad of the whole object?
+    const expense = await Expense.create(
+      { userId: this.userId, category: 'dummy cat', ...input },
+      {
+        include: [
+          {
+            model: SubCategory,
+            as: 'sub_category',
+            include: [
+              {
+                model: Category,
+                as: 'category',
+                where: {
+                  [Op.or]: [{ userId: null }, { userId: this.userId }],
+                },
+              },
+            ],
+          },
+          {
+            model: Card,
+            as: 'card',
+          },
+        ],
+      }
+    );
+    console.log({ expense });
+    return expense;
   }
 
   async getAllExpenses(userId: string, queryOptions?: FindOptions) {

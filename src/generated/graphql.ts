@@ -125,10 +125,12 @@ export type CreateCategorySettingInput = {
 
 export type CreateExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
-  category: Category;
+  categoryId: Scalars['String']['input'];
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   payBefore: Scalars['Date']['input'];
+  periodId: Scalars['String']['input'];
+  subCategoryId: Scalars['String']['input'];
   total: Scalars['Float']['input'];
 };
 

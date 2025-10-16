@@ -1,5 +1,7 @@
 'use strict';
 
+const { all } = require("axios");
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(`
@@ -164,6 +166,11 @@ module.exports = {
         key: 'id',
       },
       onDelete: 'SET NULL',
+    });
+
+    await queryInterface.changeColumn('expenses', 'category', {
+      type: Sequelize.STRING,
+      allowNull: true,
     });
   },
 
