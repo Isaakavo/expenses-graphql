@@ -40,8 +40,7 @@ export class ExpensesService {
       throw new Error(`Concept lenght must be lower than ${conceptLengthMax}`);
     }
 
-    const expense = await this.expenseRepository.createExpense(input);
-    return adaptExpenses(expense);
+    return await this.expenseRepository.createExpense(input);
   }
 
   async getAllExpenses(queryOptions?: FindOptions) {
