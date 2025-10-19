@@ -1,5 +1,6 @@
 import { PeriodService } from '../../../service/period-service.js';
 import { QueryResolvers } from '../../../generated/graphql.js';
+import { adaptPeriod } from '../../../adapters/period-adapter.js';
 
 export const periodsList: QueryResolvers['periodsList'] = async (
   _,
@@ -10,7 +11,9 @@ export const periodsList: QueryResolvers['periodsList'] = async (
     user: { userId },
     sequilizeClient,
   } = context;
-  const periodsService = new PeriodService(userId, sequilizeClient)  
+  const periodsService = new PeriodService(userId, sequilizeClient);
 
-  return periodsService.getAllPeriods();
+  return (await periodsService.getAllPeriods()).map((period) => ({
+    ...adaptPeriod(period),
+  }));
 };

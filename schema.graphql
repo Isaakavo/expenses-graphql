@@ -88,10 +88,10 @@ type PaymentDate {
 type Period {
   id: ID!
   userId: String!
-  startDate: Date!
-  endDate: Date!
-  createdAt: Date
-  updatedAt: Date
+  startDate: String!
+  endDate: String!
+  createdAt: String
+  updatedAt: String
 }
 
 type Income {
