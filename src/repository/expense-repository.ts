@@ -6,12 +6,22 @@ import {
   ExpenseWithCategory,
   SubCategory,
 } from '../models/index.js';
+import { ExpenseInput } from '../service/expenses-service.js';
 
 export class ExpenseRepository {
   userId: string;
 
   constructor(userId: string) {
     this.userId = userId;
+  }
+
+  async createExpense(input: ExpenseInput) {
+    const expense = await Expense.create({
+      userId: this.userId,
+      ...input,
+    });
+
+    return this.getExpenseByPK(expense.id);
   }
 
   async getAllExpenses(userId: string, queryOptions?: FindOptions) {
@@ -112,6 +122,30 @@ export class ExpenseRepository {
         Sequelize.col('sub_category.category.name'),
       ],
       raw: true,
+    });
+  }
+
+  async getExpenseByPK(id: string) {
+    return Expense.findByPk(id, {
+      include: [
+        {
+          model: SubCategory,
+          as: 'sub_category',
+          include: [
+            {
+              model: Category,
+              as: 'category',
+              where: {
+                [Op.or]: [{ userId: null }, { userId: this.userId }],
+              },
+            },
+          ],
+        },
+        {
+          model: Card,
+          as: 'card',
+        },
+      ],
     });
   }
 }
