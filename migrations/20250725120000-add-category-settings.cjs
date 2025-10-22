@@ -1,7 +1,5 @@
 'use strict';
 
-const { all } = require("axios");
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.sequelize.query(`
