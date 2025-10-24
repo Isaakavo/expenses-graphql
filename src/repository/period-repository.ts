@@ -1,13 +1,15 @@
-import { CreateOptions, Op } from 'sequelize';
+import { CreateOptions, Op, Sequelize } from 'sequelize';
 import { Period } from '../models/periods.js';
 import { logger } from '../logger.js';
 
 export class PeriodRepository {
   userId: string;
+  sequelize: Sequelize;
   FORTNIGHTLY_NUMBER_OF_DAYS = 13;
 
-  constructor(userId: string) {
+  constructor(userId: string, sequelize: Sequelize) {
     this.userId = userId;
+    this.sequelize = sequelize;
   }
 
   async getAllPeriods() {
@@ -17,6 +19,16 @@ export class PeriodRepository {
       },
       order: [['startDate', 'DESC']],
     });
+  }
+
+  async getPeriodByDay(date: Date) {
+    return Period.findOne({
+      where: {
+        userId: this.userId,
+        startDate: { [Op.lte]: date },
+        endDate: { [Op.gte]: date },
+      }
+    })
   }
 
   async createPeriod(startDate: Date, options?: CreateOptions) {

@@ -165,6 +165,11 @@ module.exports = {
       },
       onDelete: 'SET NULL',
     });
+
+    await queryInterface.changeColumn('expenses', 'category', {
+      type: Sequelize.STRING,
+      allowNull: true,
+    });
   },
 
   down: async (queryInterface) => {

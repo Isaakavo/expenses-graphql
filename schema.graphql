@@ -88,10 +88,10 @@ type PaymentDate {
 type Period {
   id: ID!
   userId: String!
-  startDate: Date!
-  endDate: Date!
-  createdAt: Date
-  updatedAt: Date
+  startDate: String!
+  endDate: String!
+  createdAt: String
+  updatedAt: String
 }
 
 type Income {
@@ -218,8 +218,10 @@ input CreateExpenseInput {
   concept: String!
   total: Float!
   payBefore: Date!
+  periodId: String!
   comment: String
-  category: Category!
+  categoryId: String!
+  subCategoryId: String!
 }
 
 input CreateFixedExpenseInput {
@@ -319,6 +321,8 @@ type Query {
   categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
   cardById(cardId: ID!): Card
+  periodsList: [Period!]
+  period(input: FilterInput!): Period
 }
 
 type Mutation {

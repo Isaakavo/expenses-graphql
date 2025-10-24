@@ -9,6 +9,7 @@ import { Income } from '../models/income';
 import { calculateFortnight } from '../utils/date-utils.js';
 import { Period } from 'models/periods.js';
 import { formatInTimeZone } from 'date-fns-tz';
+import { adaptPeriod } from './period-adapter.js';
 
 export function adaptSingleIncome(x: Income): GraphqlIncome {
   return {
@@ -16,7 +17,7 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
     userId: x.userId,
     total: formatCurrency(x.total),
     comment: x.comment,
-    period: x.period,
+    period: adaptPeriod(x.period),
     paymentDate: {
       date: formatInTimeZone(x.paymentDate, 'UTC', 'dd MMMM'),
       fortnight: calculateFortnight(x.paymentDate),
@@ -38,7 +39,7 @@ export function adaptIncome(
     userId: income.userId,
     total: formatCurrency(income.total),
     comment: income.comment,
-    period,
+    period: adaptPeriod(period),
     paymentDate: {
       date: formatInTimeZone(income.paymentDate, 'UTC', 'dd MMMM'),
       fortnight: calculateFortnight(income.paymentDate),

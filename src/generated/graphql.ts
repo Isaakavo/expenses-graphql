@@ -125,10 +125,12 @@ export type CreateCategorySettingInput = {
 
 export type CreateExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
-  category: Category;
+  categoryId: Scalars['String']['input'];
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   payBefore: Scalars['Date']['input'];
+  periodId: Scalars['String']['input'];
+  subCategoryId: Scalars['String']['input'];
   total: Scalars['Float']['input'];
 };
 
@@ -328,11 +330,11 @@ export type PaymentDate = {
 
 export type Period = {
   __typename?: 'Period';
-  createdAt?: Maybe<Scalars['Date']['output']>;
-  endDate: Scalars['Date']['output'];
+  createdAt?: Maybe<Scalars['String']['output']>;
+  endDate: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  startDate: Scalars['Date']['output'];
-  updatedAt?: Maybe<Scalars['Date']['output']>;
+  startDate: Scalars['String']['output'];
+  updatedAt?: Maybe<Scalars['String']['output']>;
   userId: Scalars['String']['output'];
 };
 
@@ -351,6 +353,8 @@ export type Query = {
   incomesList?: Maybe<IncomesList>;
   incomesWithExpenses: IncomesListAndExpenses;
   login: LoginResponse;
+  period?: Maybe<Period>;
+  periodsList?: Maybe<Array<Period>>;
 };
 
 
@@ -380,6 +384,11 @@ export type QueryIncomeByIdArgs = {
 
 
 export type QueryIncomesWithExpensesArgs = {
+  input: FilterInput;
+};
+
+
+export type QueryPeriodArgs = {
   input: FilterInput;
 };
 
@@ -780,11 +789,11 @@ export type PaymentDateResolvers<ContextType = Context, ParentType extends Resol
 }>;
 
 export type PeriodResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Period'] = ResolversParentTypes['Period']> = ResolversObject<{
-  createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
-  endDate?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  endDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  startDate?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
-  updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  startDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -803,6 +812,8 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
   incomesWithExpenses?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesWithExpensesArgs, 'input'>>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
+  period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType, RequireFields<QueryPeriodArgs, 'input'>>;
+  periodsList?: Resolver<Maybe<Array<ResolversTypes['Period']>>, ParentType, ContextType>;
 }>;
 
 export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
