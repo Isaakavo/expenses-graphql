@@ -18,3 +18,8 @@ export type IncomeWithCategoryAllocationDTO = {
   category: CategoryDTO;
   income: IncomeDTO;
 };
+
+export type IncomeAndPeriodDTO = {
+  income: IncomeDTO;
+  period: PeriodDTO;
+}

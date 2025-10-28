@@ -10,5 +10,8 @@ export const incomesGroupedBy = async (_, __, context) => {
 
   const groupedIncomes = incomeService.getIncomeBy();
 
+  console.log({groupedIncomes: await (groupedIncomes as any).incomes});
+  
+
   return groupedIncomes;
 };
