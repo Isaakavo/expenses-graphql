@@ -59,7 +59,8 @@ export class ExpensesService {
   async getExpensesByPeriod(
     periodId?: string,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
+    subCategoryIds?: string[],
   ) {
     const parsedStartDate = startDate ? new Date(startDate) : undefined;
     const parsedEndDate = endDate ? new Date(endDate) : undefined;
@@ -67,7 +68,8 @@ export class ExpensesService {
     const expenses = await this.expenseRepository.getExpensesByPeriod(
       periodId,
       parsedStartDate,
-      parsedEndDate
+      parsedEndDate,
+      subCategoryIds,
     );
 
     const expensesTotal = this.calculateTotal(expenses);

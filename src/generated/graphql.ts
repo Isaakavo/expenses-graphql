@@ -105,8 +105,8 @@ export type CategorySum = {
 export type CategoryType = {
   __typename?: 'CategoryType';
   categoryId?: Maybe<Scalars['ID']['output']>;
-  id?: Maybe<Scalars['ID']['output']>;
-  name?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
   percentage?: Maybe<Scalars['Float']['output']>;
   userId?: Maybe<Scalars['ID']['output']>;
 };
@@ -154,14 +154,14 @@ export type CreateIncomeInput = {
 export type Expense = {
   __typename?: 'Expense';
   card?: Maybe<Card>;
-  category: Scalars['String']['output'];
+  category: CategoryType;
   comment?: Maybe<Scalars['String']['output']>;
   concept: Scalars['String']['output'];
   createdAt?: Maybe<Scalars['Date']['output']>;
   id: Scalars['ID']['output'];
   payBefore: Scalars['Date']['output'];
   periodId?: Maybe<Scalars['String']['output']>;
-  subCategory?: Maybe<Scalars['String']['output']>;
+  subCategory: SubCategory;
   total: Scalars['String']['output'];
   updatedAt?: Maybe<Scalars['Date']['output']>;
   userId?: Maybe<Scalars['String']['output']>;
@@ -179,6 +179,7 @@ export type FilterInput = {
   month?: InputMaybe<Scalars['String']['input']>;
   periodId?: InputMaybe<Scalars['ID']['input']>;
   startDate?: InputMaybe<Scalars['Date']['input']>;
+  subCategoryIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   year?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -393,8 +394,8 @@ export type QueryPeriodArgs = {
 
 export type SubCategory = {
   __typename?: 'SubCategory';
-  id?: Maybe<Scalars['ID']['output']>;
-  name?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
   userId?: Maybe<Scalars['ID']['output']>;
 };
 
@@ -686,8 +687,8 @@ export type CategorySumResolvers<ContextType = Context, ParentType extends Resol
 
 export type CategoryTypeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CategoryType'] = ResolversParentTypes['CategoryType']> = ResolversObject<{
   categoryId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
-  id?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   percentage?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   userId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -699,14 +700,14 @@ export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes
 
 export type ExpenseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Expense'] = ResolversParentTypes['Expense']> = ResolversObject<{
   card?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType>;
-  category?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  category?: Resolver<ResolversTypes['CategoryType'], ParentType, ContextType>;
   comment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   payBefore?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
   periodId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  subCategory?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  subCategory?: Resolver<ResolversTypes['SubCategory'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   userId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -816,8 +817,8 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 }>;
 
 export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
-  id?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
-  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   userId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;

@@ -10,7 +10,7 @@ export const incomesWithExpenses: QueryResolvers['incomesWithExpenses'] =
       sequilizeClient,
     } = context;
 
-    const { startDate, endDate, periodId } = input;
+    const { startDate, endDate, periodId, subCategoryIds } = input;
 
     const incomesService = new IncomeService(userId, sequilizeClient);
     const expensesService = new ExpensesService(userId);
@@ -21,7 +21,7 @@ export const incomesWithExpenses: QueryResolvers['incomesWithExpenses'] =
       endDate
     );
     const { expenses, expensesTotal } =
-      await expensesService.getExpensesByPeriod(periodId, startDate, endDate);
+      await expensesService.getExpensesByPeriod(periodId, startDate, endDate, subCategoryIds);
 
     return {
       incomes,

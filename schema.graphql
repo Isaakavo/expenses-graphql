@@ -35,17 +35,17 @@ enum FixedExpenseFrequency {
 }
 
 type CategoryType {
-  id: ID
+  id: ID!
   userId: ID
   categoryId: ID
-  name: String
+  name: String!
   percentage: Float
 }
 
 type SubCategory {
-  id: ID
+  id: ID!
   userId: ID
-  name: String
+  name: String!
 }
 
 type Categories {
@@ -162,8 +162,8 @@ type Expense {
   updatedAt: Date
   card: Card
   comment: String
-  category: String!
-  subCategory: String
+  category: CategoryType!
+  subCategory: SubCategory!
 }
 
 type FinancialBalance {
@@ -271,6 +271,7 @@ input FilterInput {
   periodId: ID
   startDate: Date
   endDate: Date
+  subCategoryIds: [ID!]
   # inputs used t filter granualiry
   month: String
   year: String
