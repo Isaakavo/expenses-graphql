@@ -21,8 +21,6 @@ export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
     incomeId
   );
 
-  const income = allocations.income[0];
-
   return {
     categorySum: allocations.categorySum.map((allocation) => ({
       category: allocation.category,
@@ -30,7 +28,7 @@ export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
       remaining: formatCurrency(allocation.remaining),
       sum: formatCurrency(allocation.sum),
     })),
-    income: adaptIncome(income),
+    income: adaptIncome(allocations.income[0]),
     expenses: allocations.expenses.map((expense) => adaptExpenses(expense)),
   };
 };
