@@ -1,11 +1,12 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import { Expense } from './expense.js';
 import { Income } from './income.js';
+import { PeriodType } from '../dto/period-dto.js';
 
 export class Period extends Model {
   public id!: string;
   public userId!: string;
-  public type!: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY';
+  public type!: PeriodType;
   public startDate!: Date;
   public endDate!: Date;
   public createdAt!: Date;

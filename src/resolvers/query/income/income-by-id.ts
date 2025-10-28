@@ -4,6 +4,7 @@ import { QueryResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { Income } from '../../../models/index.js';
 import { Op } from 'sequelize';
+import { adaptIncomeDTO } from '../../../adapters/income-adapter.js';
 
 export const incomeById: QueryResolvers['incomeById'] = async (
   _,
@@ -32,7 +33,7 @@ export const incomeById: QueryResolvers['incomeById'] = async (
       ],
     });
 
-    return adaptSingleIncome(income);
+    return adaptSingleIncome(adaptIncomeDTO(income));
   } catch (error) {
     logger.error(error.message);
   }

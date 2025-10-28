@@ -1,5 +1,6 @@
 import { Sequelize } from 'sequelize';
 import { PeriodRepository } from '../repository/period-repository.js';
+import { adaptPeriodDTo } from '../adapters/period-adapter.js';
 
 export class PeriodService {
   private periodRepository: PeriodRepository;
@@ -11,14 +12,17 @@ export class PeriodService {
   }
 
   async getAllPeriods() {
-    return this.periodRepository.getAllPeriods();
+    return (await this.periodRepository.getAllPeriods()).map((period) =>
+      adaptPeriodDTo(period)
+    );
   }
 
   async getPeriodByDate(date: Date) {
-    return this.periodRepository.getPeriodByDay(date);
+    const result = await this.periodRepository.getPeriodByDay(date);
+    return adaptPeriodDTo(result);
   }
 
-  async createPeriod(startDate: Date, endDate: Date) {
-    // return this.periodRepository.createPeriod(startDate, endDate);
-  }
+  // async createPeriod(startDate: Date, endDate: Date) {
+  // return this.periodRepository.createPeriod(startDate, endDate);
+  // }
 }

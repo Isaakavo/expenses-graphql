@@ -21,6 +21,8 @@ export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
     incomeId
   );
 
+  const income = allocations.income[0];
+
   return {
     categorySum: allocations.categorySum.map((allocation) => ({
       category: allocation.category,
@@ -28,8 +30,7 @@ export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
       remaining: formatCurrency(allocation.remaining),
       sum: formatCurrency(allocation.sum),
     })),
-    // TODO create types to avoid use of any
-    income: (allocations.income as any).map((income) => adaptIncome(income))[0],
+    income: adaptIncome(income),
     expenses: allocations.expenses.map((expense) => adaptExpenses(expense)),
   };
 };

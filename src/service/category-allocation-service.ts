@@ -1,6 +1,7 @@
 import { IncomeRepository } from '../repository/income-repository.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 import { Sequelize } from 'sequelize';
+import { adaptIncomeDTO } from '../adapters/income-adapter.js';
 
 export class CategoryAllocationService {
   private expenseRepository: ExpenseRepository;
@@ -21,10 +22,9 @@ export class CategoryAllocationService {
       this.getExpenseSumByCategory(periodId),
     ]);
 
-    // TODO create types to avoid use of any
-    const categorySum = incomeSum.map((income: any) => {
-      const expense: any = expenseSum.find(
-        (exp: any) => exp.categoryId === income.categoryId
+    const categorySum = incomeSum.map((income) => {
+      const expense = expenseSum.find(
+        (exp) => exp.category.id === income.category.id
       );
       return {
         category: {
@@ -38,9 +38,12 @@ export class CategoryAllocationService {
       };
     });
 
+    // console.log({incomeIncome: (incomeSum as any)[0].income});
+    
+
     return {
       categorySum,
-      income: incomeSum,
+      income: incomeSum.map((inc) => adaptIncomeDTO(inc.income)),
       expenses: await this.expenseRepository.getExpensesByPeriod(periodId),
     };
   }
