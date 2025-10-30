@@ -104,7 +104,6 @@ export type CategorySum = {
 
 export type CategoryType = {
   __typename?: 'CategoryType';
-  categoryId?: Maybe<Scalars['ID']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   percentage?: Maybe<Scalars['Float']['output']>;
@@ -686,7 +685,6 @@ export type CategorySumResolvers<ContextType = Context, ParentType extends Resol
 }>;
 
 export type CategoryTypeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CategoryType'] = ResolversParentTypes['CategoryType']> = ResolversObject<{
-  categoryId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   percentage?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;

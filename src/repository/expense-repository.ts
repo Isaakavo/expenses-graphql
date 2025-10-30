@@ -7,6 +7,7 @@ import {
   SubCategory,
 } from '../models/index.js';
 import { ExpenseInput } from '../service/expenses-service.js';
+import { adaptExpenseWithCategoryAllocationDTO } from '../adapters/expense-adapter.js';
 
 export class ExpenseRepository {
   userId: string;
@@ -101,7 +102,7 @@ export class ExpenseRepository {
   }
 
   async getExpensesSumByCategory(periodId: string) {
-    return Expense.findAll({
+    const result = await Expense.findAll({
       attributes: [
         [Sequelize.col('sub_category.category.name'), 'categoryName'],
         [Sequelize.col('sub_category.category.id'), 'categoryId'],
@@ -128,6 +129,8 @@ export class ExpenseRepository {
       ],
       raw: true,
     });
+
+    return result.map((row) => adaptExpenseWithCategoryAllocationDTO(row))
   }
 
   async getExpenseByPK(id: string) {

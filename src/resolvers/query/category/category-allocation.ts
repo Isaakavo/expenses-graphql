@@ -28,8 +28,7 @@ export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
       remaining: formatCurrency(allocation.remaining),
       sum: formatCurrency(allocation.sum),
     })),
-    // TODO create types to avoid use of any
-    income: (allocations.income as any).map((income) => adaptIncome(income))[0],
+    income: adaptIncome(allocations.income[0]),
     expenses: allocations.expenses.map((expense) => adaptExpenses(expense)),
   };
 };

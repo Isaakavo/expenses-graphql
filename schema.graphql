@@ -37,7 +37,6 @@ enum FixedExpenseFrequency {
 type CategoryType {
   id: ID!
   userId: ID
-  categoryId: ID
   name: String!
   percentage: Float
 }

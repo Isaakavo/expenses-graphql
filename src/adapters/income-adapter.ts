@@ -5,13 +5,18 @@ import {
 } from '../generated/graphql.js';
 import { logger } from '../logger.js';
 import { Expense, ExpenseWithCategory } from '../models/expense';
-import { Income } from '../models/income';
 import { calculateFortnight } from '../utils/date-utils.js';
-import { Period } from 'models/periods.js';
 import { formatInTimeZone } from 'date-fns-tz';
-import { adaptPeriod } from './period-adapter.js';
+import { adaptPeriod, adaptPeriodDTo } from './period-adapter.js';
+import {
+  IncomeAndPeriodDTO,
+  IncomeDTO,
+  IncomeWithCategoryAllocationDTO,
+} from 'dto/income-dto.js';
+import { adaptCategoryDTO } from './category-adapter.js';
+import { PeriodDTO } from 'dto/period-dto.js';
 
-export function adaptSingleIncome(x: Income): GraphqlIncome {
+export function adaptSingleIncome(x: IncomeDTO): GraphqlIncome {
   return {
     id: x.id,
     userId: x.userId,
@@ -28,29 +33,35 @@ export function adaptSingleIncome(x: Income): GraphqlIncome {
 }
 
 export function adaptIncome(
-  x: Income | { income: Income; period: Period }
+  income: IncomeDTO,
+  period?: PeriodDTO
 ): GraphqlIncome {
-  // If x has an 'income' property, it's the object form
-  const income = 'income' in x ? x.income : x;
-  const period = 'period' in x ? x.period : income.period;
-
+  const adaptedPeriod = period
+    ? adaptPeriod(period)
+    : income.period
+    ? adaptPeriod(income.period)
+    : null;
   return {
-    id: income.id,
-    userId: income.userId,
-    total: formatCurrency(income.total),
-    comment: income.comment,
-    period: adaptPeriod(period),
+    id: income?.id,
+    userId: income?.userId,
+    total: formatCurrency(income?.total),
+    comment: income?.comment,
+    period: adaptedPeriod,
     paymentDate: {
-      date: formatInTimeZone(income.paymentDate, 'UTC', 'dd MMMM'),
-      fortnight: calculateFortnight(income.paymentDate),
+      date: formatInTimeZone(income?.paymentDate, 'UTC', 'dd MMMM'),
+      fortnight: calculateFortnight(income?.paymentDate),
     },
-    createdAt: income.createdAt,
-    updatedAt: income.updatedAt,
+    createdAt: income?.createdAt,
+    updatedAt: income?.updatedAt,
   };
 }
 
-export const adaptMultipleIncomes = (incomes: Income[]) =>
-  incomes.map((x) => adaptSingleIncome(x));
+// Not the best way to do this, but to avoid refactoring the service and repository layers
+export const adaptIncomeAndPeriodDTO = (input): GraphqlIncome => {
+  const income = adaptIncomeDTO(input.income);
+  const period = adaptPeriodDTo(input.period);
+  return adaptIncome(income, period);
+};
 
 // TODO refactor this to avoid code duplication
 export function adaptExpensesWithCard(x: Expense, card?: Card) {
@@ -135,4 +146,28 @@ export const formatCurrency = (amount: number) => {
   });
 
   return formatter.format(amount);
+};
+
+export const adaptIncomeDTO = (income): IncomeDTO => {
+  return {
+    id: income.id,
+    userId: income.userId,
+    total: income.total,
+    paymentDate: income.paymentDate,
+    comment: income.comment,
+    period: income.period ? adaptPeriodDTo(income.period) : null,
+    createdAt: income.createdAt,
+    updatedAt: income.updatedAt,
+  };
+};
+
+export const adaptIncomeCategoryAllocationDTO = (
+  income
+): IncomeWithCategoryAllocationDTO => {
+  return {
+    percentage: income.percentage,
+    amountAllocated: income.amountAllocated,
+    category: adaptCategoryDTO(income.category),
+    income: adaptIncomeDTO(income.income),
+  };
 };

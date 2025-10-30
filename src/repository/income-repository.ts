@@ -1,6 +1,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
-import { adaptIncome, formatCurrency } from '../adapters/income-adapter.js';
+import { adaptIncomeAndPeriodDTO, adaptIncomeCategoryAllocationDTO, formatCurrency } from '../adapters/income-adapter.js';
 import { logger } from '../logger.js';
 import { CategorySettings } from '../models/category-settings.js';
 import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
@@ -99,13 +99,13 @@ export class IncomeRepository {
         month: formatInTimeZone(new Date(r.month), 'UTC', 'MMMM'),
         year: formatInTimeZone(new Date(r.month), 'UTC', 'yyyy'),
         total: formatCurrency(r.total),
-        incomes: r.incomes.map((x) => adaptIncome(x)),
+        incomes: r.incomes.map((x) => adaptIncomeAndPeriodDTO(x)),
       };
     });
   }
 
   async getIncomeSumCategoryById(incomeId: string) {
-    return IncomeCategoryAllocation.findAll({
+    const result = await IncomeCategoryAllocation.findAll({
       include: [
         {
           model: Category,
@@ -122,6 +122,8 @@ export class IncomeRepository {
       ],
       where: { incomeId, userId: this.userId },
     });
+
+    return result.map((row) => adaptIncomeCategoryAllocationDTO(row))
   }
 
   async createIncome(incomeData: Partial<Income>) {

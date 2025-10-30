@@ -1,8 +1,8 @@
-import { Period } from 'models/periods';
 import { Period as GraphqlPeriod } from '../generated/graphql.js';
 import { formatInTimeZone } from 'date-fns-tz';
+import { PeriodDTO } from '../dto/period-dto.js';
 
-export const adaptPeriod = (period: Period): GraphqlPeriod => {
+export const adaptPeriod = (period: PeriodDTO): GraphqlPeriod => {
   return {
     id: period.id,
     userId: period.userId,
@@ -12,3 +12,15 @@ export const adaptPeriod = (period: Period): GraphqlPeriod => {
     updatedAt: formatInTimeZone(period.updatedAt,'UTC', 'dd MMMM'),
   };
 };
+
+export const adaptPeriodDTo = (period): PeriodDTO => {  
+  return {
+    id: period.id,
+    userId: period.userId,
+    type: null,
+    startDate: period.startDate,
+    endDate: period.endDate,
+    createdAt: period.createdAt,
+    updatedAt: period.updatedAt,
+  };
+}

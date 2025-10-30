@@ -1,5 +1,5 @@
+import { adaptIncome } from '../../../adapters/income-adapter.js';
 import { GraphQLError } from 'graphql';
-import { adaptMultipleIncomes as adaptIncomeList } from '../../../adapters/index.js';
 import { QueryResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
 import { IncomeService } from '../../../service/income-service.js';
@@ -24,7 +24,7 @@ export const incomesList: QueryResolvers['incomesList'] = async (
     logger.info(`returning ${allIncomes.length} incomes`);
 
     return {
-      incomes: adaptIncomeList(allIncomes),
+      incomes: allIncomes.map((income) => adaptIncome(income)),
       totalByMonth: calcualteTotalByMonth(allIncomes),
       total: allIncomes.reduce(
         (acumulator, currentValue) => acumulator + currentValue.total,

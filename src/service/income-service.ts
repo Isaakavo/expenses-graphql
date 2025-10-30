@@ -9,7 +9,10 @@ import { Income } from '../models/income.js';
 import { Date as CustomDate } from '../scalars/date.js';
 import { validateId } from '../utils/sequilize-utils.js';
 import { IncomeRepository } from '../repository/income-repository.js';
-import { adaptSingleIncome } from '../adapters/income-adapter.js';
+import {
+  adaptIncomeDTO,
+  adaptSingleIncome,
+} from '../adapters/income-adapter.js';
 import { Sequelize } from 'sequelize';
 
 export class IncomeService {
@@ -22,14 +25,12 @@ export class IncomeService {
   }
 
   async getAllIncomes() {
-    return this.incomeRepository.getAllIncomes();
+    return (await this.incomeRepository.getAllIncomes()).map((income) =>
+      adaptIncomeDTO(income)
+    );
   }
 
-  async getIncomeByPeriod(
-    periodId?: string,
-    startDate?: Date,
-    endDate?: Date
-  ) {
+  async getIncomeByPeriod(periodId?: string, startDate?: Date, endDate?: Date) {
     const parsedStartDate = startDate
       ? CustomDate.parseValue(startDate)
       : undefined;
@@ -42,17 +43,17 @@ export class IncomeService {
       parsedEndDate
     );
 
-    const incomesTotal = this.calculateTotal(incomes)
+    const incomesTotal = this.calculateTotal(incomes);
     const adaptedIncome = await Promise.all(
       incomes.map(async (income) => {
-        return adaptSingleIncome(income);
+        return adaptSingleIncome(adaptIncomeDTO(income));
       })
     );
 
     return Promise.resolve({
       incomes: adaptedIncome,
-      incomesTotal
-    })
+      incomesTotal,
+    });
   }
 
   async getIncomeBy() {
@@ -72,7 +73,7 @@ export class IncomeService {
       createdAt: parsedCreatedAt,
     };
 
-    return await this.incomeRepository.createIncome(incomeData);
+    return adaptIncomeDTO(await this.incomeRepository.createIncome(incomeData));
   }
 
   async deleteIncome(input: MutationDeleteIncomeByIdArgs) {
