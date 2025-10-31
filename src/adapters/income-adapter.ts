@@ -1,3 +1,10 @@
+import { formatInTimeZone } from 'date-fns-tz';
+import { ExpenseDTO } from 'dto/expense-dto.js';
+import {
+  IncomeDTO,
+  IncomeWithCategoryAllocationDTO,
+} from 'dto/income-dto.js';
+import { PeriodDTO } from 'dto/period-dto.js';
 import { Card } from 'models/card';
 import {
   Expense as GraphqlExpense,
@@ -6,15 +13,9 @@ import {
 import { logger } from '../logger.js';
 import { Expense, ExpenseWithCategory } from '../models/expense';
 import { calculateFortnight } from '../utils/date-utils.js';
-import { formatInTimeZone } from 'date-fns-tz';
-import { adaptPeriod, adaptPeriodDTo } from './period-adapter.js';
-import {
-  IncomeAndPeriodDTO,
-  IncomeDTO,
-  IncomeWithCategoryAllocationDTO,
-} from 'dto/income-dto.js';
+import { adaptCardDTO } from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';
-import { PeriodDTO } from 'dto/period-dto.js';
+import { adaptPeriod, adaptPeriodDTo } from './period-adapter.js';
 
 export function adaptSingleIncome(x: IncomeDTO): GraphqlIncome {
   return {
@@ -39,8 +40,8 @@ export function adaptIncome(
   const adaptedPeriod = period
     ? adaptPeriod(period)
     : income.period
-    ? adaptPeriod(income.period)
-    : null;
+      ? adaptPeriod(income.period)
+      : null;
   return {
     id: income?.id,
     userId: income?.userId,
@@ -121,6 +122,31 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
     };
   } catch (error) {
     logger.error(error);
+  }
+}
+
+export function adaptExpensesDTOInput(x: ExpenseDTO): GraphqlExpense {
+  try {
+    // console.log({x});
+    
+    return {
+      id: x?.id.toString(),
+      concept: x?.concept,
+      payBefore: x?.payBefore,
+      total: formatCurrency(x.total),
+      userId: x?.userId,
+      periodId: x?.periodId,
+      comment: x?.comments,
+      createdAt: x?.createdAt,
+      updatedAt: x?.updatedAt,
+      card: x?.card
+        ? adaptCardDTO(x.card)
+        : null,
+      category: adaptCategoryDTO(x.category),
+      subCategory: adaptCategoryDTO(x.category.subCategories[0]),
+    };
+  } catch (error) {
+    logger.error(error.message);
   }
 }
 

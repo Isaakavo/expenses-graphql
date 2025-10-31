@@ -165,6 +165,12 @@ type Expense {
   subCategory: SubCategory!
 }
 
+type GroupedExpenses {
+  date: String!
+  expenses: [Expense!]
+  total: String!
+}
+
 type FinancialBalance {
   remaining: Float!
   debts: Float!
@@ -174,7 +180,7 @@ type FinancialBalance {
 # it also return the total of all the expenses and the remaining between income and expenses
 type IncomesListAndExpenses {
   incomes: [Income!]
-  expenses: [Expense!]
+  expenses: [GroupedExpenses!]
   incomesTotal: String!
   expensesTotal: String
   remaining: String

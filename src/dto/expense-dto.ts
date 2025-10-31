@@ -1,9 +1,13 @@
+import { CardDTO } from './card-dto';
+import { CategoryDTO } from './category-dto';
+
 export type ExpenseDTO = {
   id: string;
-  userId: string;
-  cardId: string;
-  periodId: string;
-  subCategoryId: string;
+  userId?: string;
+  card: CardDTO | null;
+  category: CategoryDTO;
+  periodId?: string;
+  subCategoryId?: string;
   concept: string;
   total: number;
   comments?: string | null;
@@ -18,4 +22,10 @@ export type ExpenseWithCategoryAllocationDTO = {
     id: string;
     name: string;
   };
+};
+
+export type GroupedExpensesDTO = {
+  date: string;
+  expenses: ExpenseDTO[];
+  total: number;
 };
