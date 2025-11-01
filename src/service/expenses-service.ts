@@ -1,4 +1,4 @@
-import { ExpenseWithCategory } from 'models/expense.js';
+import { ExpenseDTO } from '../dto/expense-dto.js';
 import { FindOptions, Sequelize } from 'sequelize';
 import { adaptExpenses } from '../adapters/income-adapter.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
@@ -77,11 +77,7 @@ export class ExpensesService {
     const expensesTotal = this.calculateTotal(expenses);
 
     return {
-      expenses: await Promise.all(
-        expenses.map(async (expense) => {
-          return adaptExpenses(expense);
-        })
-      ),
+      expenses,
       expensesTotal,
     };
   }
@@ -111,7 +107,7 @@ export class ExpensesService {
     };
   }
 
-  calculateTotal(expenses: ExpenseWithCategory[]) {
+  calculateTotal(expenses: ExpenseDTO[]) {
     return expenses.reduce((acc, expense) => acc + expense.total, 0);
   }
 }

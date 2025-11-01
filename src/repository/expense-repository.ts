@@ -3,7 +3,6 @@ import {
   Card,
   Category,
   Expense,
-  ExpenseWithCategory,
   SubCategory,
 } from '../models/index.js';
 import { ExpenseInput } from '../service/expenses-service.js';
@@ -12,6 +11,8 @@ import {
   adaptGroupedExpensesDTO,
 } from '../adapters/expense-adapter.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
+import { ExpenseWithCategoryRaw, GroupedExpensesDTO } from 'dto/expense-dto.js';
+import { adaptRawExpenseWIthIncome } from '../adapters/income-adapter.js';
 
 export class ExpenseRepository {
   userId: string;
@@ -59,7 +60,7 @@ export class ExpenseRepository {
       ],
       order: [['payBefore', 'DESC']],
       limit,
-    })) as ExpenseWithCategory[];
+    })) as ExpenseWithCategoryRaw[];
   }
 
   async getExpensesByPeriod(
@@ -78,7 +79,7 @@ export class ExpenseRepository {
       };
     }
 
-    return (await Expense.findAll({
+    const expenses = (await Expense.findAll({
       where,
       include: [
         {
@@ -106,7 +107,10 @@ export class ExpenseRepository {
         },
       ],
       order: [['payBefore', 'DESC']],
-    })) as ExpenseWithCategory[];
+    })) as ExpenseWithCategoryRaw[];
+    
+    return adaptRawExpenseWIthIncome(expenses)
+
   }
 
   async getGroupedExpenses(
@@ -114,13 +118,23 @@ export class ExpenseRepository {
     startDate?: Date,
     endDate?: Date,
     limit?: number
-  ) {
+  ): Promise<GroupedExpensesDTO[]> {
     const replacements: any = { userId: this.userId };
     let where = 'WHERE e.user_id = :userId';
 
     if (periodId) {
       where += ' AND e.period_id = :periodId';
       replacements.periodId = periodId;
+    }
+
+    if (startDate) {
+      where += ' AND e.pay_before >= :startDate';
+      replacements.startDate = startDate;
+    }
+
+    if (endDate) {
+      where += ' AND e.pay_before <= :endDate';
+      replacements.endDate = endDate;
     }
 
     const sql = `
@@ -148,13 +162,11 @@ export class ExpenseRepository {
 
     const rows = await this.sequelizeClient.query(sql, {
       type: QueryTypes.SELECT,
-      replacements: { ...replacements,limit },
+      replacements: { ...replacements, limit },
       raw: true,
     });
-    
-    return toCamelCaseDeep(rows).map((row) =>
-      adaptGroupedExpensesDTO(row)
-    );
+
+    return toCamelCaseDeep(rows).map((row) => adaptGroupedExpensesDTO(row));
   }
 
   async getExpensesSumByCategory(periodId: string) {

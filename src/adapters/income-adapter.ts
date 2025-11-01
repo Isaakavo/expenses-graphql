@@ -127,8 +127,6 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
 
 export function adaptExpensesDTOInput(x: ExpenseDTO): GraphqlExpense {
   try {
-    // console.log({x});
-    
     return {
       id: x?.id.toString(),
       concept: x?.concept,
@@ -197,3 +195,23 @@ export const adaptIncomeCategoryAllocationDTO = (
     income: adaptIncomeDTO(income.income),
   };
 };
+
+export const adaptRawExpenseWIthIncome = (expense): ExpenseDTO[] => {
+  return expense.map((exp) => ({
+    id: exp.id,
+    userId: exp.userId,
+    card: exp.card ? adaptCardDTO(exp.card) : null,
+    category: adaptCategoryDTO(
+      exp.sub_category.category,
+      exp.sub_category
+    ),
+    periodId: exp.periodId,
+    subCategoryId: exp.subCategoryId,
+    concept: exp.concept,
+    total: exp.total,
+    comments: exp.comments,
+    payBefore: exp.payBefore,
+    createdAt: exp.createdAt,
+    updatedAt: exp.updatedAt,
+  })); 
+}

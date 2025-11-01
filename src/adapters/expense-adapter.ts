@@ -9,7 +9,7 @@ import { adaptCardDTO } from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';
 import { adaptExpensesDTOInput, formatCurrency } from './income-adapter.js';
 
-export const adaptExpenseDTO = (expense): ExpenseDTO => {  
+export const adaptExpenseDTO = (expense): ExpenseDTO => {    
   return {
     id: expense.expense.id,
     userId: expense.expense.userId,
@@ -63,7 +63,6 @@ export const adaptGroupedExpensesDTO = (groupedExpense): GroupedExpensesDTO => {
         ...expense.subCategory,
       };
 
-      // console.log({ expenseObj });
       return adaptExpenseDTO(expenseObj);
     }),
     total: groupedExpense.total,
