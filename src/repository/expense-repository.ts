@@ -7,11 +7,12 @@ import {
 } from '../models/index.js';
 import { ExpenseInput } from '../service/expenses-service.js';
 import {
+  adaptExpenseDTO,
   adaptExpenseWithCategoryAllocationDTO,
   adaptGroupedExpensesDTO,
 } from '../adapters/expense-adapter.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
-import { ExpenseWithCategoryRaw, GroupedExpensesDTO } from 'dto/expense-dto.js';
+import { ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, GroupedExpensesDTO } from 'dto/expense-dto.js';
 import { adaptRawExpenseWIthIncome } from '../adapters/income-adapter.js';
 
 export class ExpenseRepository {
@@ -29,12 +30,13 @@ export class ExpenseRepository {
       ...input,
     });
 
-    return this.getExpenseByPK(expense.id);
+    const createdExpense = await this.getExpenseByPK(expense.id);
+    return adaptExpenseDTO(createdExpense);
   }
 
-  async getAllExpenses(userId: string, queryOptions?: FindOptions) {
+  async getAllExpenses(userId: string, queryOptions?: FindOptions): Promise<ExpenseDTO[]> {
     const { limit, where } = queryOptions ?? {};
-    return (await Expense.findAll({
+    const response = (await Expense.findAll({
       where: {
         ...where,
         userId,
@@ -60,7 +62,9 @@ export class ExpenseRepository {
       ],
       order: [['payBefore', 'DESC']],
       limit,
-    })) as ExpenseWithCategoryRaw[];
+    }));
+
+    return adaptRawExpenseWIthIncome(response as ExpenseWithCategoryRaw[]);
   }
 
   async getExpensesByPeriod(
@@ -68,7 +72,7 @@ export class ExpenseRepository {
     startDate?: Date,
     endDate?: Date,
     subCategoryIds?: string[]
-  ) {
+  ): Promise<ExpenseDTO[]> {
     const where: FindOptions['where'] = { userId: this.userId };
 
     if (periodId) {
@@ -169,7 +173,7 @@ export class ExpenseRepository {
     return toCamelCaseDeep(rows).map((row) => adaptGroupedExpensesDTO(row));
   }
 
-  async getExpensesSumByCategory(periodId: string) {
+  async getExpensesSumByCategory(periodId: string): Promise<ExpenseWithCategoryAllocationDTO[]> {
     const result = await Expense.findAll({
       attributes: [
         [Sequelize.col('sub_category.category.name'), 'categoryName'],

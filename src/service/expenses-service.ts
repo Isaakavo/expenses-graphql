@@ -1,6 +1,5 @@
-import { ExpenseDTO } from '../dto/expense-dto.js';
 import { FindOptions, Sequelize } from 'sequelize';
-import { adaptExpenses } from '../adapters/income-adapter.js';
+import { ExpenseDTO } from '../dto/expense-dto.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 
 export type ExpenseInput = {
@@ -46,15 +45,9 @@ export class ExpensesService {
   }
 
   async getAllExpenses(queryOptions?: FindOptions) {
-    const expenses = await this.expenseRepository.getAllExpenses(
+    return this.expenseRepository.getAllExpenses(
       this.userId,
       queryOptions
-    );
-
-    return await Promise.all(
-      expenses.map(async (expense) => {
-        return adaptExpenses(expense);
-      })
     );
   }
 
