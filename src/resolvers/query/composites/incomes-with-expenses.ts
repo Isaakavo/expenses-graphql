@@ -26,7 +26,7 @@ export const incomesWithExpenses: QueryResolvers['incomesWithExpenses'] =
       
     return {
       incomes,
-      expenses: adaptGroupedExpenses(expenses),
+      groupedExpenses: adaptGroupedExpenses(expenses),
       incomesTotal: formatCurrency(incomesTotal),
       expensesTotal: formatCurrency(expensesTotal),
       remaining: formatCurrency(incomesTotal - expensesTotal),

@@ -234,8 +234,8 @@ export type IncomesList = {
 
 export type IncomesListAndExpenses = {
   __typename?: 'IncomesListAndExpenses';
-  expenses?: Maybe<Array<GroupedExpenses>>;
   expensesTotal?: Maybe<Scalars['String']['output']>;
+  groupedExpenses?: Maybe<Array<GroupedExpenses>>;
   incomes?: Maybe<Array<Income>>;
   incomesTotal: Scalars['String']['output'];
   remaining?: Maybe<Scalars['String']['output']>;
@@ -768,8 +768,8 @@ export type IncomesListResolvers<ContextType = Context, ParentType extends Resol
 }>;
 
 export type IncomesListAndExpensesResolvers<ContextType = Context, ParentType extends ResolversParentTypes['IncomesListAndExpenses'] = ResolversParentTypes['IncomesListAndExpenses']> = ResolversObject<{
-  expenses?: Resolver<Maybe<Array<ResolversTypes['GroupedExpenses']>>, ParentType, ContextType>;
   expensesTotal?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  groupedExpenses?: Resolver<Maybe<Array<ResolversTypes['GroupedExpenses']>>, ParentType, ContextType>;
   incomes?: Resolver<Maybe<Array<ResolversTypes['Income']>>, ParentType, ContextType>;
   incomesTotal?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   remaining?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;

@@ -180,7 +180,7 @@ type FinancialBalance {
 # it also return the total of all the expenses and the remaining between income and expenses
 type IncomesListAndExpenses {
   incomes: [Income!]
-  expenses: [GroupedExpenses!]
+  groupedExpenses: [GroupedExpenses!]
   incomesTotal: String!
   expensesTotal: String
   remaining: String
