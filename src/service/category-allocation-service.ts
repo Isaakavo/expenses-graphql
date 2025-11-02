@@ -38,9 +38,6 @@ export class CategoryAllocationService {
       };
     });
 
-    // console.log({incomeIncome: (incomeSum as any)[0].income});
-    
-
     return {
       categorySum,
       income: incomeSum.map((inc) => adaptIncomeDTO(inc.income)),

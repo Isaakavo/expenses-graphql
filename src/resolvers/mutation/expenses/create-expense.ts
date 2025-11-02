@@ -1,14 +1,18 @@
-import { ExpensesService } from '../../../service/expenses-service.js';
+import { adaptExpensesDTOInput } from '../../../adapters/income-adapter.js';
 import { MutationResolvers } from '../../../generated/graphql.js';
-import { adaptExpenses } from '../../../adapters/income-adapter.js';
+import { ExpensesService } from '../../../service/expenses-service.js';
 
 export const createExpense: MutationResolvers['createExpense'] = async (
   _,
   { input },
   { user: { userId } }
 ) => {
-  const expenseService = new ExpensesService(userId);
-  const newExpense = await expenseService.createExpense(input);  
+  try {
+    const expenseService = new ExpensesService(userId);
+    const newExpense = await expenseService.createExpense(input);
 
-  return adaptExpenses(newExpense);
+    return adaptExpensesDTOInput(newExpense);
+  } catch (error) {
+    console.log(error.message);
+  }
 };

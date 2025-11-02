@@ -1,10 +1,10 @@
 import { QueryResolvers } from 'generated/graphql';
-import { CategoryAllocationService } from '../../../service/category-allocation-service.js';
 import {
-  adaptExpenses,
+  adaptExpensesDTOInput,
   adaptIncome,
-  formatCurrency,
+  formatCurrency
 } from '../../../adapters/income-adapter.js';
+import { CategoryAllocationService } from '../../../service/category-allocation-service.js';
 
 export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
   _,
@@ -29,6 +29,6 @@ export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
       sum: formatCurrency(allocation.sum),
     })),
     income: adaptIncome(allocations.income[0]),
-    expenses: allocations.expenses.map((expense) => adaptExpenses(expense)),
+    expenses: allocations.expenses.map((expense) => adaptExpensesDTOInput(expense)),
   };
 };

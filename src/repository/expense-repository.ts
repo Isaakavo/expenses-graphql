@@ -1,19 +1,27 @@
-import { FindOptions, Op, Sequelize } from 'sequelize';
+import { ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, GroupedExpensesDTO } from 'dto/expense-dto.js';
+import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
+import {
+  adaptExpenseWithCategoryAllocationDTO,
+  adaptGroupedExpensesDTO,
+  adaptRawListExpense,
+  adaptSingleRawExpenseDTO
+} from '../adapters/expense-adapter.js';
 import {
   Card,
   Category,
   Expense,
-  ExpenseWithCategory,
   SubCategory,
 } from '../models/index.js';
 import { ExpenseInput } from '../service/expenses-service.js';
-import { adaptExpenseWithCategoryAllocationDTO } from '../adapters/expense-adapter.js';
+import { toCamelCaseDeep } from '../utils/case-converter.js';
 
 export class ExpenseRepository {
   userId: string;
+  sequelizeClient: Sequelize;
 
-  constructor(userId: string) {
+  constructor(userId: string, sequelizeClient?: Sequelize) {
     this.userId = userId;
+    this.sequelizeClient = sequelizeClient;
   }
 
   async createExpense(input: ExpenseInput) {
@@ -22,12 +30,14 @@ export class ExpenseRepository {
       ...input,
     });
 
-    return this.getExpenseByPK(expense.id);
+    const createdExpense = await this.getExpenseByPK(expense.id);
+    
+    return adaptSingleRawExpenseDTO(createdExpense);
   }
 
-  async getAllExpenses(userId: string, queryOptions?: FindOptions) {
+  async getAllExpenses(userId: string, queryOptions?: FindOptions): Promise<ExpenseDTO[]> {
     const { limit, where } = queryOptions ?? {};
-    return (await Expense.findAll({
+    const response = (await Expense.findAll({
       where: {
         ...where,
         userId,
@@ -53,15 +63,17 @@ export class ExpenseRepository {
       ],
       order: [['payBefore', 'DESC']],
       limit,
-    })) as ExpenseWithCategory[];
+    }));
+
+    return adaptRawListExpense(response as ExpenseWithCategoryRaw[]);
   }
 
   async getExpensesByPeriod(
     periodId?: string,
     startDate?: Date,
     endDate?: Date,
-    subCategoryIds?: string[],
-  ) {
+    subCategoryIds?: string[]
+  ): Promise<ExpenseDTO[]> {
     const where: FindOptions['where'] = { userId: this.userId };
 
     if (periodId) {
@@ -72,7 +84,7 @@ export class ExpenseRepository {
       };
     }
 
-    return (await Expense.findAll({
+    const expenses = (await Expense.findAll({
       where,
       include: [
         {
@@ -89,7 +101,9 @@ export class ExpenseRepository {
           ],
           // TODO add logic to handle how to get by category
           where: {
-            id: subCategoryIds ? { [Op.in]: subCategoryIds } : { [Op.ne]: null },
+            id: subCategoryIds
+              ? { [Op.in]: subCategoryIds }
+              : { [Op.ne]: null },
           },
         },
         {
@@ -98,10 +112,69 @@ export class ExpenseRepository {
         },
       ],
       order: [['payBefore', 'DESC']],
-    })) as ExpenseWithCategory[];
+    })) as ExpenseWithCategoryRaw[];
+    
+    return adaptRawListExpense(expenses)
+
   }
 
-  async getExpensesSumByCategory(periodId: string) {
+  async getGroupedExpenses(
+    periodId?: string,
+    startDate?: Date,
+    endDate?: Date,
+    limit?: number
+  ): Promise<GroupedExpensesDTO[]> {
+    const replacements: any = { userId: this.userId };
+    let where = 'WHERE e.user_id = :userId';
+
+    if (periodId) {
+      where += ' AND e.period_id = :periodId';
+      replacements.periodId = periodId;
+    }
+
+    if (startDate) {
+      where += ' AND e.pay_before >= :startDate';
+      replacements.startDate = startDate;
+    }
+
+    if (endDate) {
+      where += ' AND e.pay_before <= :endDate';
+      replacements.endDate = endDate;
+    }
+
+    const sql = `
+     SELECT
+      DATE_TRUNC('day', e.pay_before) AS date,
+      SUM(e.total) AS total,
+      COUNT(*) AS count,
+      JSON_AGG(
+        JSON_BUILD_OBJECT(
+          'expense', e,
+          'subCategory', sc,
+          'category', c,
+          'card', cd
+        ) ORDER BY e.pay_before
+      ) AS expenses
+    FROM expenses e
+    LEFT JOIN sub_categories sc ON e.sub_category_id = sc.id
+	  LEFT JOIN categories c ON sc.category_id = c.id
+    LEFT JOIN "Cards" cd ON e.card_id = cd.id
+    ${where}
+    GROUP BY DATE_TRUNC('day', e.pay_before)
+    ORDER BY DATE_TRUNC('day', e.pay_before) DESC
+    ${limit ? 'LIMIT :limit' : ''}
+    `;
+
+    const rows = await this.sequelizeClient.query(sql, {
+      type: QueryTypes.SELECT,
+      replacements: { ...replacements, limit },
+      raw: true,
+    });
+
+    return toCamelCaseDeep(rows).map((row) => adaptGroupedExpensesDTO(row));
+  }
+
+  async getExpensesSumByCategory(periodId: string): Promise<ExpenseWithCategoryAllocationDTO[]> {
     const result = await Expense.findAll({
       attributes: [
         [Sequelize.col('sub_category.category.name'), 'categoryName'],
@@ -130,7 +203,7 @@ export class ExpenseRepository {
       raw: true,
     });
 
-    return result.map((row) => adaptExpenseWithCategoryAllocationDTO(row))
+    return result.map((row) => adaptExpenseWithCategoryAllocationDTO(row));
   }
 
   async getExpenseByPK(id: string) {

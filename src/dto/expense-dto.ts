@@ -1,9 +1,14 @@
+import { Card, Category, Expense, SubCategory } from '../models/index.js';
+import { CardDTO } from './card-dto';
+import { CategoryDTO } from './category-dto';
+
 export type ExpenseDTO = {
   id: string;
-  userId: string;
-  cardId: string;
-  periodId: string;
-  subCategoryId: string;
+  userId?: string;
+  card: CardDTO | null;
+  category: CategoryDTO;
+  periodId?: string;
+  subCategoryId?: string;
   concept: string;
   total: number;
   comments?: string | null;
@@ -17,5 +22,19 @@ export type ExpenseWithCategoryAllocationDTO = {
   category: {
     id: string;
     name: string;
+  };
+};
+
+export type GroupedExpensesDTO = {
+  date: string;
+  expenses: ExpenseDTO[];
+  total: number;
+};
+
+// Special type to handle Sequelize return
+export type ExpenseWithCategoryRaw = Expense & {
+  card: Card;
+  sub_category: SubCategory & {
+    category: Category;
   };
 };
