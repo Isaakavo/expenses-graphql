@@ -1,4 +1,11 @@
+import { ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, GroupedExpensesDTO } from 'dto/expense-dto.js';
 import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
+import {
+  adaptExpenseWithCategoryAllocationDTO,
+  adaptGroupedExpensesDTO,
+  adaptRawListExpense,
+  adaptSingleRawExpenseDTO
+} from '../adapters/expense-adapter.js';
 import {
   Card,
   Category,
@@ -6,14 +13,7 @@ import {
   SubCategory,
 } from '../models/index.js';
 import { ExpenseInput } from '../service/expenses-service.js';
-import {
-  adaptExpenseDTO,
-  adaptExpenseWithCategoryAllocationDTO,
-  adaptGroupedExpensesDTO,
-} from '../adapters/expense-adapter.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
-import { ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, GroupedExpensesDTO } from 'dto/expense-dto.js';
-import { adaptRawExpenseWIthIncome } from '../adapters/income-adapter.js';
 
 export class ExpenseRepository {
   userId: string;
@@ -31,7 +31,8 @@ export class ExpenseRepository {
     });
 
     const createdExpense = await this.getExpenseByPK(expense.id);
-    return adaptExpenseDTO(createdExpense);
+    
+    return adaptSingleRawExpenseDTO(createdExpense);
   }
 
   async getAllExpenses(userId: string, queryOptions?: FindOptions): Promise<ExpenseDTO[]> {
@@ -64,7 +65,7 @@ export class ExpenseRepository {
       limit,
     }));
 
-    return adaptRawExpenseWIthIncome(response as ExpenseWithCategoryRaw[]);
+    return adaptRawListExpense(response as ExpenseWithCategoryRaw[]);
   }
 
   async getExpensesByPeriod(
@@ -113,7 +114,7 @@ export class ExpenseRepository {
       order: [['payBefore', 'DESC']],
     })) as ExpenseWithCategoryRaw[];
     
-    return adaptRawExpenseWIthIncome(expenses)
+    return adaptRawListExpense(expenses)
 
   }
 

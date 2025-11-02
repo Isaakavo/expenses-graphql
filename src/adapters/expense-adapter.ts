@@ -9,22 +9,29 @@ import { adaptCardDTO } from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';
 import { adaptExpensesDTOInput, formatCurrency } from './income-adapter.js';
 
-export const adaptExpenseDTO = (expense): ExpenseDTO => {    
+export const adaptSingleRawExpenseDTO = (exp): ExpenseDTO => {
   return {
-    id: expense.expense.id,
-    userId: expense.expense.userId,
-    card: expense.card ? adaptCardDTO(expense.card) : null,
-    category: adaptCategoryDTO(expense.category, expense.subCategory),
-    periodId: expense.expense.periodId,
-    subCategoryId: expense.expense.subCategoryId,
-    concept: expense.expense.concept,
-    total: expense.expense.total,
-    comments: expense.expense.comments,
-    payBefore: expense.expense.payBefore,
-    createdAt: expense.expense.createdAt,
-    updatedAt: expense.expense.updatedAt,
+    id: exp.id,
+    userId: exp.userId,
+    card: exp.card ? adaptCardDTO(exp.card) : null,
+    category: adaptCategoryDTO(
+      exp.sub_category.category,
+      exp.sub_category
+    ),
+    periodId: exp.periodId,
+    subCategoryId: exp.subCategoryId,
+    concept: exp.concept,
+    total: exp.total,
+    comments: exp.comments,
+    payBefore: exp.payBefore,
+    createdAt: exp.createdAt,
+    updatedAt: exp.updatedAt,
   };
 };
+
+export const adaptRawListExpense= (expense): ExpenseDTO[] => {
+  return expense.map((exp) => adaptSingleRawExpenseDTO(exp));
+}
 
 export const adaptGroupedExpenses = (
   groupedExpenses: GroupedExpensesDTO[]
@@ -49,6 +56,24 @@ export const adaptExpenseWithCategoryAllocationDTO = (
       id: expense.categoryId,
       name: expense.categoryName,
     },
+  };
+};
+
+// This is an special case for the expenses DTO, this is used when the query returns custom objects
+export const adaptExpenseDTO = (expense): ExpenseDTO => {
+  return {
+    id: expense.expense.id,
+    userId: expense.expense.userId,
+    card: expense.card ? adaptCardDTO(expense.card) : null,
+    category: adaptCategoryDTO(expense.category, expense.subCategory),
+    periodId: expense.expense.periodId,
+    subCategoryId: expense.expense.subCategoryId,
+    concept: expense.expense.concept,
+    total: expense.expense.total,
+    comments: expense.expense.comments,
+    payBefore: expense.expense.payBefore,
+    createdAt: expense.expense.createdAt,
+    updatedAt: expense.expense.updatedAt,
   };
 };
 

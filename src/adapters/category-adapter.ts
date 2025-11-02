@@ -18,8 +18,6 @@ export const adaptCategoryDTO = (category, subCategory?): CategoryDTO => {
 };
 
 export const adaptSubCategoryDTO = (subCategory): SubCategoryDTO => {
-  // console.log({ subCategory });
-
   return {
     id: subCategory.id,
     userId: subCategory.userId,
