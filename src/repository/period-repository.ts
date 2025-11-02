@@ -1,6 +1,6 @@
-import { CreateOptions, Op, Sequelize } from 'sequelize';
-import { Period } from '../models/periods.js';
+import { CreateOptions, Op, Sequelize, WhereOptions } from 'sequelize';
 import { logger } from '../logger.js';
+import { Period } from '../models/periods.js';
 
 export class PeriodRepository {
   userId: string;
@@ -21,14 +21,22 @@ export class PeriodRepository {
     });
   }
 
-  async getPeriodByDay(date: Date) {
+  async getPeriodBy(date: Date, periodId: string) {
+    const where: WhereOptions = {
+      userId: this.userId,
+    };
+
+    if (periodId) {
+      where['id'] = periodId;
+    }
+    if (date) {
+      where['startDate'] = { [Op.lte]: date };
+      where['endDate'] = { [Op.gte]: date };
+    }
+
     return Period.findOne({
-      where: {
-        userId: this.userId,
-        startDate: { [Op.lte]: date },
-        endDate: { [Op.gte]: date },
-      }
-    })
+      where,
+    });
   }
 
   async createPeriod(startDate: Date, options?: CreateOptions) {
@@ -40,18 +48,20 @@ export class PeriodRepository {
     const periodType: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY' = 'FORTNIGHTLY';
 
     switch (periodType) {
-    // case 'WEEKLY':
-    //   endDate.setDate(endDate.getDate() + 7);
-    //   break;
-    case 'FORTNIGHTLY':
-      endDate.setDate(endDate.getDate() + this.FORTNIGHTLY_NUMBER_OF_DAYS);
-      logger.info(`Creating fortnightly period from ${startDate.toISOString()} to ${endDate.toISOString()}`);
-      break;
-    // case 'MONTHLY':
-    //   endDate.setMonth(endDate.getMonth() + 1);
-    //   break;
-    default:
-      throw new Error('Invalid period type');
+      // case 'WEEKLY':
+      //   endDate.setDate(endDate.getDate() + 7);
+      //   break;
+      case 'FORTNIGHTLY':
+        endDate.setDate(endDate.getDate() + this.FORTNIGHTLY_NUMBER_OF_DAYS);
+        logger.info(
+          `Creating fortnightly period from ${startDate.toISOString()} to ${endDate.toISOString()}`
+        );
+        break;
+      // case 'MONTHLY':
+      //   endDate.setMonth(endDate.getMonth() + 1);
+      //   break;
+      default:
+        throw new Error('Invalid period type');
     }
 
     const period = await Period.findOne({
@@ -64,9 +74,11 @@ export class PeriodRepository {
     });
 
     if (period) {
-      logger.info(`Found existing period: ${period.id} ${startDate} to ${endDate}`);
-      if(startDate > period.startDate) {
-        await period.update({startDate, endDate})
+      logger.info(
+        `Found existing period: ${period.id} ${startDate} to ${endDate}`
+      );
+      if (startDate > period.startDate) {
+        await period.update({ startDate, endDate });
       }
       return period.reload();
     }
@@ -81,7 +93,11 @@ export class PeriodRepository {
       options
     );
 
-    logger.info(`Period created: ${result.id} - ${startDate.toISOString()} to ${endDate.toISOString()}`);
+    logger.info(
+      `Period created: ${
+        result.id
+      } - ${startDate.toISOString()} to ${endDate.toISOString()}`
+    );
 
     return result;
   }

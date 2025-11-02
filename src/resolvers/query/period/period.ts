@@ -4,7 +4,7 @@ import { PeriodService } from '../.../../../../service/period-service.js';
 
 export const period: QueryResolvers['period'] = async (
   _,
-  { input: { startDate } },
+  { input: { startDate, periodId } },
   context
 ) => {
   const {
@@ -13,7 +13,7 @@ export const period: QueryResolvers['period'] = async (
   } = context;
   const periodsService = new PeriodService(userId, sequilizeClient);
 
-  const period = await periodsService.getPeriodByDate(startDate);
+  const period = await periodsService.getPeriodBy(startDate, periodId);
 
   return adaptPeriod(period);
 };
