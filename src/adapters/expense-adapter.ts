@@ -38,7 +38,7 @@ export const adaptGroupedExpenses = (
 ): GroupedExpenses[] => {
   return groupedExpenses.map((groupedExpense) => {
     return {
-      date: formatInTimeZone(groupedExpense.date, 'UTC', 'dd MMMM'),
+      date: formatInTimeZone(groupedExpense.date, 'UTC', 'EEE dd MMM'),
       total: formatCurrency(groupedExpense.total),
       expenses: groupedExpense.expenses.map((expense) =>
         adaptExpensesDTOInput(expense)
