@@ -247,7 +247,7 @@ input UpdateExpenseInput {
   total: Float!
   payBefore: Date!
   comment: String
-  category: Category!
+  subCategoryId: String!
 }
 
 input CreateCardInput {

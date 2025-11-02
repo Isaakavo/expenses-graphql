@@ -1,24 +1,28 @@
 import { FindOptions, Sequelize } from 'sequelize';
 import { ExpenseDTO } from '../dto/expense-dto.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
+import { logger } from '../logger.js';
+import { PeriodRepository } from '../repository/period-repository.js';
 
 export type ExpenseInput = {
   concept: string;
   total: number;
   cardId?: string;
   periodId: string;
-  comment?: string;
+  comments?: string;
   categoryId: string;
   subCategoryId: string;
 };
 
 export class ExpensesService {
   private expenseRepository: ExpenseRepository;
+  private periodRepository: PeriodRepository;
   userId: string;
   sequelize: Sequelize;
 
   constructor(userId: string, sequelize?: Sequelize) {
     this.expenseRepository = new ExpenseRepository(userId, sequelize);
+    this.periodRepository = new PeriodRepository(userId, sequelize);
     this.userId = userId;
     this.sequelize = sequelize;
   }
@@ -44,11 +48,35 @@ export class ExpensesService {
     return await this.expenseRepository.createExpense(input);
   }
 
+  async updateExpense(
+    id: string,
+    input: Partial<ExpenseInput & { payBefore: Date }>
+  ) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const period = await this.periodRepository.getPeriodBy(
+        { date: input.payBefore },
+        { transaction }
+      );
+
+      if(!period) {
+        throw new Error('No period found for the given payBefore date');
+      }
+
+      const updated = await this.expenseRepository.updateExpense(id, input, {
+        transaction,
+      });
+      await transaction.commit();
+      return updated;
+    } catch (error) {
+      logger.error('Error updating expense: ' + error.message);
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
   async getAllExpenses(queryOptions?: FindOptions) {
-    return this.expenseRepository.getAllExpenses(
-      this.userId,
-      queryOptions
-    );
+    return this.expenseRepository.getAllExpenses(this.userId, queryOptions);
   }
 
   async getExpensesByPeriod(

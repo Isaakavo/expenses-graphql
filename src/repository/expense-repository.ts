@@ -1,19 +1,20 @@
-import { ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, GroupedExpensesDTO } from 'dto/expense-dto.js';
-import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
+import {
+  ExpenseDTO,
+  ExpenseWithCategoryAllocationDTO,
+  ExpenseWithCategoryRaw,
+  GroupedExpensesDTO,
+} from 'dto/expense-dto.js';
+import { FindOptions, Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
 import {
   adaptExpenseWithCategoryAllocationDTO,
   adaptGroupedExpensesDTO,
   adaptRawListExpense,
-  adaptSingleRawExpenseDTO
+  adaptSingleRawExpenseDTO,
 } from '../adapters/expense-adapter.js';
-import {
-  Card,
-  Category,
-  Expense,
-  SubCategory,
-} from '../models/index.js';
+import { Card, Category, Expense, SubCategory } from '../models/index.js';
 import { ExpenseInput } from '../service/expenses-service.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
+import { logger } from '../logger.js';
 
 export class ExpenseRepository {
   userId: string;
@@ -31,13 +32,47 @@ export class ExpenseRepository {
     });
 
     const createdExpense = await this.getExpenseByPK(expense.id);
-    
+
     return adaptSingleRawExpenseDTO(createdExpense);
   }
 
-  async getAllExpenses(userId: string, queryOptions?: FindOptions): Promise<ExpenseDTO[]> {
+  async updateExpense(
+    id: string,
+    input: Partial<ExpenseInput>,
+    options: { transaction?: Transaction } = {}
+  ) {
+    const updatedExpense = await Expense.update(
+      {
+        ...input,
+      },
+      {
+        where: {
+          id,
+          userId: this.userId,
+        },
+        returning: true,
+        validate: true,
+        transaction: options.transaction,
+      }
+    );
+
+    logger.info(`Updated expense id ${id} for user ${this.userId}`);
+
+    if (updatedExpense[1].length === 0) {
+      throw new Error('Expense id not found');
+    }
+
+    return await this.getExpenseByPK(updatedExpense[1][0].id, {
+      transaction: options.transaction,
+    });
+  }
+
+  async getAllExpenses(
+    userId: string,
+    queryOptions?: FindOptions
+  ): Promise<ExpenseDTO[]> {
     const { limit, where } = queryOptions ?? {};
-    const response = (await Expense.findAll({
+    const response = await Expense.findAll({
       where: {
         ...where,
         userId,
@@ -63,7 +98,7 @@ export class ExpenseRepository {
       ],
       order: [['payBefore', 'DESC']],
       limit,
-    }));
+    });
 
     return adaptRawListExpense(response as ExpenseWithCategoryRaw[]);
   }
@@ -113,9 +148,8 @@ export class ExpenseRepository {
       ],
       order: [['payBefore', 'DESC']],
     })) as ExpenseWithCategoryRaw[];
-    
-    return adaptRawListExpense(expenses)
 
+    return adaptRawListExpense(expenses);
   }
 
   async getGroupedExpenses(
@@ -174,7 +208,9 @@ export class ExpenseRepository {
     return toCamelCaseDeep(rows).map((row) => adaptGroupedExpensesDTO(row));
   }
 
-  async getExpensesSumByCategory(periodId: string): Promise<ExpenseWithCategoryAllocationDTO[]> {
+  async getExpensesSumByCategory(
+    periodId: string
+  ): Promise<ExpenseWithCategoryAllocationDTO[]> {
     const result = await Expense.findAll({
       attributes: [
         [Sequelize.col('sub_category.category.name'), 'categoryName'],
@@ -206,8 +242,11 @@ export class ExpenseRepository {
     return result.map((row) => adaptExpenseWithCategoryAllocationDTO(row));
   }
 
-  async getExpenseByPK(id: string) {
-    return Expense.findByPk(id, {
+  async getExpenseByPK(
+    id: string,
+    options: { transaction?: Transaction } = {}
+  ) {
+    const expense = await Expense.findByPk(id, {
       include: [
         {
           model: SubCategory,
@@ -227,6 +266,8 @@ export class ExpenseRepository {
           as: 'card',
         },
       ],
+      transaction: options.transaction,
     });
+    return adaptSingleRawExpenseDTO(expense);
   }
 }

@@ -1,6 +1,12 @@
-import { CreateOptions, Op, Sequelize, WhereOptions } from 'sequelize';
+import { CreateOptions, Op, Sequelize, Transaction, WhereOptions } from 'sequelize';
 import { logger } from '../logger.js';
 import { Period } from '../models/periods.js';
+import { adaptPeriodDTo } from '../adapters/period-adapter.js';
+
+export type PeriodInputs = {
+  date?: Date;
+  id?: string;
+}
 
 export class PeriodRepository {
   userId: string;
@@ -21,22 +27,25 @@ export class PeriodRepository {
     });
   }
 
-  async getPeriodBy(date: Date, periodId: string) {
+  async getPeriodBy(input: PeriodInputs, options: {transaction?: Transaction} = {}) {
+    const { date, id } = input;
     const where: WhereOptions = {
       userId: this.userId,
     };
 
-    if (periodId) {
-      where['id'] = periodId;
+    if (id) {
+      where['id'] = id;
     }
     if (date) {
       where['startDate'] = { [Op.lte]: date };
       where['endDate'] = { [Op.gte]: date };
     }
 
-    return Period.findOne({
+    const period = await Period.findOne({
       where,
+      transaction: options.transaction,
     });
+    return adaptPeriodDTo(period);
   }
 
   async createPeriod(startDate: Date, options?: CreateOptions) {

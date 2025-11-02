@@ -445,11 +445,11 @@ export type UpdateCardInput = {
 
 export type UpdateExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
-  category: Category;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   id: Scalars['ID']['input'];
   payBefore: Scalars['Date']['input'];
+  subCategoryId: Scalars['String']['input'];
   total: Scalars['Float']['input'];
 };
 
