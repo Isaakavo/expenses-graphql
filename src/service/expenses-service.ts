@@ -128,6 +128,10 @@ export class ExpensesService {
     };
   }
 
+  async getExpenseById(id: string) {
+    return this.expenseRepository.getExpenseByPK(id);
+  }
+
   calculateTotal(expenses: ExpenseDTO[]) {
     return expenses.reduce((acc, expense) => acc + expense.total, 0);
   }
