@@ -67,6 +67,22 @@ export class ExpenseRepository {
     });
   }
 
+  async deleteExpense(id: string) {
+    const deletedCount = await Expense.destroy({
+      where: {
+        id,
+        userId: this.userId,
+      },
+    });
+
+    if (deletedCount === 0) {
+      throw new Error('Expense id not found');
+    }
+
+    logger.info(`Deleted expense id ${id} for user ${this.userId}`);
+    return true;
+  }
+
   async getAllExpenses(
     userId: string,
     queryOptions?: FindOptions

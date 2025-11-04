@@ -75,6 +75,10 @@ export class ExpensesService {
     }
   }
 
+  async deleteExpense(id: string) {
+    return this.expenseRepository.deleteExpense(id);
+  }
+
   async getAllExpenses(queryOptions?: FindOptions) {
     return this.expenseRepository.getAllExpenses(this.userId, queryOptions);
   }
