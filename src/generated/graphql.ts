@@ -156,9 +156,9 @@ export type Expense = {
   category: CategoryType;
   comment?: Maybe<Scalars['String']['output']>;
   concept: Scalars['String']['output'];
-  createdAt?: Maybe<Scalars['Date']['output']>;
+  createdAt?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
-  payBefore: Scalars['Date']['output'];
+  payBefore: Scalars['String']['output'];
   periodId?: Maybe<Scalars['String']['output']>;
   subCategory: SubCategory;
   total: Scalars['String']['output'];
@@ -710,9 +710,9 @@ export type ExpenseResolvers<ContextType = Context, ParentType extends Resolvers
   category?: Resolver<ResolversTypes['CategoryType'], ParentType, ContextType>;
   comment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  payBefore?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  payBefore?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   periodId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   subCategory?: Resolver<ResolversTypes['SubCategory'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

@@ -1,9 +1,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { ExpenseDTO } from 'dto/expense-dto.js';
-import {
-  IncomeDTO,
-  IncomeWithCategoryAllocationDTO,
-} from 'dto/income-dto.js';
+import { IncomeDTO, IncomeWithCategoryAllocationDTO } from 'dto/income-dto.js';
 import { PeriodDTO } from 'dto/period-dto.js';
 import { Card } from 'models/card';
 import {
@@ -40,8 +37,8 @@ export function adaptIncome(
   const adaptedPeriod = period
     ? adaptPeriod(period)
     : income.period
-      ? adaptPeriod(income.period)
-      : null;
+    ? adaptPeriod(income.period)
+    : null;
   return {
     id: income?.id,
     userId: income?.userId,
@@ -70,11 +67,11 @@ export function adaptExpensesWithCard(x: Expense, card?: Card) {
     return {
       id: x.id.toString(),
       concept: x.concept,
-      payBefore: x.payBefore,
+      payBefore: formatInTimeZone(x.payBefore, 'UTC', 'dd MMM yyyy'),
       total: formatCurrency(x.total),
       userId: x.userId,
       comment: x.comments,
-      createdAt: x.createdAt,
+      createdAt: formatInTimeZone(x.createdAt, 'UTC', 'dd MMMM'),
       updatedAt: x.updatedAt,
       card: card ? adaptCard(card) : null,
       category: {
@@ -99,12 +96,12 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
     return {
       id: x.id.toString(),
       concept: x.concept,
-      payBefore: x.payBefore,
+      payBefore: formatInTimeZone(x.payBefore, 'UTC', 'dd MMM yyyy'),
       total: formatCurrency(x.total),
       userId: x.userId,
       periodId: x.periodId,
       comment: x.comments,
-      createdAt: x.createdAt,
+      createdAt: formatInTimeZone(x.createdAt, 'UTC', 'dd MMMM'),
       updatedAt: x.updatedAt,
       card: expenseWithCategory.card
         ? adaptCard(expenseWithCategory.card)
@@ -130,16 +127,14 @@ export function adaptExpensesDTOInput(x: ExpenseDTO): GraphqlExpense {
     return {
       id: x?.id.toString(),
       concept: x?.concept,
-      payBefore: x?.payBefore,
+      payBefore: formatInTimeZone(x?.payBefore, 'UTC', 'dd MMM yyyy'),
       total: formatCurrency(x.total),
       userId: x?.userId,
       periodId: x?.periodId,
       comment: x?.comments,
-      createdAt: x?.createdAt,
+      createdAt: formatInTimeZone(x?.createdAt, 'UTC', 'dd MMM yyyy'),
       updatedAt: x?.updatedAt,
-      card: x?.card
-        ? adaptCardDTO(x.card)
-        : null,
+      card: x?.card ? adaptCardDTO(x.card) : null,
       category: adaptCategoryDTO(x.category),
       subCategory: adaptCategoryDTO(x.category.subCategories[0]),
     };
