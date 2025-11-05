@@ -1,27 +1,36 @@
-import { GraphQLError } from 'graphql';
-import {
-  CreateIncomeInput,
-  MutationDeleteIncomeByIdArgs,
-  UpdateIncomeInput,
-} from '../generated/graphql.js';
-import { logger } from '../logger.js';
-import { Income } from '../models/income.js';
-import { Date as CustomDate } from '../scalars/date.js';
-import { validateId } from '../utils/sequilize-utils.js';
-import { IncomeRepository } from '../repository/income-repository.js';
+import { Sequelize } from 'sequelize';
 import {
   adaptIncomeDTO,
   adaptSingleIncome,
 } from '../adapters/income-adapter.js';
-import { Sequelize } from 'sequelize';
+import {
+  CreateIncomeInput,
+  MutationDeleteIncomeByIdArgs,
+} from '../generated/graphql.js';
+import { logger } from '../logger.js';
+import { Income } from '../models/income.js';
+import { IncomeRepository } from '../repository/income-repository.js';
+import { PeriodRepository } from '../repository/period-repository.js';
+import { Date as CustomDate } from '../scalars/date.js';
+
+export type IncomeInput = {
+  id: string;
+  total: number;
+  comment?: string;
+  paymentDate: Date;
+};
 
 export class IncomeService {
   private incomeRepository: IncomeRepository;
+  private periodRepository: PeriodRepository;
   userId: string;
+  sequelize: Sequelize;
 
   constructor(userId: string, sequelize: Sequelize) {
     this.userId = userId;
+    this.sequelize = sequelize;
     this.incomeRepository = new IncomeRepository(userId, sequelize);
+    this.periodRepository = new PeriodRepository(userId, sequelize);
   }
 
   async getAllIncomes() {
@@ -81,41 +90,38 @@ export class IncomeService {
     return this.incomeRepository.deleteIncomeById(id);
   }
 
-  async updateIncome(input: UpdateIncomeInput) {
-    const { incomeId, total, comment, paymentDate } = input;
+  async updateIncome(input: IncomeInput) {
+    const { id, total, comment, paymentDate } = input;
+    const transaction = await this.sequelize.transaction();
 
-    await validateId(Income, this.userId, incomeId);
+    try {
+      const period = await this.periodRepository.getPeriodBy(
+        { date: input.paymentDate },
+        { transaction }
+      );
 
-    const updateParams = {
-      total,
-      comment: comment?.trim() ?? '',
-      paymentDate: CustomDate.parseValue(paymentDate),
-      updatedAt: CustomDate.parseValue(new Date().toISOString()),
-    };
-
-    const [affectedCount, updatedElement] = await Income.update(
-      {
-        ...updateParams,
-      },
-      {
-        where: { id: incomeId, userId: this.userId },
-        returning: true,
+      if (!period) {
+        throw new Error('No period found for the given payBefore date');
       }
-    );
 
-    if (updatedElement.length === 0) {
-      logger.info('Couldt update Income, id doesnt exists');
-      throw new GraphQLError('Income id not found', {
-        extensions: {
-          code: 'NOT_FOUND',
-          http: { status: 404 },
+      const updated = await this.incomeRepository.updateIncome(
+        {
+          id,
+          total,
+          comment,
+          paymentDate,
         },
-      });
+        {
+          transaction,
+        }
+      );
+      await transaction.commit();
+      return updated;
+    } catch (error) {
+      logger.error('Error updating income: ' + error.message);
+      await transaction.rollback();
+      throw error;
     }
-
-    logger.info(`Updated Income, affectedCount ${affectedCount}`);
-
-    return updatedElement;
   }
 
   calculateTotal(incomes: Income[]) {

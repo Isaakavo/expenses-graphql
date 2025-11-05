@@ -167,16 +167,16 @@ export const formatCurrency = (amount: number) => {
   return formatter.format(amount);
 };
 
-export const adaptIncomeDTO = (income): IncomeDTO => {
+export const adaptIncomeDTO = (income): IncomeDTO => {  
   return {
-    id: income.id,
-    userId: income.userId,
-    total: income.total,
-    paymentDate: income.paymentDate,
-    comment: income.comment,
-    period: income.period ? adaptPeriodDTo(income.period) : null,
-    createdAt: income.createdAt,
-    updatedAt: income.updatedAt,
+    id: income?.id,
+    userId: income?.userId,
+    total: income?.total,
+    paymentDate: income?.paymentDate,
+    comment: income?.comment,
+    period: income?.period ? adaptPeriodDTo(income.period) : null,
+    createdAt: income?.createdAt,
+    updatedAt: income?.updatedAt,
   };
 };
 
