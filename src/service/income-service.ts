@@ -78,22 +78,7 @@ export class IncomeService {
 
   async deleteIncome(input: MutationDeleteIncomeByIdArgs) {
     const { id } = input;
-    const isDeleted = await Income.destroy({
-      where: { id, userId: this.userId },
-    });
-
-    if (isDeleted === 0) {
-      logger.info(`Couldnt delete Income with id ${id}`);
-      throw new GraphQLError('Couldnt delete Income', {
-        extensions: {
-          code: 'CONFLICT',
-          http: { status: 409 },
-        },
-      });
-    }
-
-    logger.info(`Deleted ${isDeleted} Income`);
-    return true;
+    return this.incomeRepository.deleteIncomeById(id);
   }
 
   async updateIncome(input: UpdateIncomeInput) {

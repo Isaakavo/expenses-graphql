@@ -1,6 +1,6 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
-import { adaptIncomeAndPeriodDTO, adaptIncomeCategoryAllocationDTO, formatCurrency } from '../adapters/income-adapter.js';
+import { adaptIncomeAndPeriodDTO, adaptIncomeCategoryAllocationDTO, adaptIncomeDTO, formatCurrency } from '../adapters/income-adapter.js';
 import { logger } from '../logger.js';
 import { CategorySettings } from '../models/category-settings.js';
 import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
@@ -214,5 +214,22 @@ export class IncomeRepository {
 
       return incomeWithPeriod;
     });
+  }
+
+  async deleteIncomeById(id: string) {
+    const result = await Income.destroy({
+      where: {
+        id,
+        userId: this.userId,
+      },
+    });
+
+    if (result === 0) {
+      throw new Error(`Income with id ${id} not found for user ${this.userId}`);
+    }
+
+    logger.info(`Deleted income with id ${id} for user ${this.userId}`);
+
+    return true;
   }
 }
