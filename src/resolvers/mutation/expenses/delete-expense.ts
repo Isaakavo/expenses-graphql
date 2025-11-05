@@ -1,7 +1,6 @@
 import { MutationResolvers } from '../../../generated/graphql.js';
 import { logger } from '../../../logger.js';
-import { Expense } from '../../../models/index.js';
-import { deleteElement, validateId } from '../../../utils/sequilize-utils.js';
+import { ExpensesService } from '../../../service/expenses-service.js';
 
 export const deleteExpense: MutationResolvers['deleteExpense'] = async (
   _,
@@ -12,10 +11,9 @@ export const deleteExpense: MutationResolvers['deleteExpense'] = async (
     const {
       user: { userId },
     } = context;
+    const expenseService = new ExpensesService(userId, context.sequilizeClient);
 
-    await validateId(Expense, userId, id);
-
-    return deleteElement(Expense, userId, id);
+    return expenseService.deleteExpense(id);
   } catch (error) {
     logger.error(error);
     return error;

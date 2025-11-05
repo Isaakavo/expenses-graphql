@@ -18,8 +18,7 @@ export class PeriodService {
   }
 
   async getPeriodBy(date: Date, periodId: string) {
-    const result = await this.periodRepository.getPeriodBy(date, periodId);
-    return adaptPeriodDTo(result);
+    return await this.periodRepository.getPeriodBy({date, id: periodId});
   }
 
   // async createPeriod(startDate: Date, endDate: Date) {
