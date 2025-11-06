@@ -14,7 +14,6 @@ import { Period } from '../models/periods.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
 import { PeriodRepository } from './period-repository.js';
 import { IncomeInput } from 'service/income-service.js';
-import { get } from 'http';
 
 export class IncomeRepository {
   private periodRepository: PeriodRepository;

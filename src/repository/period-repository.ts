@@ -62,9 +62,6 @@ export class PeriodRepository {
       //   break;
       case 'FORTNIGHTLY':
         endDate.setDate(endDate.getDate() + this.FORTNIGHTLY_NUMBER_OF_DAYS);
-        logger.info(
-          `Creating fortnightly period from ${startDate.toISOString()} to ${endDate.toISOString()}`
-        );
         break;
       // case 'MONTHLY':
       //   endDate.setMonth(endDate.getMonth() + 1);
