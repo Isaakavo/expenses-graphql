@@ -7,7 +7,7 @@ import {
 } from 'sequelize';
 import { logger } from '../logger.js';
 import { Period } from '../models/periods.js';
-import { adaptPeriodDTo } from '../adapters/period-adapter.js';
+import { adaptPeriodDTO } from '../adapters/period-adapter.js';
 
 export type PeriodInputs = {
   date?: Date;
@@ -58,7 +58,7 @@ export class PeriodRepository {
 
       logger.info(`Found period ${period.id}`);
 
-      return adaptPeriodDTo(period);
+      return adaptPeriodDTO(period);
     } catch (error) {
       logger.error(error.message);
     }
@@ -73,17 +73,17 @@ export class PeriodRepository {
     const periodType: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY' = 'FORTNIGHTLY';
 
     switch (periodType) {
-      // case 'WEEKLY':
-      //   endDate.setDate(endDate.getDate() + 7);
-      //   break;
-      case 'FORTNIGHTLY':
-        endDate.setDate(endDate.getDate() + this.FORTNIGHTLY_NUMBER_OF_DAYS);
-        break;
+    // case 'WEEKLY':
+    //   endDate.setDate(endDate.getDate() + 7);
+    //   break;
+    case 'FORTNIGHTLY':
+      endDate.setDate(endDate.getDate() + this.FORTNIGHTLY_NUMBER_OF_DAYS);
+      break;
       // case 'MONTHLY':
       //   endDate.setMonth(endDate.getMonth() + 1);
       //   break;
-      default:
-        throw new Error('Invalid period type');
+    default:
+      throw new Error('Invalid period type');
     }
 
     const period = await Period.findOne({

@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize';
 import { PeriodRepository } from '../repository/period-repository.js';
-import { adaptPeriodDTo } from '../adapters/period-adapter.js';
+import { adaptPeriodDTO } from '../adapters/period-adapter.js';
 
 export class PeriodService {
   private periodRepository: PeriodRepository;
@@ -13,7 +13,7 @@ export class PeriodService {
 
   async getAllPeriods() {
     return (await this.periodRepository.getAllPeriods()).map((period) =>
-      adaptPeriodDTo(period)
+      adaptPeriodDTO(period)
     );
   }
 

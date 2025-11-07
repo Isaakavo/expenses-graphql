@@ -14,7 +14,7 @@ export const adaptPeriod = (period: PeriodDTO): GraphqlPeriod => {
   };
 };
 
-export const adaptPeriodDTo = (period): PeriodDTO | null => {
+export const adaptPeriodDTO = (period): PeriodDTO | null => {
   try {
     return {
       id: period.id,
