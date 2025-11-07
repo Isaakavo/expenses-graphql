@@ -1,7 +1,4 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { ExpenseDTO } from 'dto/expense-dto.js';
-import { IncomeDTO, IncomeWithCategoryAllocationDTO } from 'dto/income-dto.js';
-import { PeriodDTO } from 'dto/period-dto.js';
 import { Card } from 'models/card';
 import {
   Expense as GraphqlExpense,
@@ -13,6 +10,7 @@ import { calculateFortnight } from '../utils/date-utils.js';
 import { adaptCardDTO } from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';
 import { adaptPeriod, adaptPeriodDTO } from './period-adapter.js';
+import { ExpenseDTO, IncomeDTO, IncomeWithCategoryAllocationDTO, PeriodDTO } from '../dto';
 
 export function adaptSingleIncome(x: IncomeDTO): GraphqlIncome {
   return {

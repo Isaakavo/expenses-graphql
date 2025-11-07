@@ -4,7 +4,7 @@ import {
   ExpenseDTO,
   ExpenseWithCategoryAllocationDTO,
   GroupedExpensesDTO,
-} from '../dto/expense-dto.js';
+} from '../dto';
 import { adaptCardDTO } from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';
 import { adaptExpensesDTOInput, formatCurrency } from './income-adapter.js';

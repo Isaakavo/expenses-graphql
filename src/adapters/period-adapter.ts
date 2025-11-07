@@ -1,6 +1,6 @@
 import { Period as GraphqlPeriod } from '../generated/graphql.js';
 import { formatInTimeZone } from 'date-fns-tz';
-import { PeriodDTO } from '../dto/period-dto.js';
+import { PeriodDTO } from '../dto';
 import { logger } from '../logger.js';
 
 export const adaptPeriod = (period: PeriodDTO): GraphqlPeriod => {

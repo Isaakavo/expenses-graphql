@@ -3,7 +3,7 @@ import {
   ExpenseWithCategoryAllocationDTO,
   ExpenseWithCategoryRaw,
   GroupedExpensesDTO,
-} from 'dto/expense-dto.js';
+} from '../dto';
 import { FindOptions, Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
 import {
   adaptExpenseWithCategoryAllocationDTO,
