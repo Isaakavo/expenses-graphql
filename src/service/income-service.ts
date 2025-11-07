@@ -17,6 +17,7 @@ export type IncomeInput = {
   id: string;
   total: number;
   comment?: string;
+  periodId?: string;
   paymentDate: Date;
 };
 
@@ -110,6 +111,7 @@ export class IncomeService {
           total,
           comment,
           paymentDate,
+          periodId: period.id
         },
         {
           transaction,

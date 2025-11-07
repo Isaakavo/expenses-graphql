@@ -3,9 +3,9 @@
 const { v4: uuidv4 } = require('uuid');
 
 function getFortnightRange(date) {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const day = date.getDate();
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
   if (day <= 15) {
     return {
       start: new Date(Date.UTC(year, month, 1)),
