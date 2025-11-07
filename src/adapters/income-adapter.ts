@@ -1,11 +1,11 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { Card } from 'models/card';
+import { Card } from 'models/card.js';
 import {
   Expense as GraphqlExpense,
   Income as GraphqlIncome,
 } from '../generated/graphql.js';
 import { logger } from '../logger.js';
-import { Expense, ExpenseWithCategory } from '../models/expense';
+import { Expense, ExpenseWithCategory } from '../models';
 import { calculateFortnight } from '../utils/date-utils.js';
 import { adaptCardDTO } from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';

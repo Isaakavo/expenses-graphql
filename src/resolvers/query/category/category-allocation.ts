@@ -9,10 +9,10 @@ import { CategoryAllocationService } from '../../../service/category-allocation-
 export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
   _,
   { input: { periodId, incomeId } },
-  { user: { userId }, sequilizeClient }
+  { user: { userId }, sequelizeClient }
 ) => {
   const categoryAllocationService = new CategoryAllocationService(
-    sequilizeClient,
+    sequelizeClient,
     userId
   );
 

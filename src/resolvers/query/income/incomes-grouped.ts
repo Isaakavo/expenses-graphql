@@ -1,14 +1,12 @@
-import { IncomeService } from '../../../service/income-service.js';
+import {IncomeService} from '../../../service/income-service.js';
 
 export const incomesGroupedBy = async (_, __, context) => {
   const {
     user: { userId },
-    sequilizeClient,
+    sequelizeClient,
   } = context;
 
-  const incomeService = new IncomeService(userId, sequilizeClient);
+  const incomeService = new IncomeService(userId, sequelizeClient);
 
-  const groupedIncomes = incomeService.getIncomeBy();  
-
-  return groupedIncomes;
+  return incomeService.getIncomeBy();
 };

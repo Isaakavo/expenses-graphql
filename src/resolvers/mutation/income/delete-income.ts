@@ -10,9 +10,9 @@ export const deleteIncomeById: MutationResolvers['deleteIncomeById'] = async (
   try {
     const {
       user: { userId },
-      sequilizeClient
+      sequelizeClient
     } = context;
-    const incomeService = new IncomeService(userId, sequilizeClient);
+    const incomeService = new IncomeService(userId, sequelizeClient);
 
     return incomeService.deleteIncome(input);
   } catch (error) {

@@ -5,12 +5,12 @@ export const createCategorySetting: MutationResolvers['createCategorySetting'] =
   async (
     _,
     { input: { categoryId, allocationPercentage } },
-    { user: { userId }, sequilizeClient }
+    { user: { userId }, sequelizeClient }
   ) => {
     try {
       const categorySettingsService = new CategorySettingsService(
         userId,
-        sequilizeClient
+        sequelizeClient
       );
 
       const createdCategorySetting =

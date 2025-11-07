@@ -13,10 +13,10 @@ export const incomesList: QueryResolvers['incomesList'] = async (
   try {
     const {
       user: { userId },
-      sequilizeClient,
+      sequelizeClient,
     } = context;
 
-    const incomeService = new IncomeService(userId, sequilizeClient);
+    const incomeService = new IncomeService(userId, sequelizeClient);
 
     //TODO implement logic in the query to receive the order of filtering from the client
     const allIncomes = await incomeService.getAllIncomes();

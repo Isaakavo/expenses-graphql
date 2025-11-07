@@ -11,7 +11,7 @@ export const deleteExpense: MutationResolvers['deleteExpense'] = async (
     const {
       user: { userId },
     } = context;
-    const expenseService = new ExpensesService(userId, context.sequilizeClient);
+    const expenseService = new ExpensesService(userId, context.sequelizeClient);
 
     return expenseService.deleteExpense(id);
   } catch (error) {

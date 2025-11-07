@@ -8,12 +8,12 @@ export const categorySettings: QueryResolvers['categorySettings'] = async (
 ) => {
   const {
     user: { userId },
-    sequilizeClient,
+    sequelizeClient,
   } = context;
 
   const categorySettingsService = new CategorySettingsService(
     userId,
-    sequilizeClient
+    sequelizeClient
   );
 
   const settings = await categorySettingsService.getCategorySettings();

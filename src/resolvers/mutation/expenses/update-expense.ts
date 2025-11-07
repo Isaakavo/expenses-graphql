@@ -13,7 +13,7 @@ export const updateExpense: MutationResolvers['updateExpense'] = async (
       user: { userId },
     } = context;
     const { subCategoryId, concept, id, payBefore, total, cardId, comment } = input;
-    const expenseService = new ExpensesService(userId, context.sequilizeClient);
+    const expenseService = new ExpensesService(userId, context.sequelizeClient);
 
     const updatedExpense = await expenseService.updateExpense(id, {
       total,
