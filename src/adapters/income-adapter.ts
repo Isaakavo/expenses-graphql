@@ -22,7 +22,7 @@ export function adaptSingleIncome(x: IncomeDTO): GraphqlIncome {
     comment: x.comment,
     period: adaptPeriod(x.period),
     paymentDate: {
-      date: formatInTimeZone(x.paymentDate, 'UTC', 'dd MMMM'),
+      date: formatInTimeZone(x.paymentDate, 'UTC', 'dd MMM yyyy'),
       fortnight: calculateFortnight(x.paymentDate),
     },
     createdAt: x.createdAt,
@@ -167,16 +167,16 @@ export const formatCurrency = (amount: number) => {
   return formatter.format(amount);
 };
 
-export const adaptIncomeDTO = (income): IncomeDTO => {
+export const adaptIncomeDTO = (income): IncomeDTO => {  
   return {
-    id: income.id,
-    userId: income.userId,
-    total: income.total,
-    paymentDate: income.paymentDate,
-    comment: income.comment,
-    period: income.period ? adaptPeriodDTo(income.period) : null,
-    createdAt: income.createdAt,
-    updatedAt: income.updatedAt,
+    id: income?.id,
+    userId: income?.userId,
+    total: income?.total,
+    paymentDate: income?.paymentDate,
+    comment: income?.comment,
+    period: income?.period ? adaptPeriodDTo(income.period) : null,
+    createdAt: income?.createdAt,
+    updatedAt: income?.updatedAt,
   };
 };
 

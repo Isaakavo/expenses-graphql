@@ -1,6 +1,11 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { FindOptions, Op, QueryTypes, Sequelize } from 'sequelize';
-import { adaptIncomeAndPeriodDTO, adaptIncomeCategoryAllocationDTO, formatCurrency } from '../adapters/income-adapter.js';
+import { FindOptions, Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
+import {
+  adaptIncomeAndPeriodDTO,
+  adaptIncomeCategoryAllocationDTO,
+  adaptIncomeDTO,
+  formatCurrency,
+} from '../adapters/income-adapter.js';
 import { logger } from '../logger.js';
 import { CategorySettings } from '../models/category-settings.js';
 import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
@@ -8,7 +13,7 @@ import { Category, Income } from '../models/index.js';
 import { Period } from '../models/periods.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
 import { PeriodRepository } from './period-repository.js';
-
+import { IncomeInput } from 'service/income-service.js';
 
 export class IncomeRepository {
   private periodRepository: PeriodRepository;
@@ -118,12 +123,12 @@ export class IncomeRepository {
           model: Income,
           as: 'income',
           where: { userId: this.userId, id: incomeId },
-        }
+        },
       ],
       where: { incomeId, userId: this.userId },
     });
 
-    return result.map((row) => adaptIncomeCategoryAllocationDTO(row))
+    return result.map((row) => adaptIncomeCategoryAllocationDTO(row));
   }
 
   async createIncome(incomeData: Partial<Income>) {
@@ -214,5 +219,71 @@ export class IncomeRepository {
 
       return incomeWithPeriod;
     });
+  }
+
+  async updateIncome(
+    input: Partial<IncomeInput>,
+    options: { transaction?: Transaction } = {}
+  ) {
+    const { id, ...updateData } = input;
+
+    const [affectedCount, updatedElements] = await Income.update(updateData, {
+      where: {
+        id,
+        userId: this.userId,
+      },
+      returning: true,
+      validate: true,
+      transaction: options.transaction,
+    });
+
+    if (affectedCount === 0) {
+      throw new Error(`Income with id ${id} not found for user ${this.userId}`);
+    }
+
+    logger.info(`Updated income with id ${id} for user ${this.userId}`);
+
+    return await this.getIncomeByPK(updatedElements[0].id, {
+      transaction: options.transaction,
+    });
+  }
+
+  async deleteIncomeById(id: string) {
+    const result = await Income.destroy({
+      where: {
+        id,
+        userId: this.userId,
+      },
+    });
+
+    if (result === 0) {
+      throw new Error(`Income with id ${id} not found for user ${this.userId}`);
+    }
+
+    logger.info(`Deleted income with id ${id} for user ${this.userId}`);
+
+    return true;
+  }
+
+  async getIncomeByPK(id: string, options: { transaction?: Transaction } = {}) {
+    const income = await Income.findOne({
+      where: {
+        id,
+        userId: this.userId,
+      },
+      include: [
+        {
+          model: Period,
+          as: 'period',
+        },
+      ],
+      transaction: options.transaction,
+    });
+
+    if (!income) {
+      throw new Error(`Income with id ${id} not found for user ${this.userId}`);
+    }
+
+    return adaptIncomeDTO(income);
   }
 }
