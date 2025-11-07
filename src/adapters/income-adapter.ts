@@ -1,18 +1,16 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { ExpenseDTO } from 'dto/expense-dto.js';
-import { IncomeDTO, IncomeWithCategoryAllocationDTO } from 'dto/income-dto.js';
-import { PeriodDTO } from 'dto/period-dto.js';
-import { Card } from 'models/card';
+import { Card } from 'models/card.js';
 import {
   Expense as GraphqlExpense,
   Income as GraphqlIncome,
 } from '../generated/graphql.js';
 import { logger } from '../logger.js';
-import { Expense, ExpenseWithCategory } from '../models/expense';
+import { Expense, ExpenseWithCategory } from '../models';
 import { calculateFortnight } from '../utils/date-utils.js';
 import { adaptCardDTO } from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';
-import { adaptPeriod, adaptPeriodDTo } from './period-adapter.js';
+import { adaptPeriod, adaptPeriodDTO } from './period-adapter.js';
+import { ExpenseDTO, IncomeDTO, IncomeWithCategoryAllocationDTO, PeriodDTO } from '../dto';
 
 export function adaptSingleIncome(x: IncomeDTO): GraphqlIncome {
   return {
@@ -37,8 +35,8 @@ export function adaptIncome(
   const adaptedPeriod = period
     ? adaptPeriod(period)
     : income.period
-    ? adaptPeriod(income.period)
-    : null;
+      ? adaptPeriod(income.period)
+      : null;
   return {
     id: income?.id,
     userId: income?.userId,
@@ -57,7 +55,7 @@ export function adaptIncome(
 // Not the best way to do this, but to avoid refactoring the service and repository layers
 export const adaptIncomeAndPeriodDTO = (input): GraphqlIncome => {
   const income = adaptIncomeDTO(input.income);
-  const period = adaptPeriodDTo(input.period);
+  const period = adaptPeriodDTO(input.period);
   return adaptIncome(income, period);
 };
 
@@ -174,7 +172,7 @@ export const adaptIncomeDTO = (income): IncomeDTO => {
     total: income?.total,
     paymentDate: income?.paymentDate,
     comment: income?.comment,
-    period: income?.period ? adaptPeriodDTo(income.period) : null,
+    period: income?.period ? adaptPeriodDTO(income.period) : null,
     createdAt: income?.createdAt,
     updatedAt: income?.updatedAt,
   };

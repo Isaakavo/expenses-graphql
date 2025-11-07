@@ -4,9 +4,9 @@ import { CategoryService } from '../../../service/category-service.js';
 export const categoryList: QueryResolvers['categoryList'] = async (
   _,
   __,
-  { user: { userId }, sequilizeClient }
+  { user: { userId }, sequelizeClient }
 ) => {
-  const categoryService = new CategoryService(userId, sequilizeClient);
+  const categoryService = new CategoryService(userId, sequelizeClient);
 
   const categories = await categoryService.getCategoryList();  
 

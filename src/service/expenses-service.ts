@@ -1,5 +1,5 @@
 import { FindOptions, Sequelize } from 'sequelize';
-import { ExpenseDTO } from '../dto/expense-dto.js';
+import { ExpenseDTO } from '../dto';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 import { logger } from '../logger.js';
 import { PeriodRepository } from '../repository/period-repository.js';
@@ -60,7 +60,7 @@ export class ExpensesService {
       );
 
       if(!period) {
-        throw new Error('No period found for the given payBefore date');
+        logger.error('No period found for the given payBefore date');
       }
 
       const updated = await this.expenseRepository.updateExpense(id, input, {

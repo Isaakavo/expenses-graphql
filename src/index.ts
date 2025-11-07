@@ -20,7 +20,7 @@ export interface User {
 }
 
 export interface Context {
-  sequilizeClient: Sequelize;
+  sequelizeClient: Sequelize;
   axiosClient: AxiosInstance;
   user?: User;
 }
@@ -40,7 +40,7 @@ const startServer = async () => {
     context: async ({ req }) => {
       try {
         return {
-          sequilizeClient: sequelizeClient,
+          sequelizeClient: sequelizeClient,
           axiosClient: instance,
           user: await resolverUser(req),
         };

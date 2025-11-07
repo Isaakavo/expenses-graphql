@@ -1,4 +1,4 @@
-import { CategoryDTO, SubCategoryDTO } from '../dto/category-dto.js';
+import { CategoryDTO, SubCategoryDTO } from '../dto';
 import { Category } from '../generated/graphql.js';
 
 export const categoryAdapter = (category: Category) =>

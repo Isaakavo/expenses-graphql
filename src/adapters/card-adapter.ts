@@ -1,4 +1,4 @@
-import { CardDTO } from '../dto/card-dto';
+import { CardDTO } from '../dto';
 
 export const adaptCardDTO = (card): CardDTO => {
   return {

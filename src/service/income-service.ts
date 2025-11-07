@@ -8,7 +8,7 @@ import {
   MutationDeleteIncomeByIdArgs,
 } from '../generated/graphql.js';
 import { logger } from '../logger.js';
-import { Income } from '../models/income.js';
+import { Income } from '../models';
 import { IncomeRepository } from '../repository/income-repository.js';
 import { PeriodRepository } from '../repository/period-repository.js';
 import { Date as CustomDate } from '../scalars/date.js';
@@ -102,7 +102,7 @@ export class IncomeService {
       );
 
       if (!period) {
-        throw new Error('No period found for the given payBefore date');
+        logger.error('No period found for the given payBefore date');
       }
 
       const updated = await this.incomeRepository.updateIncome(

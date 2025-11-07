@@ -9,9 +9,9 @@ export const period: QueryResolvers['period'] = async (
 ) => {
   const {
     user: { userId },
-    sequilizeClient,
+    sequelizeClient,
   } = context;
-  const periodsService = new PeriodService(userId, sequilizeClient);
+  const periodsService = new PeriodService(userId, sequelizeClient);
 
   const period = await periodsService.getPeriodBy(startDate, periodId);
 

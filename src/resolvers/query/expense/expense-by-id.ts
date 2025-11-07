@@ -7,7 +7,7 @@ export const expenseById: QueryResolvers['expenseById'] = async (_, { id }, cont
     user: { userId },
   } = context;
 
-  const expensesService = new ExpensesService(userId, context.sequilizeClient);
+  const expensesService = new ExpensesService(userId, context.sequelizeClient);
   const expense = await expensesService.getExpenseById(id);
 
   return adaptExpensesDTOInput(expense);

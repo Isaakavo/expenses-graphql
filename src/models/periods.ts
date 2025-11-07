@@ -1,7 +1,7 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import { Expense } from './expense.js';
 import { Income } from './income.js';
-import { PeriodType } from '../dto/period-dto.js';
+import { PeriodType } from '../dto';
 
 export class Period extends Model {
   public id!: string;
