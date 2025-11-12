@@ -3,20 +3,35 @@
 const { v4: uuidv4 } = require('uuid');
 
 function getFortnightRange(date) {
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth();
-  const day = date.getUTCDate();
-  if (day <= 15) {
-    return {
-      start: new Date(Date.UTC(year, month, 1)),
-      end: new Date(Date.UTC(year, month, 15, 23, 59, 59, 999)),
-    };
+  // Cutoff date: April 1st, 2025. Month is 0-indexed, so 3 is April.
+  const cutoffDate = new Date(Date.UTC(2025, 3, 1));
+
+  if (date >= cutoffDate) {
+    // New logic: 14-day period (start date + 13 days)
+    const startDate = new Date(date);
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    const endDate = new Date(startDate);
+    endDate.setUTCDate(startDate.getUTCDate() + 13);
+    endDate.setUTCHours(23, 59, 59, 999);
+    return { start: startDate, end: endDate };
   } else {
-    const lastDay = new Date(Date.UTC(year, month + 1, 0)).getDate();
-    return {
-      start: new Date(Date.UTC(year, month, 16)),
-      end: new Date(Date.UTC(year, month, lastDay, 23, 59, 59, 999)),
-    };
+    // Old logic: 1-15 and 16-EOM
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    const day = date.getUTCDate();
+    if (day <= 15) {
+      return {
+        start: new Date(Date.UTC(year, month, 1)),
+        end: new Date(Date.UTC(year, month, 15, 23, 59, 59, 999)),
+      };
+    } else {
+      const lastDay = new Date(Date.UTC(year, month + 1, 0)).getDate();
+      return {
+        start: new Date(Date.UTC(year, month, 16)),
+        end: new Date(Date.UTC(year, month, lastDay, 23, 59, 59, 999)),
+      };
+    }
   }
 }
 
