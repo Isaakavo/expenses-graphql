@@ -3,20 +3,59 @@
 const { v4: uuidv4 } = require('uuid');
 
 function getFortnightRange(date) {
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth();
-  const day = date.getUTCDate();
-  if (day <= 15) {
-    return {
-      start: new Date(Date.UTC(year, month, 1)),
-      end: new Date(Date.UTC(year, month, 15, 23, 59, 59, 999)),
-    };
+  // For dates before April 1st, 2025, use the old logic (1-15 and 16-EOM).
+  const cutoffDate = new Date(Date.UTC(2025, 3, 1));
+
+  if (date < cutoffDate) {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    const day = date.getUTCDate();
+    if (day <= 15) {
+      return {
+        start: new Date(Date.UTC(year, month, 1)),
+        end: new Date(Date.UTC(year, month, 15, 23, 59, 59, 999)),
+      };
+    } else {
+      const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+      return {
+        start: new Date(Date.UTC(year, month, 16)),
+        end: new Date(Date.UTC(year, month, lastDay, 23, 59, 59, 999)),
+      };
+    }
   } else {
-    const lastDay = new Date(Date.UTC(year, month + 1, 0)).getDate();
-    return {
-      start: new Date(Date.UTC(year, month, 16)),
-      end: new Date(Date.UTC(year, month, lastDay, 23, 59, 59, 999)),
-    };
+    // For dates on or after April 1st, 2025, use the new bi-weekly logic.
+    // Periods start every other Friday, anchored to April 4th, 2025.
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    const day = date.getUTCDate();
+
+    // Group dates by 1-15 and 16-EOM to map to the correct new period.
+    let mappingDate;
+    if (day <= 15) {
+      mappingDate = new Date(Date.UTC(year, month, 1));
+    } else {
+      mappingDate = new Date(Date.UTC(year, month, 16));
+    }
+
+    const periodCycleAnchor = new Date(Date.UTC(2025, 3, 4)); // Anchor: Friday, April 4th, 2025
+
+    const diffInMs = mappingDate.getTime() - periodCycleAnchor.getTime();
+    const msIn14Days = 1000 * 60 * 60 * 24 * 14;
+    
+    const numCycles = Math.floor(diffInMs / msIn14Days);
+
+    let startDate = new Date(periodCycleAnchor);
+    startDate.setUTCDate(startDate.getUTCDate() + numCycles * 14);
+
+    if (startDate.getTime() < mappingDate.getTime()) {
+      startDate.setUTCDate(startDate.getUTCDate() + 14);
+    }
+
+    const endDate = new Date(startDate);
+    endDate.setUTCDate(startDate.getUTCDate() + 13);
+    endDate.setUTCHours(23, 59, 59, 999);
+
+    return { start: startDate, end: endDate };
   }
 }
 
@@ -63,55 +102,62 @@ module.exports = {
     );
 
     const periodMap = {};
+    const allItems = [
+      ...incomes.map(i => ({ ...i, date: i.payment_date })),
+      ...expenses.map(e => ({ ...e, date: e.pay_before })),
+    ];
 
-    for (const list of [incomes, expenses]) {
-      for (const row of list) {
-        const userId = row.user_id;
-        const date = new Date(row.payment_date || row.pay_before);
-        const { start, end } = getFortnightRange(date);
-        const key = `${userId}_${start.toISOString()}_${end.toISOString()}`;
-        if (!periodMap[key]) {
-          const periodId = uuidv4();
-          periodMap[key] = periodId;
-          await queryInterface.bulkInsert('periods', [
-            {
-              id: periodId,
-              user_id: userId,
-              type: 'FORTNIGHTLY',
-              start_date: start,
-              end_date: end,
-              created_at: new Date(),
-              updated_at: new Date(),
-            },
-          ]);
-        }
+    const periodsToCreate = [];
+    for (const item of allItems) {
+      const userId = item.user_id;
+
+      const date = new Date(item.date);
+      const { start, end } = getFortnightRange(date);
+      const key = `${userId}_${start.toISOString()}`;
+      
+      if (!periodMap[key]) {
+        const periodId = uuidv4();
+        periodMap[key] = { id: periodId };
+        periodsToCreate.push({
+          id: periodId,
+          user_id: userId,
+          type: 'FORTNIGHTLY',
+          start_date: start,
+          end_date: end,
+          created_at: new Date(),
+          updated_at: new Date(),
+        });
       }
+    }
+    
+    if (periodsToCreate.length > 0) {
+      await queryInterface.bulkInsert('periods', periodsToCreate);
     }
 
     for (const income of incomes) {
       const date = new Date(income.payment_date);
-      const { start, end } = getFortnightRange(date);
-      const key = `${
-        income.user_id
-      }_${start.toISOString()}_${end.toISOString()}`;
-      const periodId = periodMap[key];
-      await queryInterface.sequelize.query(`
-        UPDATE incomes SET period_id = '${periodId}' WHERE id = '${income.id}'
-      `);
+      const { start } = getFortnightRange(date);
+      const key = `${income.user_id}_${start.toISOString()}`;
+      const period = periodMap[key];
+      if (period) {
+        await queryInterface.sequelize.query(`
+          UPDATE incomes SET period_id = '${period.id}' WHERE id = '${income.id}'
+        `);
+      }
     }
 
     for (const expense of expenses) {
       const date = new Date(expense.pay_before);
-      const { start, end } = getFortnightRange(date);
-      const key = `${
-        expense.user_id
-      }_${start.toISOString()}_${end.toISOString()}`;
-      const periodId = periodMap[key];
-      await queryInterface.sequelize.query(`
-        UPDATE expenses
-        SET period_id = '${periodId}'
-        WHERE id = '${expense.id}'
-      `);
+      const { start } = getFortnightRange(date);
+      const key = `${expense.user_id}_${start.toISOString()}`;
+      const period = periodMap[key];
+      if (period) {
+        await queryInterface.sequelize.query(`
+          UPDATE expenses
+          SET period_id = '${period.id}'
+          WHERE id = '${expense.id}'
+        `);
+      }
     }
 
     await queryInterface.changeColumn('expenses', 'period_id', {

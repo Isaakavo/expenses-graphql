@@ -1,20 +1,15 @@
-import {
-  ExpenseDTO,
-  ExpenseWithCategoryAllocationDTO,
-  ExpenseWithCategoryRaw,
-  GroupedExpensesDTO,
-} from '../dto';
-import { FindOptions, Op, QueryTypes, Sequelize, Transaction } from 'sequelize';
+import {ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, GroupedExpensesDTO,} from '../dto';
+import {FindOptions, Op, QueryTypes, Sequelize, Transaction} from 'sequelize';
 import {
   adaptExpenseWithCategoryAllocationDTO,
   adaptGroupedExpensesDTO,
   adaptRawListExpense,
   adaptSingleRawExpenseDTO,
 } from '../adapters/expense-adapter.js';
-import { Card, Category, Expense, SubCategory } from '../models/index.js';
-import { ExpenseInput } from '../service/expenses-service.js';
-import { toCamelCaseDeep } from '../utils/case-converter.js';
-import { logger } from '../logger.js';
+import {Card, Category, Expense, SubCategory} from '../models/index.js';
+import {ExpenseInput} from '../service/expenses-service.js';
+import {toCamelCaseDeep} from '../utils/case-converter.js';
+import {logger} from '../logger.js';
 
 export class ExpenseRepository {
   userId: string;
@@ -31,9 +26,7 @@ export class ExpenseRepository {
       ...input,
     });
 
-    const createdExpense = await this.getExpenseByPK(expense.id);
-
-    return adaptSingleRawExpenseDTO(createdExpense);
+    return await this.getExpenseByPK(expense.id);
   }
 
   async updateExpense(

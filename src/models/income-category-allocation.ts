@@ -63,6 +63,10 @@ export const initIncomeCategoryAllocationModel = (sequelize: Sequelize) => {
         field: 'amount_allocated'
       },
     },
-    { sequelize, underscored: true }
+    { 
+      sequelize, 
+      underscored: true,
+      tableName: 'income_category_allocation' // Explicitly set the table name
+    }
   );
 };
