@@ -23,17 +23,7 @@ export const createCategorySetting: MutationResolvers['createCategorySetting'] =
         id: createdCategorySetting.id,
         message: 'Category setting created successfully',
       };
-    } catch (error) {
-      let errorMessage = error.message;
-      
-      if (error.name === 'SequelizeUniqueConstraintError') {
-        errorMessage =
-          'Category setting already exists';
-      }
-
-      return {
-        id: '',
-        message: errorMessage || 'Failed to create category setting',
-      };
+    } catch (e) {
+      throw e
     }
   };

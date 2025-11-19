@@ -23,5 +23,6 @@ export const updateCategorySetting: MutationResolvers['updateCategorySetting'] =
       return adaptCategorySettings([updated])
     } catch (e) {
       logger.error(e.message)
+      throw e
     }
   }
