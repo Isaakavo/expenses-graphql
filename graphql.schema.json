@@ -608,6 +608,22 @@
             "deprecationReason": null
           },
           {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "remaining",
             "description": null,
             "args": [],
@@ -2403,7 +2419,7 @@
               "name": null,
               "ofType": {
                 "kind": "OBJECT",
-                "name": "CategorySum",
+                "name": "CategorySetting",
                 "ofType": null
               }
             },

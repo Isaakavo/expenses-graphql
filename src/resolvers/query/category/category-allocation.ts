@@ -23,6 +23,7 @@ export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
 
   return {
     categorySum: allocations.categorySum.map((allocation) => ({
+      id:allocation.id,
       category: allocation.category,
       allocated: formatCurrency(allocation.allocated),
       remaining: formatCurrency(allocation.remaining),

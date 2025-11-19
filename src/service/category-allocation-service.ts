@@ -34,6 +34,7 @@ export class CategoryAllocationService {
         (exp) => exp.category.id === income.category.id
       );
       return {
+        id: income.id,
         category: {
           id: income.category.id,
           name: income.category.name,

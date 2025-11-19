@@ -66,6 +66,7 @@ type CategoryAllocation {
 }
 
 type CategorySum {
+  id: ID!
   category: CategoryType!
   allocated: String!
   remaining: String!
@@ -355,5 +356,5 @@ type Mutation {
   createCategorySetting(input: CreateCategorySettingInput!): CategorySetting!
   updateCategorySetting(input: UpdateCategorySettingInput!): CategorySettings!
   deleteCategorySetting(categoryId: ID!): CategorySetting!
-  updateCategoryAllocation(input: UpdateCategoryAllocationInput): CategorySum!
+  updateCategoryAllocation(input: UpdateCategoryAllocationInput): CategorySetting!
 }

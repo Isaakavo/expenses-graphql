@@ -16,14 +16,8 @@ export const updateCategoryAllocation: MutationResolvers['updateCategoryAllocati
       .updateCategoryAllocation(incomeId, id, percentage)
 
     return {
-      category: {
-        id: updated.category.id,
-        name: updated.category.name,
-        percentage: updated.percentage * 100,
-      },
-      allocated: formatCurrency(updated.amountAllocated),
-      remaining: '',
-      sum: '',
+      id: '',
+      message: ''
     }
   } catch (e) {
     logger.error(e.message)
