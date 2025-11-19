@@ -309,6 +309,11 @@ input CreateCategorySettingInput {
   allocationPercentage: Float!
 }
 
+input UpdateCategorySettingInput {
+    id: ID!
+    percentage: Float!
+}
+
 type Query {
   login: LoginResponse!
   incomesList: IncomesList
@@ -342,5 +347,6 @@ type Mutation {
   updateCard(input: UpdateCardInput): Card!
   deleteCard(id: ID!): Boolean!
   createCategorySetting(input: CreateCategorySettingInput!): CategorySetting!
+  updateCategorySetting(input: UpdateCategorySettingInput!): CategorySettings!
   deleteCategorySetting(categoryId: ID!): CategorySetting!
 }

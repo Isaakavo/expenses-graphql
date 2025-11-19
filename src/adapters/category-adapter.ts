@@ -1,5 +1,6 @@
-import { CategoryDTO, SubCategoryDTO } from '../dto';
-import { Category } from '../generated/graphql.js';
+import {CategoryDTO, CategorySettingDTO, SubCategoryDTO} from '../dto';
+import {Category} from '../generated/graphql.js';
+import {categorySettings} from '../resolvers/query';
 
 export const categoryAdapter = (category: Category) =>
   Category[category.toUpperCase()];
@@ -27,3 +28,12 @@ export const adaptSubCategoryDTO = (subCategory): SubCategoryDTO => {
     updatedAt: subCategory.updatedAt,
   };
 };
+
+export const adaptCategorySettingDTO = (categorySetting): CategorySettingDTO => {
+  return {
+    id: categorySetting.id,
+    userId: categorySetting.userId,
+    categoryId: categorySetting.categoryId,
+    percentage: categorySetting.percentage,
+  }
+}

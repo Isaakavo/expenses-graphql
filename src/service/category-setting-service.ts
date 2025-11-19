@@ -46,6 +46,17 @@ export class CategorySettingsService {
     );
   }
 
+  async updateCategorySetting(
+    input:{
+    id: string;
+    percentage: number;
+  }
+  ){
+    const { id, percentage } = input;
+
+    return this.categorySettingsRepository.updateCategorySetting(id, percentage)
+  }
+
   async deleteCategorySetting(categoryId: string) {
     const deleted = await this.categorySettingsRepository.deleteCategorySetting(
       categoryId
