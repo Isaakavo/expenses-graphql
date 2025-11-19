@@ -11,3 +11,4 @@ export { deleteCard } from './card/delete-card.js';
 export { createCategorySetting } from './category/create-category-setting.js';
 export { deleteCategorySetting } from './category/delete-category-setting.js';
 export { updateCategorySetting } from './category/update-category-setting.js';
+export { updateCategoryAllocation } from './category/update-category-allocation.js'

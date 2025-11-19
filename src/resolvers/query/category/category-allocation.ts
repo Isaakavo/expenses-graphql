@@ -1,19 +1,19 @@
-import { QueryResolvers } from 'generated/graphql';
+import {QueryResolvers} from 'generated/graphql';
 import {
   adaptExpensesDTOInput,
   adaptIncome,
   formatCurrency
 } from '../../../adapters/income-adapter.js';
-import { CategoryAllocationService } from '../../../service/category-allocation-service.js';
+import {CategoryAllocationService} from '../../../service/category-allocation-service.js';
 
 export const categoryAllocation: QueryResolvers['categoryAllocation'] = async (
   _,
-  { input: { periodId, incomeId } },
-  { user: { userId }, sequelizeClient }
+  {input: {periodId, incomeId}},
+  {user: {userId}, sequelizeClient}
 ) => {
   const categoryAllocationService = new CategoryAllocationService(
+    userId,
     sequelizeClient,
-    userId
   );
 
   const allocations = await categoryAllocationService.getCategoryAllocation(

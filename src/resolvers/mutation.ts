@@ -11,7 +11,7 @@ import {
   updateExpense,
   updateIncome,
   createCategorySetting,
-  deleteCategorySetting, updateCategorySetting,
+  deleteCategorySetting, updateCategorySetting, updateCategoryAllocation,
 } from './mutation/index.js';
 
 //TODO add mutation for deletion
@@ -30,6 +30,7 @@ const mutations: MutationResolvers = {
   updateCard,
   deleteCard,
   deleteCategorySetting,
+  updateCategoryAllocation,
 };
 
 export default mutations;

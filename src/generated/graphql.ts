@@ -258,6 +258,7 @@ export type Mutation = {
   deleteExpense: Scalars['Boolean']['output'];
   deleteIncomeById: Scalars['Boolean']['output'];
   updateCard: Card;
+  updateCategoryAllocation: CategorySum;
   updateCategorySetting: CategorySettings;
   updateExpense: Expense;
   updateIncome?: Maybe<Income>;
@@ -311,6 +312,11 @@ export type MutationDeleteIncomeByIdArgs = {
 
 export type MutationUpdateCardArgs = {
   input?: InputMaybe<UpdateCardInput>;
+};
+
+
+export type MutationUpdateCategoryAllocationArgs = {
+  input?: InputMaybe<UpdateCategoryAllocationInput>;
 };
 
 
@@ -447,6 +453,12 @@ export type UpdateCardInput = {
   id: Scalars['ID']['input'];
   isDebit?: InputMaybe<Scalars['Boolean']['input']>;
   isDigital?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type UpdateCategoryAllocationInput = {
+  id: Scalars['ID']['input'];
+  incomeId: Scalars['ID']['input'];
+  percentage: Scalars['Float']['input'];
 };
 
 export type UpdateCategorySettingInput = {
@@ -604,6 +616,7 @@ export type ResolversTypes = ResolversObject<{
   TotalByFortnight: ResolverTypeWrapper<TotalByFortnight>;
   TotalByMonth: ResolverTypeWrapper<TotalByMonth>;
   UpdateCardInput: UpdateCardInput;
+  UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
   UpdateCategorySettingInput: UpdateCategorySettingInput;
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateIncomeInput: UpdateIncomeInput;
@@ -654,6 +667,7 @@ export type ResolversParentTypes = ResolversObject<{
   TotalByFortnight: TotalByFortnight;
   TotalByMonth: TotalByMonth;
   UpdateCardInput: UpdateCardInput;
+  UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
   UpdateCategorySettingInput: UpdateCategorySettingInput;
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateIncomeInput: UpdateIncomeInput;
@@ -805,6 +819,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
   deleteIncomeById?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
   updateCard?: Resolver<ResolversTypes['Card'], ParentType, ContextType, Partial<MutationUpdateCardArgs>>;
+  updateCategoryAllocation?: Resolver<ResolversTypes['CategorySum'], ParentType, ContextType, Partial<MutationUpdateCategoryAllocationArgs>>;
   updateCategorySetting?: Resolver<ResolversTypes['CategorySettings'], ParentType, ContextType, RequireFields<MutationUpdateCategorySettingArgs, 'input'>>;
   updateExpense?: Resolver<ResolversTypes['Expense'], ParentType, ContextType, RequireFields<MutationUpdateExpenseArgs, 'input'>>;
   updateIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, Partial<MutationUpdateIncomeArgs>>;
