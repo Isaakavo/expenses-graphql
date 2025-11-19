@@ -1,5 +1,5 @@
 import {Category} from '../models/category.js';
-import {CategorySettings, CategorySettingsWithCategory} from '../models/category-settings.js';
+import {CategorySettings} from '../models/category-settings.js';
 import {Sequelize, Transaction} from 'sequelize';
 import {logger} from '../logger.js';
 import {adaptCategorySettingDTO} from '../adapters/category-adapter.js';
@@ -14,10 +14,12 @@ export class CategorySettingsRepository {
   }
 
   async getCategorySettings() {
-    return CategorySettings.findAll({
+    const settings = await CategorySettings.findAll({
       where: {userId: this.userId},
       include: [{model: Category, as: 'category'}],
-    }) as Promise<CategorySettingsWithCategory[]>;
+    });
+
+    return settings.map((setting) => adaptCategorySettingDTO(setting))
   }
 
   async createCategorySetting(categorySettingData: Partial<CategorySettings>) {
@@ -68,8 +70,9 @@ export class CategorySettingsRepository {
   async getCategorySettingByPk(id: string, options: { transaction?: Transaction } = {}) {
     const setting = await CategorySettings.findByPk(id,
       {
+        include: [{model: Category, as: 'category'}],
         transaction: options.transaction
-      }
+      },
     )
 
     return adaptCategorySettingDTO(setting)

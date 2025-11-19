@@ -19,6 +19,7 @@ export type SubCategoryDTO = {
 export type CategorySettingDTO = {
   id: string;
   userId: string;
+  category: CategoryDTO;
   categoryId: string;
   percentage: number;
 }
