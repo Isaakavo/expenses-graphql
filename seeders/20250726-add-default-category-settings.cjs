@@ -10,11 +10,14 @@ module.exports = {
     );
 
     const defaultCategorySettings = [
-      { name: 'HOUSEHOLD', percentage: 0.50 },
-      { name: 'FINANCIAL', percentage: 0.10 },
-      { name: 'LIFESTYLE', percentage: 0.10 },
-      { name: 'FOOD_AND_DRINKS', percentage: 0.20 },
-      { name: 'COMMUNICATION_SUBSCRIPTIONS', percentage: 0.10 },
+      { name: 'HOUSEHOLD', percentage: 0.60 },
+      { name: 'COMMUNICATION_SUBSCRIPTIONS', percentage: 0.04 },
+      { name: 'HEALTH_WELLNESS', percentage: 0.01 },
+      { name: 'LIFESTYLE', percentage: 0.05 },
+      { name: 'FOOD_AND_DRINKS', percentage: 0.10 },
+      { name: 'EDUCATION_DEVELOPMENT', percentage: 0.02 },
+      { name: 'OTHERS', percentage: 0.03 },
+      { name: 'FINANCIAL', percentage: 0.15 },
     ];
 
     const categoryNames = defaultCategorySettings.map(s => s.name);
