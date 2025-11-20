@@ -44,15 +44,17 @@
   "scripts": {
     "codegen": "graphql-codegen --config codegen.ts",
     "codegen:watch": "graphql-codegen --watch --config codegen.ts",
+    "copy-assets": "cp -r ./migrations ./seeders ./config ./.sequelizerc ./dist/",
     "compile": "tsc",
     "delete:dist": "rm -rf ./dist",
-    "deploy:prod": "pnpm delete:dist && pnpm codegen && pnpm compile && fly deploy",
+    "build": "pnpm delete:dist && pnpm codegen && pnpm compile && pnpm copy-assets",
+    "deploy:prod": "pnpm build && fly deploy",
     "dev": "NODE_ENV=dev nodemon --esm src/index.ts",
     "lint": "eslint . --ext .ts",
-    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \"",
     "migrate": "npx sequelize-cli db:migrate",
     "seeds": "npx sequelize-cli db:seed:all",
-    "test": "vitest"
+    "test": "vitest",
+    "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \""
   },
   "graphql": {
     "schema": "http://localhost:4000/graphql",

@@ -14,10 +14,10 @@
     "dialect": "postgres"
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "expenses",
-    "host": "127.0.0.1",
+    "username": "expenses_graphql",
+    "password": "process.env.DATABASE_PASSWORD",
+    "database": "expenses_graphql",
+    "host": "process.env.DATABASE_HOST",
     "dialect": "postgres"
   }
 }

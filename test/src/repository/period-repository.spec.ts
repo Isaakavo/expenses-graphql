@@ -10,7 +10,7 @@ beforeEach(async () => {
   sequelize = new Sequelize('sqlite::memory:', { logging: false });
   initPeriodsModel(sequelize);
   await sequelize.sync({ force: true });
-  periodRepository = new PeriodRepository('123');
+  periodRepository = new PeriodRepository('123', sequelize);
 });
 
 describe('Period Model', () => {

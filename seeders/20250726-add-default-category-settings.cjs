@@ -1,9 +1,10 @@
 'use strict';
 
-const { v4: uuidv4 } = require('uuid');
-
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+    // Use dynamic import for the ESM 'uuid' package inside the async function.
+    const { v4: uuidv4 } = await import('uuid');
+
     // Step 1: Create default category settings for all users
     const [users] = await queryInterface.sequelize.query(
       'SELECT user_id AS id FROM expenses WHERE user_id IS NOT NULL UNION SELECT user_id AS id FROM incomes WHERE user_id IS NOT NULL'
