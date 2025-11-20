@@ -1,19 +1,26 @@
-import { IncomeRepository } from '../repository/income-repository.js';
-import { ExpenseRepository } from '../repository/expense-repository.js';
-import { Sequelize } from 'sequelize';
-import { adaptIncomeDTO } from '../adapters/income-adapter.js';
+import {IncomeRepository} from '../repository/income-repository.js';
+import {ExpenseRepository} from '../repository/expense-repository.js';
+import {Sequelize} from 'sequelize';
+import {adaptIncomeCategoryAllocationDTO, adaptIncomeDTO} from '../adapters/income-adapter.js';
+import {CategoryAllocationRepository} from '../repository/category-allocation-repository.js';
 
 export class CategoryAllocationService {
   private expenseRepository: ExpenseRepository;
   private incomeRepository: IncomeRepository;
+  private categoryAllocationRepository: CategoryAllocationRepository;
   userId: string;
   sequelize: Sequelize;
 
-  constructor(sequelize: Sequelize, userId: string) {
+  constructor(userId: string, sequelize: Sequelize) {
     this.sequelize = sequelize;
     this.userId = userId;
     this.expenseRepository = new ExpenseRepository(userId);
     this.incomeRepository = new IncomeRepository(userId, sequelize);
+    this.categoryAllocationRepository = new CategoryAllocationRepository(userId, sequelize);
+  }
+
+  async getCategoryAllocationByPk(id: string) {
+    return this.categoryAllocationRepository.getCategoryAllocationByPk(id);
   }
 
   async getCategoryAllocation(periodId: string, incomeId: string) {
@@ -27,6 +34,7 @@ export class CategoryAllocationService {
         (exp) => exp.category.id === income.category.id
       );
       return {
+        id: income.id,
         category: {
           id: income.category.id,
           name: income.category.name,
@@ -43,6 +51,17 @@ export class CategoryAllocationService {
       income: incomeSum.map((inc) => adaptIncomeDTO(inc.income)),
       expenses: await this.expenseRepository.getExpensesByPeriod(periodId),
     };
+  }
+
+  async updateCategoryAllocation(incomeId: string, settingId: string, percentage: number) {
+    const income = this.incomeRepository.getIncomeByPK(incomeId);
+
+    const newAmountAllocated = (await income).total * percentage;
+
+    const updated = await this.categoryAllocationRepository
+      .updateCategoryAllocation(settingId, percentage, newAmountAllocated)
+
+    return adaptIncomeCategoryAllocationDTO(updated)
   }
 
   private async getIncomeSumByCategory(incomeId: string) {

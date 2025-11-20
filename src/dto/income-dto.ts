@@ -13,6 +13,7 @@ export type IncomeDTO = {
 };
 
 export type IncomeWithCategoryAllocationDTO = {
+  id: string;
   percentage: number;
   amountAllocated: number;
   category: CategoryDTO;

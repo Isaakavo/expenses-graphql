@@ -1,4 +1,4 @@
-import { MutationResolvers } from '../generated/graphql.js';
+import {MutationResolvers} from '../generated/graphql.js';
 import {
   createCard,
   createExpense,
@@ -11,7 +11,7 @@ import {
   updateExpense,
   updateIncome,
   createCategorySetting,
-  deleteCategorySetting,
+  deleteCategorySetting, updateCategorySetting, updateCategoryAllocation,
 } from './mutation/index.js';
 
 //TODO add mutation for deletion
@@ -21,6 +21,7 @@ const mutations: MutationResolvers = {
   deleteIncomeById,
   createExpense,
   createCategorySetting,
+  updateCategorySetting,
   // TODO add logic to handle weekly expenses
   createFixedExpense,
   updateExpense,
@@ -29,6 +30,7 @@ const mutations: MutationResolvers = {
   updateCard,
   deleteCard,
   deleteCategorySetting,
+  updateCategoryAllocation,
 };
 
 export default mutations;

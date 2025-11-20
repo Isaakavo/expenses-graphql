@@ -179,12 +179,13 @@ export const adaptIncomeDTO = (income): IncomeDTO => {
 };
 
 export const adaptIncomeCategoryAllocationDTO = (
-  income
+  allocation
 ): IncomeWithCategoryAllocationDTO => {
   return {
-    percentage: income.percentage,
-    amountAllocated: income.amountAllocated,
-    category: adaptCategoryDTO(income.category),
-    income: adaptIncomeDTO(income.income),
+    id: allocation.id,
+    percentage: allocation.percentage,
+    amountAllocated: allocation.amountAllocated,
+    category: adaptCategoryDTO(allocation.category),
+    income: adaptIncomeDTO(allocation.income),
   };
 };

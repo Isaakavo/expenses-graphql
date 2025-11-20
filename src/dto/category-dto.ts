@@ -15,3 +15,11 @@ export type SubCategoryDTO = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type CategorySettingDTO = {
+  id: string;
+  userId: string;
+  category: CategoryDTO;
+  categoryId: string;
+  percentage: number;
+}

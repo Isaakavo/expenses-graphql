@@ -1,5 +1,7 @@
-import { CategorySettingsRepository } from '../repository/category-settings-repository.js';
-import { Sequelize } from 'sequelize';
+import {CategorySettingsRepository} from '../repository/category-settings-repository.js';
+import {Sequelize} from 'sequelize';
+import {GraphQLError} from 'graphql';
+import {extensions} from 'sequelize/lib/utils/validator-extras';
 
 export class CategorySettingsService {
   categorySettingsRepository: CategorySettingsRepository;
@@ -17,14 +19,7 @@ export class CategorySettingsService {
     return this.categorySettingsRepository.getCategorySettings();
   }
 
-  //TODO add logic to validate that the percetage of the category does not exceed 100%
-  // and that the category is not already set for the user
-  async createCategorySetting(input: {
-    categoryId: string;
-    percentage: number;
-  }) {
-    const { categoryId, percentage } = input;
-
+  async calculateTotalPercentage(percentage: number) {
     const allSettings = await this.getCategorySettings();
 
     // Sum of percentage validation
@@ -33,8 +28,27 @@ export class CategorySettingsService {
     }, 0);
 
     if (percentageTotal + percentage > 1) {
-      throw new Error('Total percentage exceeds 100%');
+      throw new GraphQLError('Total percentage exceeds 100%',
+        {
+          extensions: {
+            code: 'VALIDATION_ERROR',
+            argumentName:
+              'percentage'
+          }
+        }
+      )
     }
+  }
+
+  //TODO add logic to validate that the percetage of the category does not exceed 100%
+  // and that the category is not already set for the user
+  async createCategorySetting(input: {
+    categoryId: string;
+    percentage: number;
+  }) {
+    const {categoryId, percentage} = input;
+
+    await this.calculateTotalPercentage(percentage);
 
     const categorySettingData = {
       userId: this.userId,
@@ -44,6 +58,19 @@ export class CategorySettingsService {
     return this.categorySettingsRepository.createCategorySetting(
       categorySettingData
     );
+  }
+
+  async updateCategorySetting(
+    input: {
+      id: string;
+      percentage: number;
+    }
+  ) {
+    const {id, percentage} = input;
+
+    await this.calculateTotalPercentage(percentage);
+
+    return this.categorySettingsRepository.updateCategorySetting(id, percentage)
   }
 
   async deleteCategorySetting(categoryId: string) {

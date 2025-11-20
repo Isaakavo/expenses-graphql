@@ -98,6 +98,7 @@ export type CategorySum = {
   __typename?: 'CategorySum';
   allocated: Scalars['String']['output'];
   category: CategoryType;
+  id: Scalars['ID']['output'];
   remaining: Scalars['String']['output'];
   sum: Scalars['String']['output'];
 };
@@ -258,6 +259,8 @@ export type Mutation = {
   deleteExpense: Scalars['Boolean']['output'];
   deleteIncomeById: Scalars['Boolean']['output'];
   updateCard: Card;
+  updateCategoryAllocation: CategorySetting;
+  updateCategorySetting: CategorySettings;
   updateExpense: Expense;
   updateIncome?: Maybe<Income>;
 };
@@ -310,6 +313,16 @@ export type MutationDeleteIncomeByIdArgs = {
 
 export type MutationUpdateCardArgs = {
   input?: InputMaybe<UpdateCardInput>;
+};
+
+
+export type MutationUpdateCategoryAllocationArgs = {
+  input?: InputMaybe<UpdateCategoryAllocationInput>;
+};
+
+
+export type MutationUpdateCategorySettingArgs = {
+  input: UpdateCategorySettingInput;
 };
 
 
@@ -441,6 +454,17 @@ export type UpdateCardInput = {
   id: Scalars['ID']['input'];
   isDebit?: InputMaybe<Scalars['Boolean']['input']>;
   isDigital?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+export type UpdateCategoryAllocationInput = {
+  id: Scalars['ID']['input'];
+  incomeId: Scalars['ID']['input'];
+  percentage: Scalars['Float']['input'];
+};
+
+export type UpdateCategorySettingInput = {
+  id: Scalars['ID']['input'];
+  percentage: Scalars['Float']['input'];
 };
 
 export type UpdateExpenseInput = {
@@ -593,6 +617,8 @@ export type ResolversTypes = ResolversObject<{
   TotalByFortnight: ResolverTypeWrapper<TotalByFortnight>;
   TotalByMonth: ResolverTypeWrapper<TotalByMonth>;
   UpdateCardInput: UpdateCardInput;
+  UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
+  UpdateCategorySettingInput: UpdateCategorySettingInput;
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateIncomeInput: UpdateIncomeInput;
   endDate: EndDate;
@@ -642,6 +668,8 @@ export type ResolversParentTypes = ResolversObject<{
   TotalByFortnight: TotalByFortnight;
   TotalByMonth: TotalByMonth;
   UpdateCardInput: UpdateCardInput;
+  UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
+  UpdateCategorySettingInput: UpdateCategorySettingInput;
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateIncomeInput: UpdateIncomeInput;
   endDate: EndDate;
@@ -688,6 +716,7 @@ export type CategorySettingsResolvers<ContextType = Context, ParentType extends 
 export type CategorySumResolvers<ContextType = Context, ParentType extends ResolversParentTypes['CategorySum'] = ResolversParentTypes['CategorySum']> = ResolversObject<{
   allocated?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   category?: Resolver<ResolversTypes['CategoryType'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   remaining?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   sum?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -792,6 +821,8 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
   deleteIncomeById?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
   updateCard?: Resolver<ResolversTypes['Card'], ParentType, ContextType, Partial<MutationUpdateCardArgs>>;
+  updateCategoryAllocation?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, Partial<MutationUpdateCategoryAllocationArgs>>;
+  updateCategorySetting?: Resolver<ResolversTypes['CategorySettings'], ParentType, ContextType, RequireFields<MutationUpdateCategorySettingArgs, 'input'>>;
   updateExpense?: Resolver<ResolversTypes['Expense'], ParentType, ContextType, RequireFields<MutationUpdateExpenseArgs, 'input'>>;
   updateIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, Partial<MutationUpdateIncomeArgs>>;
 }>;
