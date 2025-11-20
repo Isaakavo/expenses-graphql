@@ -1,5 +1,4 @@
 'use strict';
-const { v4: uuidv4 } = require('uuid');
 
 const PARENT_CHILD = {
   HOUSEHOLD: ['BILLS', 'RENT', 'MORTGAGE', 'SUPERMARKET', 'SUPER_MARKET', 'FOOD', 'UTILITIES', 'HOME_MAINTENANCE', 'HOME_INSURANCE', 'HOUSE'],
@@ -14,7 +13,7 @@ const PARENT_CHILD = {
 };
 
 // Helper function to find or create a record
-async function findOrCreate(queryInterface, table, where, defaults) {
+async function findOrCreate(queryInterface, table, where, defaults, uuidv4) {
   const [results] = await queryInterface.sequelize.query(`SELECT id FROM ${table} WHERE ${Object.keys(where).map(key => `${key} = '${where[key]}'`).join(' AND ')} LIMIT 1;`);
   if (results.length > 0) {
     return results[0];
@@ -26,16 +25,19 @@ async function findOrCreate(queryInterface, table, where, defaults) {
 
 module.exports = {
   async up(queryInterface, Sequelize) {
+    // Use dynamic import for the ESM 'uuid' package inside the async function.
+    const { v4: uuidv4 } = await import('uuid');
+
     // 1. Find or create GENERIC category and sub-category
-    const genericCategory = await findOrCreate(queryInterface, 'categories', { name: 'GENERIC' }, { created_at: new Date(), updated_at: new Date() });
-    const genericSubcat = await findOrCreate(queryInterface, 'sub_categories', { name: 'GENERIC', category_id: genericCategory.id }, { created_at: new Date(), updated_at: new Date() });
+    const genericCategory = await findOrCreate(queryInterface, 'categories', { name: 'GENERIC' }, { created_at: new Date(), updated_at: new Date() }, uuidv4);
+    const genericSubcat = await findOrCreate(queryInterface, 'sub_categories', { name: 'GENERIC', category_id: genericCategory.id }, { created_at: new Date(), updated_at: new Date() }, uuidv4);
 
     // 2. Loop through and find or create other categories and sub-categories
     for (const [parent, children] of Object.entries(PARENT_CHILD)) {
-      const category = await findOrCreate(queryInterface, 'categories', { name: parent }, { created_at: new Date(), updated_at: new Date() });
+      const category = await findOrCreate(queryInterface, 'categories', { name: parent }, { created_at: new Date(), updated_at: new Date() }, uuidv4);
 
       for (const child of children) {
-        const subcat = await findOrCreate(queryInterface, 'sub_categories', { name: child, category_id: category.id }, { created_at: new Date(), updated_at: new Date() });
+        const subcat = await findOrCreate(queryInterface, 'sub_categories', { name: child, category_id: category.id }, { created_at: new Date(), updated_at: new Date() }, uuidv4);
 
         // Update existing expenses based on the old category string.
         // This will overwrite the 'GENERIC' ID set by the migration.

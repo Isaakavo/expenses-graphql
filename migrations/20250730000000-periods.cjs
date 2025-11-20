@@ -1,7 +1,5 @@
 'use-strict';
 
-const { v4: uuidv4 } = require('uuid');
-
 function getFortnightRange(date) {
   // For dates before April 1st, 2025, use the old logic (1-15 and 16-EOM).
   const cutoffDate = new Date(Date.UTC(2025, 3, 1));
@@ -61,6 +59,9 @@ function getFortnightRange(date) {
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+    // Use dynamic import for the ESM 'uuid' package inside the async function.
+    const { v4: uuidv4 } = await import('uuid');
+
     await queryInterface.createTable('periods', {
       id: { type: Sequelize.UUID, primaryKey: true },
       user_id: { type: Sequelize.UUID, allowNull: false },

@@ -1,8 +1,10 @@
 'use strict';
-const { v4: uuidv4 } = require('uuid');
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
+    // Use dynamic import for the ESM 'uuid' package inside the async function.
+    const { v4: uuidv4 } = await import('uuid');
+
     // Step 1: Find or create a GENERIC category and sub-category to use as a default.
     // This makes the migration self-sufficient and not dependent on seeders.
     const [genericCategoryResult] = await queryInterface.sequelize.query(
