@@ -385,6 +385,7 @@ export type Query = {
   login: LoginResponse;
   period?: Maybe<Period>;
   periodsList?: Maybe<Array<Period>>;
+  udiValue: UdiValue;
 };
 
 
@@ -457,6 +458,12 @@ export type TotalByMonth = Total & {
   month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
   year: Scalars['String']['output'];
+};
+
+export type UdiValue = {
+  __typename?: 'UdiValue';
+  amount?: Maybe<Scalars['String']['output']>;
+  date?: Maybe<Scalars['String']['output']>;
 };
 
 export type UpdateCardInput = {
@@ -628,6 +635,7 @@ export type ResolversTypes = ResolversObject<{
   TotalByCardId: ResolverTypeWrapper<TotalByCardId>;
   TotalByFortnight: ResolverTypeWrapper<TotalByFortnight>;
   TotalByMonth: ResolverTypeWrapper<TotalByMonth>;
+  UdiValue: ResolverTypeWrapper<UdiValue>;
   UpdateCardInput: UpdateCardInput;
   UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
   UpdateCategorySettingInput: UpdateCategorySettingInput;
@@ -680,6 +688,7 @@ export type ResolversParentTypes = ResolversObject<{
   TotalByCardId: TotalByCardId;
   TotalByFortnight: TotalByFortnight;
   TotalByMonth: TotalByMonth;
+  UdiValue: UdiValue;
   UpdateCardInput: UpdateCardInput;
   UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
   UpdateCategorySettingInput: UpdateCategorySettingInput;
@@ -883,6 +892,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
   period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType, RequireFields<QueryPeriodArgs, 'input'>>;
   periodsList?: Resolver<Maybe<Array<ResolversTypes['Period']>>, ParentType, ContextType>;
+  udiValue?: Resolver<ResolversTypes['UdiValue'], ParentType, ContextType>;
 }>;
 
 export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
@@ -923,6 +933,12 @@ export type TotalByMonthResolvers<ContextType = Context, ParentType extends Reso
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type UdiValueResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UdiValue'] = ResolversParentTypes['UdiValue']> = ResolversObject<{
+  amount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  date?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type Resolvers<ContextType = Context> = ResolversObject<{
   Card?: CardResolvers<ContextType>;
   Categories?: CategoriesResolvers<ContextType>;
@@ -951,5 +967,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   TotalByCardId?: TotalByCardIdResolvers<ContextType>;
   TotalByFortnight?: TotalByFortnightResolvers<ContextType>;
   TotalByMonth?: TotalByMonthResolvers<ContextType>;
+  UdiValue?: UdiValueResolvers<ContextType>;
 }>;
 

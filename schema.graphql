@@ -215,6 +215,11 @@ type InvestmentRecord {
   purchasedOn: String!
 }
 
+type UdiValue {
+  amount: String,
+  date: String,
+}
+
 input CreateIncomeInput {
   total: Float!
   comment: String
@@ -350,6 +355,8 @@ type Query {
   periodsList: [Period!]
   period(input: FilterInput!): Period
   allInvestmentRecords:[InvestmentRecord!]
+  #TODO add input for query dates
+  udiValue: UdiValue!
 }
 
 type Mutation {

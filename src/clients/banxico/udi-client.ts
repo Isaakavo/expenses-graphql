@@ -12,19 +12,22 @@ const udiClientInstance = axios.create({
   }
 })
 
+export type UdiDatosResponse = {
+  fecha: string
+  dato: string
+}
+
 type UdiResponse = {
   bmx: {
     series: [{
-      datos: [{
-        fecha: string
-        dato: string
-      }]
+      datos: [UdiDatosResponse]
     }]
 
   }
 }
 
-export const fetchTodayUdiValue = async () => {
+export const fetchTodayUdiValue = async (): Promise<UdiResponse> => {
   const today = formatInTimeZone(new Date(), 'UTC', 'yyyy-MM-dd') ;
-  return await udiClientInstance.get<UdiResponse>(`/datos/${today}/${today}`)
+  const response = await udiClientInstance.get<UdiResponse>(`/datos/${today}/${today}`);
+  return response.data;
 }
