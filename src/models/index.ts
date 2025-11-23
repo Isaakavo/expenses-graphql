@@ -6,4 +6,3 @@ export {
 } from './expense.js'
 export { Income } from './income.js'
 export { SubCategory } from './sub-category.js'
-

@@ -206,6 +206,15 @@ type LoginResponse {
   status: AUTH_STATUS!
 }
 
+type InvestmentRecord {
+  id: ID!
+  userId: ID!
+  amount: String!
+  udiAmount: Float!
+  udiValue: String!
+  purchasedOn: String!
+}
+
 input CreateIncomeInput {
   total: Float!
   comment: String
@@ -340,6 +349,7 @@ type Query {
   cardById(cardId: ID!): Card
   periodsList: [Period!]
   period(input: FilterInput!): Period
+  allInvestmentRecords:[InvestmentRecord!]
 }
 
 type Mutation {

@@ -242,6 +242,16 @@ export type IncomesListAndExpenses = {
   remaining?: Maybe<Scalars['String']['output']>;
 };
 
+export type InvestmentRecord = {
+  __typename?: 'InvestmentRecord';
+  amount: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  purchasedOn: Scalars['String']['output'];
+  udiAmount: Scalars['Float']['output'];
+  udiValue: Scalars['String']['output'];
+  userId: Scalars['ID']['output'];
+};
+
 export type LoginResponse = {
   __typename?: 'LoginResponse';
   status: Auth_Status;
@@ -360,6 +370,7 @@ export type Period = {
 export type Query = {
   __typename?: 'Query';
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
+  allInvestmentRecords?: Maybe<Array<InvestmentRecord>>;
   cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
   categoryAllocation?: Maybe<CategoryAllocation>;
@@ -604,6 +615,7 @@ export type ResolversTypes = ResolversObject<{
   IncomesList: ResolverTypeWrapper<IncomesList>;
   IncomesListAndExpenses: ResolverTypeWrapper<IncomesListAndExpenses>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  InvestmentRecord: ResolverTypeWrapper<InvestmentRecord>;
   LoginResponse: ResolverTypeWrapper<LoginResponse>;
   Mutation: ResolverTypeWrapper<{}>;
   PayBeforeInput: PayBeforeInput;
@@ -655,6 +667,7 @@ export type ResolversParentTypes = ResolversObject<{
   IncomesList: IncomesList;
   IncomesListAndExpenses: IncomesListAndExpenses;
   Int: Scalars['Int']['output'];
+  InvestmentRecord: InvestmentRecord;
   LoginResponse: LoginResponse;
   Mutation: {};
   PayBeforeInput: PayBeforeInput;
@@ -805,6 +818,16 @@ export type IncomesListAndExpensesResolvers<ContextType = Context, ParentType ex
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type InvestmentRecordResolvers<ContextType = Context, ParentType extends ResolversParentTypes['InvestmentRecord'] = ResolversParentTypes['InvestmentRecord']> = ResolversObject<{
+  amount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  purchasedOn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  udiAmount?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  udiValue?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type LoginResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['LoginResponse'] = ResolversParentTypes['LoginResponse']> = ResolversObject<{
   status?: Resolver<ResolversTypes['AUTH_STATUS'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -845,6 +868,7 @@ export type PeriodResolvers<ContextType = Context, ParentType extends ResolversP
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  allInvestmentRecords?: Resolver<Maybe<Array<ResolversTypes['InvestmentRecord']>>, ParentType, ContextType>;
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
   categoryAllocation?: Resolver<Maybe<ResolversTypes['CategoryAllocation']>, ParentType, ContextType, RequireFields<QueryCategoryAllocationArgs, 'input'>>;
@@ -916,6 +940,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   IncomesGroupedBy?: IncomesGroupedByResolvers<ContextType>;
   IncomesList?: IncomesListResolvers<ContextType>;
   IncomesListAndExpenses?: IncomesListAndExpensesResolvers<ContextType>;
+  InvestmentRecord?: InvestmentRecordResolvers<ContextType>;
   LoginResponse?: LoginResponseResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   PaymentDate?: PaymentDateResolvers<ContextType>;
