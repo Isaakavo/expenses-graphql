@@ -7,14 +7,15 @@ export class InvestmentRecord extends Model {
   public udiAmount!: number;
   public udiValue!: number;
   public purchasedOn!: Date;
+  public udi_commission!: number;
 }
 
 export function initInvestmentRecordModel(sequelize: Sequelize) {
   InvestmentRecord.init(
     {
       id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
         primaryKey: true,
       },
       userId: {
@@ -41,6 +42,11 @@ export function initInvestmentRecordModel(sequelize: Sequelize) {
         type: DataTypes.DATE,
         allowNull: false,
         field: 'date_purchase',
+      },
+      udi_commission: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: 'udi_commission',
       }
     },
     {

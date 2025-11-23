@@ -335,6 +335,12 @@ input UpdateCategoryAllocationInput {
     percentage: Float!
 }
 
+input InvestmentRecordInput {
+    amount: Float!
+    date: Date!
+    udiValue: Float
+}
+
 type Query {
   login: LoginResponse!
   incomesList: IncomesList
@@ -374,4 +380,5 @@ type Mutation {
   updateCategorySetting(input: UpdateCategorySettingInput!): CategorySettings!
   deleteCategorySetting(categoryId: ID!): CategorySetting!
   updateCategoryAllocation(input: UpdateCategoryAllocationInput): CategorySetting!
+  createInvestmentRecord(input: InvestmentRecordInput): InvestmentRecord!
 }

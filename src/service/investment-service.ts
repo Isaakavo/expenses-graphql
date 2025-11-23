@@ -1,4 +1,4 @@
-import {InvestmentRepository} from '../repository/investment-repository.js';
+import {InvestmentRecordInput, InvestmentRepository} from '../repository/investment-repository.js';
 import {Sequelize} from 'sequelize';
 import {fetchTodayUdiValue, UdiDatosResponse} from '../clients/banxico/udi-client.js';
 
@@ -11,6 +11,19 @@ export class InvestmentService {
     this.userId = userId;
     this.sequelize = sequelize;
     this.investmentRepository = new InvestmentRepository(userId, sequelize);
+  }
+
+  async createInvestmentRecord(input: InvestmentRecordInput) {
+    const { amount, udiValue, purchasedOn } = input;
+    const calculatedUdiValue = udiValue ?? Number((await this.fetchUdiValue()).dato)
+    const totalOfUdis = amount / calculatedUdiValue;
+
+    return await this.investmentRepository.createInvestmentRecord({
+      amount,
+      udiValue: calculatedUdiValue,
+      udiAmount: totalOfUdis,
+      purchasedOn,
+    })
   }
 
   async getAllInvestmentRecords() {

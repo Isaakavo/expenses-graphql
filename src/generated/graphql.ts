@@ -252,6 +252,12 @@ export type InvestmentRecord = {
   userId: Scalars['ID']['output'];
 };
 
+export type InvestmentRecordInput = {
+  amount: Scalars['Float']['input'];
+  date: Scalars['Date']['input'];
+  udiValue?: InputMaybe<Scalars['Float']['input']>;
+};
+
 export type LoginResponse = {
   __typename?: 'LoginResponse';
   status: Auth_Status;
@@ -264,6 +270,7 @@ export type Mutation = {
   createExpense?: Maybe<Expense>;
   createFixedExpense?: Maybe<Array<Maybe<Expense>>>;
   createIncome: Income;
+  createInvestmentRecord: InvestmentRecord;
   deleteCard: Scalars['Boolean']['output'];
   deleteCategorySetting: CategorySetting;
   deleteExpense: Scalars['Boolean']['output'];
@@ -298,6 +305,11 @@ export type MutationCreateFixedExpenseArgs = {
 
 export type MutationCreateIncomeArgs = {
   input: CreateIncomeInput;
+};
+
+
+export type MutationCreateInvestmentRecordArgs = {
+  input?: InputMaybe<InvestmentRecordInput>;
 };
 
 
@@ -623,6 +635,7 @@ export type ResolversTypes = ResolversObject<{
   IncomesListAndExpenses: ResolverTypeWrapper<IncomesListAndExpenses>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
   InvestmentRecord: ResolverTypeWrapper<InvestmentRecord>;
+  InvestmentRecordInput: InvestmentRecordInput;
   LoginResponse: ResolverTypeWrapper<LoginResponse>;
   Mutation: ResolverTypeWrapper<{}>;
   PayBeforeInput: PayBeforeInput;
@@ -676,6 +689,7 @@ export type ResolversParentTypes = ResolversObject<{
   IncomesListAndExpenses: IncomesListAndExpenses;
   Int: Scalars['Int']['output'];
   InvestmentRecord: InvestmentRecord;
+  InvestmentRecordInput: InvestmentRecordInput;
   LoginResponse: LoginResponse;
   Mutation: {};
   PayBeforeInput: PayBeforeInput;
@@ -848,6 +862,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'input'>>;
   createFixedExpense?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<MutationCreateFixedExpenseArgs>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
+  createInvestmentRecord?: Resolver<ResolversTypes['InvestmentRecord'], ParentType, ContextType, Partial<MutationCreateInvestmentRecordArgs>>;
   deleteCard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteCardArgs, 'id'>>;
   deleteCategorySetting?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, RequireFields<MutationDeleteCategorySettingArgs, 'categoryId'>>;
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
