@@ -1,6 +1,8 @@
 import {InvestmentRecord} from '../models/investment-record.js';
 import {Sequelize} from 'sequelize';
-import {adaptInvestmentDTO} from '../adapters/investment-adapter.js';
+import {adaptInvestmentDTO, adaptInvestmentFeeDTO} from '../adapters/investment-adapter.js';
+import {InvestmentFeeRecord} from '../models/investment-fee-record.js';
+import {InvestmentDto} from '../dto/investment-dto.js';
 
 
 export type InvestmentRecordInput = {
@@ -19,7 +21,7 @@ export class InvestmentRepository {
     this.sequelize = sequelize;
   }
 
-  async createInvestmentRecord(input: InvestmentRecordInput) {
+  async createInvestmentRecord(input: InvestmentRecordInput): Promise<InvestmentDto> {
     const inserted = await InvestmentRecord.create({
       ...input,
       userId: this.userId,
@@ -35,9 +37,15 @@ export class InvestmentRepository {
       where: {
         userId: this.userId,
       },
-      // order: [['date_purchase', 'DESC']],
+      order: [['date_purchase', 'DESC']],
     });
 
     return investments.map((investment) => adaptInvestmentDTO(investment));
+  }
+
+  async getInvestmentFee(id: number) {
+    const investments = await InvestmentFeeRecord.findByPk(id)
+
+    return adaptInvestmentFeeDTO(investments)
   }
 }

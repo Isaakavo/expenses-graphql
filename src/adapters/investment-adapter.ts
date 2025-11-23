@@ -3,6 +3,7 @@ import {InvestmentRecord as InvestmentRecordModel } from 'models/investment-reco
 import {InvestmentDto} from '../dto/investment-dto.js';
 import {formatCurrency} from './income-adapter.js';
 import { formatInTimeZone } from 'date-fns-tz';
+import {InvestmentFeeRecord} from '../models/investment-fee-record';
 
 export const adaptInvestment = (investmentRecordDTO: InvestmentDto): InvestmentRecord => {
   return {
@@ -10,7 +11,11 @@ export const adaptInvestment = (investmentRecordDTO: InvestmentDto): InvestmentR
     userId: investmentRecordDTO.userId,
     amount: formatCurrency(investmentRecordDTO.amount),
     udiAmount: investmentRecordDTO.udiAmount,
-    udiValue: formatCurrency(investmentRecordDTO.udiValue),
+    udiValue: `$${investmentRecordDTO.udiValue}`,
+    monthlyPremium: investmentRecordDTO.monthlyBonus,
+    fee: investmentRecordDTO.udiCommission,
+    conversion: formatCurrency(investmentRecordDTO.conversion),
+    feeConversion: formatCurrency(investmentRecordDTO.feeConversion),
     purchasedOn: formatInTimeZone(investmentRecordDTO.purchasedOn, 'UTC', 'dd MMM yyyy'),
   }
 }
@@ -23,5 +28,17 @@ export const adaptInvestmentDTO = (investmentRecord: InvestmentRecordModel) => {
     udiAmount: investmentRecord.udiAmount,
     udiValue: investmentRecord.udiValue,
     purchasedOn: investmentRecord.purchasedOn,
+  }
+}
+
+export const adaptInvestmentFeeDTO = (investmentFee: InvestmentFeeRecord) => {
+  return {
+    id: investmentFee.id,
+    userId: investmentFee.userId,
+    monthlyBonus: investmentFee.monthlyBonus,
+    udiCommission: investmentFee.udiCommission,
+    yearlyBonus: investmentFee.yearlyBonus,
+    monthlyTotalBonus: investmentFee.monthlyTotalBonus,
+    dateAdded: investmentFee.dateAdded,
   }
 }

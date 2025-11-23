@@ -19,6 +19,6 @@ export const allInvestmentRecords: QueryResolvers['allInvestmentRecords'] = asyn
 
     return investments.map((investment) => adaptInvestment(investment));
   }catch (e) {
-    logger.error(`all investment records: ${e.message}`)
+    logger.error(`all investment records: ${e.message} - ${e.stack}`)
   }
 }

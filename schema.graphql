@@ -212,6 +212,10 @@ type InvestmentRecord {
   amount: String!
   udiAmount: Float!
   udiValue: String!
+  monthlyPremium: Float
+  fee: Float
+  conversion: String
+  feeConversion: String
   purchasedOn: String!
 }
 

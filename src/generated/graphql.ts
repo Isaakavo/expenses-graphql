@@ -245,7 +245,11 @@ export type IncomesListAndExpenses = {
 export type InvestmentRecord = {
   __typename?: 'InvestmentRecord';
   amount: Scalars['String']['output'];
+  conversion?: Maybe<Scalars['String']['output']>;
+  fee?: Maybe<Scalars['Float']['output']>;
+  feeConversion?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  monthlyPremium?: Maybe<Scalars['Float']['output']>;
   purchasedOn: Scalars['String']['output'];
   udiAmount: Scalars['Float']['output'];
   udiValue: Scalars['String']['output'];
@@ -843,7 +847,11 @@ export type IncomesListAndExpensesResolvers<ContextType = Context, ParentType ex
 
 export type InvestmentRecordResolvers<ContextType = Context, ParentType extends ResolversParentTypes['InvestmentRecord'] = ResolversParentTypes['InvestmentRecord']> = ResolversObject<{
   amount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  conversion?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  fee?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  feeConversion?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  monthlyPremium?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   purchasedOn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   udiAmount?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   udiValue?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

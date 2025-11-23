@@ -11,7 +11,8 @@ import {
 import { initIncomeModel } from './income.js';
 import { initPeriodsModel } from './periods.js';
 import { initSubCategoryModel } from './sub-category.js';
-import {initInvestmentRecordModel} from './investment-record.js';
+import { initInvestmentRecordModel } from './investment-record.js';
+import { initInvestmentFeeRecordModel } from './investment-fee-record.js';
 
 export const initModels = (sequelize: Sequelize) => {
   initExpenseModel(sequelize);
@@ -23,4 +24,5 @@ export const initModels = (sequelize: Sequelize) => {
   initUserCategoryAllocationTemplateModel(sequelize);
   initPeriodsModel(sequelize);
   initInvestmentRecordModel(sequelize);
+  initInvestmentFeeRecordModel(sequelize);
 };
