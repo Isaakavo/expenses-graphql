@@ -219,6 +219,14 @@ type InvestmentRecord {
   purchasedOn: String!
 }
 
+type InvestmentDetail {
+    totalSpent: String!
+    totalOfUdis: Float!
+    udiValue: String!
+    financialReturn: String!
+    conversion: String!
+}
+
 type UdiValue {
   amount: String,
   date: String,
@@ -365,6 +373,7 @@ type Query {
   periodsList: [Period!]
   period(input: FilterInput!): Period
   allInvestmentRecords:[InvestmentRecord!]
+  investmentDetails: InvestmentDetail!
   #TODO add input for query dates
   udiValue: UdiValue!
 }

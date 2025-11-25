@@ -242,6 +242,15 @@ export type IncomesListAndExpenses = {
   remaining?: Maybe<Scalars['String']['output']>;
 };
 
+export type InvestmentDetail = {
+  __typename?: 'InvestmentDetail';
+  conversion: Scalars['String']['output'];
+  financialReturn: Scalars['String']['output'];
+  totalOfUdis: Scalars['Float']['output'];
+  totalSpent: Scalars['String']['output'];
+  udiValue: Scalars['String']['output'];
+};
+
 export type InvestmentRecord = {
   __typename?: 'InvestmentRecord';
   amount: Scalars['String']['output'];
@@ -398,6 +407,7 @@ export type Query = {
   incomesGroupedBy?: Maybe<Array<IncomesGroupedBy>>;
   incomesList?: Maybe<IncomesList>;
   incomesWithExpenses: IncomesListAndExpenses;
+  investmentDetails: InvestmentDetail;
   login: LoginResponse;
   period?: Maybe<Period>;
   periodsList?: Maybe<Array<Period>>;
@@ -638,6 +648,7 @@ export type ResolversTypes = ResolversObject<{
   IncomesList: ResolverTypeWrapper<IncomesList>;
   IncomesListAndExpenses: ResolverTypeWrapper<IncomesListAndExpenses>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  InvestmentDetail: ResolverTypeWrapper<InvestmentDetail>;
   InvestmentRecord: ResolverTypeWrapper<InvestmentRecord>;
   InvestmentRecordInput: InvestmentRecordInput;
   LoginResponse: ResolverTypeWrapper<LoginResponse>;
@@ -692,6 +703,7 @@ export type ResolversParentTypes = ResolversObject<{
   IncomesList: IncomesList;
   IncomesListAndExpenses: IncomesListAndExpenses;
   Int: Scalars['Int']['output'];
+  InvestmentDetail: InvestmentDetail;
   InvestmentRecord: InvestmentRecord;
   InvestmentRecordInput: InvestmentRecordInput;
   LoginResponse: LoginResponse;
@@ -845,6 +857,15 @@ export type IncomesListAndExpensesResolvers<ContextType = Context, ParentType ex
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type InvestmentDetailResolvers<ContextType = Context, ParentType extends ResolversParentTypes['InvestmentDetail'] = ResolversParentTypes['InvestmentDetail']> = ResolversObject<{
+  conversion?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  financialReturn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  totalOfUdis?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  totalSpent?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  udiValue?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type InvestmentRecordResolvers<ContextType = Context, ParentType extends ResolversParentTypes['InvestmentRecord'] = ResolversParentTypes['InvestmentRecord']> = ResolversObject<{
   amount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   conversion?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -912,6 +933,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   incomesGroupedBy?: Resolver<Maybe<Array<ResolversTypes['IncomesGroupedBy']>>, ParentType, ContextType>;
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
   incomesWithExpenses?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesWithExpensesArgs, 'input'>>;
+  investmentDetails?: Resolver<ResolversTypes['InvestmentDetail'], ParentType, ContextType>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
   period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType, RequireFields<QueryPeriodArgs, 'input'>>;
   periodsList?: Resolver<Maybe<Array<ResolversTypes['Period']>>, ParentType, ContextType>;
@@ -979,6 +1001,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   IncomesGroupedBy?: IncomesGroupedByResolvers<ContextType>;
   IncomesList?: IncomesListResolvers<ContextType>;
   IncomesListAndExpenses?: IncomesListAndExpensesResolvers<ContextType>;
+  InvestmentDetail?: InvestmentDetailResolvers<ContextType>;
   InvestmentRecord?: InvestmentRecordResolvers<ContextType>;
   LoginResponse?: LoginResponseResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;

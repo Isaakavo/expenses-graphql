@@ -16,6 +16,7 @@ import {
   periodsList,
   period,
   allInvestmentRecords,
+  investmentDetails,
   udiValue,
 } from './query/index.js';
 
@@ -36,6 +37,7 @@ const queries: QueryResolvers = {
   periodsList,
   period,
   allInvestmentRecords,
+  investmentDetails,
   udiValue,
 };
 

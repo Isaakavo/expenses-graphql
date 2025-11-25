@@ -43,6 +43,30 @@ export class InvestmentService {
     ))
   }
 
+  async calculateInvestmentDetails() {
+    const investmentsPromise = this.getAllInvestmentRecords();
+    const udiValuePromise = this.fetchUdiValue();
+
+    const [investments, udiValue] = await Promise.all([investmentsPromise, udiValuePromise]);
+
+    const totalSpent = investments.reduce((prev, investment) => {
+      return investment.amount + prev
+    }, 0);
+    const totalOfUdis = investments.reduce((prev, investment) => {
+      return prev + investment.udiAmount
+    }, 0);
+    const conversion = totalOfUdis * Number(udiValue.dato);
+    const financialReturn = conversion - totalSpent;
+
+    return {
+      totalSpent,
+      totalOfUdis,
+      udiValue: udiValue.dato,
+      financialReturn,
+      conversion,
+    }
+  }
+
   async fetchUdiValue(): Promise<UdiDatosResponse> {
     const result = (await fetchTodayUdiValue()).bmx.series[0].datos[0]
     return {

@@ -14,4 +14,5 @@ export { categoryList } from './category/category-list.js';
 export { periodsList } from './period/periods-list.js';
 export { period } from './period/period.js'
 export { allInvestmentRecords } from './investment/all-investment-records.js'
+export { investmentDetails } from './investment/investment-details.js'
 export { udiValue } from './investment/udi-value.js'
