@@ -206,6 +206,32 @@ type LoginResponse {
   status: AUTH_STATUS!
 }
 
+type InvestmentRecord {
+  id: ID!
+  userId: ID!
+  amount: String!
+  udiAmount: Float!
+  udiValue: String!
+  monthlyPremium: Float
+  fee: Float
+  conversion: String
+  feeConversion: String
+  purchasedOn: String!
+}
+
+type InvestmentDetail {
+    totalSpent: String!
+    totalOfUdis: Float!
+    udiValue: String!
+    financialReturn: String!
+    conversion: String!
+}
+
+type UdiValue {
+  amount: String,
+  date: String,
+}
+
 input CreateIncomeInput {
   total: Float!
   comment: String
@@ -321,6 +347,12 @@ input UpdateCategoryAllocationInput {
     percentage: Float!
 }
 
+input InvestmentRecordInput {
+    amount: Float!
+    date: Date!
+    udiValue: Float
+}
+
 type Query {
   login: LoginResponse!
   incomesList: IncomesList
@@ -340,6 +372,10 @@ type Query {
   cardById(cardId: ID!): Card
   periodsList: [Period!]
   period(input: FilterInput!): Period
+  allInvestmentRecords:[InvestmentRecord!]
+  investmentDetails: InvestmentDetail!
+  #TODO add input for query dates
+  udiValue: UdiValue!
 }
 
 type Mutation {
@@ -357,4 +393,5 @@ type Mutation {
   updateCategorySetting(input: UpdateCategorySettingInput!): CategorySettings!
   deleteCategorySetting(categoryId: ID!): CategorySetting!
   updateCategoryAllocation(input: UpdateCategoryAllocationInput): CategorySetting!
+  createInvestmentRecord(input: InvestmentRecordInput): InvestmentRecord!
 }

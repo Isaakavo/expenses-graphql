@@ -242,6 +242,35 @@ export type IncomesListAndExpenses = {
   remaining?: Maybe<Scalars['String']['output']>;
 };
 
+export type InvestmentDetail = {
+  __typename?: 'InvestmentDetail';
+  conversion: Scalars['String']['output'];
+  financialReturn: Scalars['String']['output'];
+  totalOfUdis: Scalars['Float']['output'];
+  totalSpent: Scalars['String']['output'];
+  udiValue: Scalars['String']['output'];
+};
+
+export type InvestmentRecord = {
+  __typename?: 'InvestmentRecord';
+  amount: Scalars['String']['output'];
+  conversion?: Maybe<Scalars['String']['output']>;
+  fee?: Maybe<Scalars['Float']['output']>;
+  feeConversion?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  monthlyPremium?: Maybe<Scalars['Float']['output']>;
+  purchasedOn: Scalars['String']['output'];
+  udiAmount: Scalars['Float']['output'];
+  udiValue: Scalars['String']['output'];
+  userId: Scalars['ID']['output'];
+};
+
+export type InvestmentRecordInput = {
+  amount: Scalars['Float']['input'];
+  date: Scalars['Date']['input'];
+  udiValue?: InputMaybe<Scalars['Float']['input']>;
+};
+
 export type LoginResponse = {
   __typename?: 'LoginResponse';
   status: Auth_Status;
@@ -254,6 +283,7 @@ export type Mutation = {
   createExpense?: Maybe<Expense>;
   createFixedExpense?: Maybe<Array<Maybe<Expense>>>;
   createIncome: Income;
+  createInvestmentRecord: InvestmentRecord;
   deleteCard: Scalars['Boolean']['output'];
   deleteCategorySetting: CategorySetting;
   deleteExpense: Scalars['Boolean']['output'];
@@ -288,6 +318,11 @@ export type MutationCreateFixedExpenseArgs = {
 
 export type MutationCreateIncomeArgs = {
   input: CreateIncomeInput;
+};
+
+
+export type MutationCreateInvestmentRecordArgs = {
+  input?: InputMaybe<InvestmentRecordInput>;
 };
 
 
@@ -360,6 +395,7 @@ export type Period = {
 export type Query = {
   __typename?: 'Query';
   allExpenses?: Maybe<Array<Maybe<Expense>>>;
+  allInvestmentRecords?: Maybe<Array<InvestmentRecord>>;
   cardById?: Maybe<Card>;
   cardList?: Maybe<Array<Maybe<Card>>>;
   categoryAllocation?: Maybe<CategoryAllocation>;
@@ -371,9 +407,11 @@ export type Query = {
   incomesGroupedBy?: Maybe<Array<IncomesGroupedBy>>;
   incomesList?: Maybe<IncomesList>;
   incomesWithExpenses: IncomesListAndExpenses;
+  investmentDetails: InvestmentDetail;
   login: LoginResponse;
   period?: Maybe<Period>;
   periodsList?: Maybe<Array<Period>>;
+  udiValue: UdiValue;
 };
 
 
@@ -446,6 +484,12 @@ export type TotalByMonth = Total & {
   month: Scalars['String']['output'];
   total: Scalars['Float']['output'];
   year: Scalars['String']['output'];
+};
+
+export type UdiValue = {
+  __typename?: 'UdiValue';
+  amount?: Maybe<Scalars['String']['output']>;
+  date?: Maybe<Scalars['String']['output']>;
 };
 
 export type UpdateCardInput = {
@@ -604,6 +648,9 @@ export type ResolversTypes = ResolversObject<{
   IncomesList: ResolverTypeWrapper<IncomesList>;
   IncomesListAndExpenses: ResolverTypeWrapper<IncomesListAndExpenses>;
   Int: ResolverTypeWrapper<Scalars['Int']['output']>;
+  InvestmentDetail: ResolverTypeWrapper<InvestmentDetail>;
+  InvestmentRecord: ResolverTypeWrapper<InvestmentRecord>;
+  InvestmentRecordInput: InvestmentRecordInput;
   LoginResponse: ResolverTypeWrapper<LoginResponse>;
   Mutation: ResolverTypeWrapper<{}>;
   PayBeforeInput: PayBeforeInput;
@@ -616,6 +663,7 @@ export type ResolversTypes = ResolversObject<{
   TotalByCardId: ResolverTypeWrapper<TotalByCardId>;
   TotalByFortnight: ResolverTypeWrapper<TotalByFortnight>;
   TotalByMonth: ResolverTypeWrapper<TotalByMonth>;
+  UdiValue: ResolverTypeWrapper<UdiValue>;
   UpdateCardInput: UpdateCardInput;
   UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
   UpdateCategorySettingInput: UpdateCategorySettingInput;
@@ -655,6 +703,9 @@ export type ResolversParentTypes = ResolversObject<{
   IncomesList: IncomesList;
   IncomesListAndExpenses: IncomesListAndExpenses;
   Int: Scalars['Int']['output'];
+  InvestmentDetail: InvestmentDetail;
+  InvestmentRecord: InvestmentRecord;
+  InvestmentRecordInput: InvestmentRecordInput;
   LoginResponse: LoginResponse;
   Mutation: {};
   PayBeforeInput: PayBeforeInput;
@@ -667,6 +718,7 @@ export type ResolversParentTypes = ResolversObject<{
   TotalByCardId: TotalByCardId;
   TotalByFortnight: TotalByFortnight;
   TotalByMonth: TotalByMonth;
+  UdiValue: UdiValue;
   UpdateCardInput: UpdateCardInput;
   UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
   UpdateCategorySettingInput: UpdateCategorySettingInput;
@@ -805,6 +857,29 @@ export type IncomesListAndExpensesResolvers<ContextType = Context, ParentType ex
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type InvestmentDetailResolvers<ContextType = Context, ParentType extends ResolversParentTypes['InvestmentDetail'] = ResolversParentTypes['InvestmentDetail']> = ResolversObject<{
+  conversion?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  financialReturn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  totalOfUdis?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  totalSpent?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  udiValue?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type InvestmentRecordResolvers<ContextType = Context, ParentType extends ResolversParentTypes['InvestmentRecord'] = ResolversParentTypes['InvestmentRecord']> = ResolversObject<{
+  amount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  conversion?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  fee?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  feeConversion?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  monthlyPremium?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
+  purchasedOn?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  udiAmount?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  udiValue?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type LoginResponseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['LoginResponse'] = ResolversParentTypes['LoginResponse']> = ResolversObject<{
   status?: Resolver<ResolversTypes['AUTH_STATUS'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -816,6 +891,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateExpenseArgs, 'input'>>;
   createFixedExpense?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<MutationCreateFixedExpenseArgs>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
+  createInvestmentRecord?: Resolver<ResolversTypes['InvestmentRecord'], ParentType, ContextType, Partial<MutationCreateInvestmentRecordArgs>>;
   deleteCard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteCardArgs, 'id'>>;
   deleteCategorySetting?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, RequireFields<MutationDeleteCategorySettingArgs, 'categoryId'>>;
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
@@ -845,6 +921,7 @@ export type PeriodResolvers<ContextType = Context, ParentType extends ResolversP
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = ResolversObject<{
   allExpenses?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType>;
+  allInvestmentRecords?: Resolver<Maybe<Array<ResolversTypes['InvestmentRecord']>>, ParentType, ContextType>;
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
   categoryAllocation?: Resolver<Maybe<ResolversTypes['CategoryAllocation']>, ParentType, ContextType, RequireFields<QueryCategoryAllocationArgs, 'input'>>;
@@ -856,9 +933,11 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   incomesGroupedBy?: Resolver<Maybe<Array<ResolversTypes['IncomesGroupedBy']>>, ParentType, ContextType>;
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
   incomesWithExpenses?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesWithExpensesArgs, 'input'>>;
+  investmentDetails?: Resolver<ResolversTypes['InvestmentDetail'], ParentType, ContextType>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
   period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType, RequireFields<QueryPeriodArgs, 'input'>>;
   periodsList?: Resolver<Maybe<Array<ResolversTypes['Period']>>, ParentType, ContextType>;
+  udiValue?: Resolver<ResolversTypes['UdiValue'], ParentType, ContextType>;
 }>;
 
 export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
@@ -899,6 +978,12 @@ export type TotalByMonthResolvers<ContextType = Context, ParentType extends Reso
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type UdiValueResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UdiValue'] = ResolversParentTypes['UdiValue']> = ResolversObject<{
+  amount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  date?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type Resolvers<ContextType = Context> = ResolversObject<{
   Card?: CardResolvers<ContextType>;
   Categories?: CategoriesResolvers<ContextType>;
@@ -916,6 +1001,8 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   IncomesGroupedBy?: IncomesGroupedByResolvers<ContextType>;
   IncomesList?: IncomesListResolvers<ContextType>;
   IncomesListAndExpenses?: IncomesListAndExpensesResolvers<ContextType>;
+  InvestmentDetail?: InvestmentDetailResolvers<ContextType>;
+  InvestmentRecord?: InvestmentRecordResolvers<ContextType>;
   LoginResponse?: LoginResponseResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   PaymentDate?: PaymentDateResolvers<ContextType>;
@@ -926,5 +1013,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   TotalByCardId?: TotalByCardIdResolvers<ContextType>;
   TotalByFortnight?: TotalByFortnightResolvers<ContextType>;
   TotalByMonth?: TotalByMonthResolvers<ContextType>;
+  UdiValue?: UdiValueResolvers<ContextType>;
 }>;
 
