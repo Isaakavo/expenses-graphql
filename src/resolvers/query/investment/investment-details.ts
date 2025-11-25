@@ -19,7 +19,7 @@ export const investmentDetails: QueryResolvers['investmentDetails'] = async (
 
     return {
       totalSpent: formatCurrency(result.totalSpent),
-      totalOfUdis: result.totalOfUdis,
+      totalOfUdis: Number(result.totalOfUdis.toFixed(2)),
       udiValue: result.udiValue,
       financialReturn: formatCurrency(result.financialReturn),
       conversion: formatCurrency(result.conversion),
