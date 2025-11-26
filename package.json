@@ -46,7 +46,7 @@
   "scripts": {
     "codegen": "graphql-codegen --config codegen.ts",
     "codegen:watch": "graphql-codegen --watch --config codegen.ts",
-    "copy-assets": "cp -r ./migrations ./seeders ./config ./.sequelizerc ./dist/",
+    "copy-assets": "cp -r ./migrations ./seeders ./config ./dist/",
     "compile": "tsc",
     "delete:dist": "rm -rf ./dist",
     "build": "pnpm delete:dist && pnpm codegen && pnpm compile && pnpm copy-assets",
