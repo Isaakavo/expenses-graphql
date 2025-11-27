@@ -66,8 +66,8 @@ export class ExpensesService {
       const updated = await this.expenseRepository.updateExpense(
         id,
         {
+          ...input,
           periodId: period.id,
-          ...input
         },
         {
           transaction,
