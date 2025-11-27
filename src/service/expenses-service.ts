@@ -63,9 +63,16 @@ export class ExpensesService {
         logger.error('No period found for the given payBefore date');
       }
 
-      const updated = await this.expenseRepository.updateExpense(id, input, {
-        transaction,
-      });
+      const updated = await this.expenseRepository.updateExpense(
+        id,
+        {
+          ...input,
+          periodId: period.id,
+        },
+        {
+          transaction,
+        }
+      );
       await transaction.commit();
       return updated;
     } catch (error) {
