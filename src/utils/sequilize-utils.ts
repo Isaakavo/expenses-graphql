@@ -59,7 +59,7 @@ export const updateElement = async (
     return updatedElement;
   } catch (error) {
     logger.error(error);
-    return error
+    throw error;
   }
 };
 

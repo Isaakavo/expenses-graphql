@@ -1,5 +1,4 @@
 import { MutationResolvers } from '../../../generated/graphql.js';
-import { logger } from '../../../logger.js';
 import { ExpensesService } from '../../../service/expenses-service.js';
 
 export const deleteExpense: MutationResolvers['deleteExpense'] = async (
@@ -7,15 +6,10 @@ export const deleteExpense: MutationResolvers['deleteExpense'] = async (
   { id },
   context
 ) => {
-  try {
-    const {
-      user: { userId },
-    } = context;
-    const expenseService = new ExpensesService(userId, context.sequelizeClient);
+  const {
+    user: { userId },
+  } = context;
+  const expenseService = new ExpensesService(userId, context.sequelizeClient);
 
-    return expenseService.deleteExpense(id);
-  } catch (error) {
-    logger.error(error);
-    return error;
-  }
+  return expenseService.deleteExpense(id);
 };

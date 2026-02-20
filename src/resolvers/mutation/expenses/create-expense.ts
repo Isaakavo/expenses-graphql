@@ -7,12 +7,8 @@ export const createExpense: MutationResolvers['createExpense'] = async (
   { input },
   { user: { userId } }
 ) => {
-  try {
-    const expenseService = new ExpensesService(userId);
-    const newExpense = await expenseService.createExpense(input);
+  const expenseService = new ExpensesService(userId);
+  const newExpense = await expenseService.createExpense(input);
 
-    return adaptExpensesDTOInput(newExpense);
-  } catch (error) {
-    console.log(error.message);
-  }
+  return adaptExpensesDTOInput(newExpense);
 };
