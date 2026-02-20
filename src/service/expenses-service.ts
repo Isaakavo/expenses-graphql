@@ -87,7 +87,7 @@ export class ExpensesService {
   }
 
   async getAllExpenses(queryOptions?: FindOptions) {
-    return this.expenseRepository.getAllExpenses(this.userId, queryOptions);
+    return this.expenseRepository.getAllExpenses(queryOptions);
   }
 
   async getExpensesByPeriod(

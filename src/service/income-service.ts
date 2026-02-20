@@ -47,7 +47,6 @@ export class IncomeService {
     const parsedEndDate = endDate ? CustomDate.parseValue(endDate) : undefined;
 
     const incomes = await this.incomeRepository.getIncomeByPeriod(
-      this.userId,
       periodId,
       parsedStartDate,
       parsedEndDate

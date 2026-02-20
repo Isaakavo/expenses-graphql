@@ -12,7 +12,7 @@ import { logger } from './logger.js';
 import { GraphQLError } from 'graphql';
 
 export interface User {
-  userId?: string;
+  userId: string;
   exp?: number;
   tokenUse?: string;
   authTime?: string;
@@ -22,7 +22,7 @@ export interface User {
 export interface Context {
   sequelizeClient: Sequelize;
   axiosClient: AxiosInstance;
-  user?: User;
+  user: User;
 }
 
 const startServer = async () => {

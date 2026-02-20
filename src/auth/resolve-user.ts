@@ -10,7 +10,7 @@ export const resolverUser = async (req: IncomingMessage) => {
 };
 
 export const validateUserToken = (decodedUser: User) => {
-  if (!decodedUser) {
+  if (!decodedUser || !decodedUser.userId) {
     throw new GraphQLError('User token is not valid', {
       extensions: {
         code: 'INVALID_JWT',
@@ -19,5 +19,5 @@ export const validateUserToken = (decodedUser: User) => {
     });
   }
 
-  return decodedUser;
+  return decodedUser as User & { userId: string };
 };
