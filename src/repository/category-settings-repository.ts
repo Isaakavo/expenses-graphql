@@ -68,12 +68,14 @@ export class CategorySettingsRepository {
   }
 
   async getCategorySettingByPk(id: string, options: { transaction?: Transaction } = {}) {
-    const setting = await CategorySettings.findByPk(id,
-      {
-        include: [{model: Category, as: 'category'}],
-        transaction: options.transaction
+    const setting = await CategorySettings.findOne({
+      where: {
+        id,
+        userId: this.userId,
       },
-    )
+      include: [{model: Category, as: 'category'}],
+      transaction: options.transaction,
+    })
 
     return adaptCategorySettingDTO(setting)
   }

@@ -45,12 +45,11 @@ export class IncomeRepository {
   }
 
   async getIncomeByPeriod(
-    userId: string,
     periodId?: string,
     startDate?: Date,
     endDate?: Date
   ) {
-    const where: FindOptions['where'] = { userId };
+    const where: FindOptions['where'] = { userId: this.userId };
 
     if (periodId) {
       where.periodId = periodId;
@@ -66,7 +65,7 @@ export class IncomeRepository {
         {
           model: Period,
           as: 'period',
-          where: { userId },
+          where: { userId: this.userId },
         },
       ],
       order: [['paymentDate', 'DESC']],
@@ -88,6 +87,7 @@ export class IncomeRepository {
       ) AS incomes
       FROM incomes i
       LEFT JOIN periods p ON i.period_id = p.id
+      WHERE i.user_id = :userId
       GROUP BY month
       ORDER BY month DESC;
     `,

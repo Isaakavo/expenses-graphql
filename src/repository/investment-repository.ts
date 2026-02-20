@@ -44,7 +44,12 @@ export class InvestmentRepository {
   }
 
   async getInvestmentFee(id: number) {
-    const investments = await InvestmentFeeRecord.findByPk(id)
+    const investments = await InvestmentFeeRecord.findOne({
+      where: {
+        id,
+        userId: this.userId,
+      },
+    })
 
     return adaptInvestmentFeeDTO(investments)
   }

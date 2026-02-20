@@ -73,7 +73,11 @@ export class CategoryAllocationRepository {
     id: string,
     options: { transaction?: Transaction } = {}
   ) {
-    const allocation = await IncomeCategoryAllocation.findByPk(id, {
+    const allocation = await IncomeCategoryAllocation.findOne({
+      where: {
+        id,
+        userId: this.userId,
+      },
       include: [
         { model: Category, as: 'category' },
         { model: Income, as: 'income' },

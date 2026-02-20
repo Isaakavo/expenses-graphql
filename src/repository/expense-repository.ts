@@ -77,14 +77,13 @@ export class ExpenseRepository {
   }
 
   async getAllExpenses(
-    userId: string,
     queryOptions?: FindOptions
   ): Promise<ExpenseDTO[]> {
     const { limit, where } = queryOptions ?? {};
     const response = await Expense.findAll({
       where: {
         ...where,
-        userId,
+        userId: this.userId,
       },
       include: [
         {
@@ -95,7 +94,7 @@ export class ExpenseRepository {
               model: Category,
               as: 'category',
               where: {
-                [Op.or]: [{ userId: null }, { userId }],
+                [Op.or]: [{ userId: null }, { userId: this.userId }],
               },
             },
           ],
@@ -255,7 +254,11 @@ export class ExpenseRepository {
     id: string,
     options: { transaction?: Transaction } = {}
   ) {
-    const expense = await Expense.findByPk(id, {
+    const expense = await Expense.findOne({
+      where: {
+        id,
+        userId: this.userId,
+      },
       include: [
         {
           model: SubCategory,
