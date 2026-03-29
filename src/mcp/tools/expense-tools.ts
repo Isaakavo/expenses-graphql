@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { sequelizeClient } from '../../database/client.js';
 import { ExpensesService } from '../../service/expenses-service.js';
 import { adaptExpensesDTOInput } from '../../adapters/income-adapter.js';
+import { adaptExpensesByCategoryDTO } from '../../adapters/expense-adapter.js';
 import { textResponse, errorResponse } from '../utils.js';
 
 export function registerExpenseTools(server: McpServer, userId: string) {
@@ -98,6 +99,35 @@ export function registerExpenseTools(server: McpServer, userId: string) {
           comments: input.comment,
         });
         return textResponse(adaptExpensesDTOInput(expense));
+      } catch (error) {
+        return errorResponse(error.message);
+      }
+    }
+  );
+
+  server.registerTool(
+    'expenses-by-category',
+    {
+      description: 'List expenses grouped by category and subcategory. Supports filtering by period, date range, subcategories, and card.',
+      inputSchema: {
+        periodId: z.string().optional().describe('Period ID to filter by'),
+        startDate: z.string().optional().describe('Start date (ISO format)'),
+        endDate: z.string().optional().describe('End date (ISO format)'),
+        subCategoryIds: z.array(z.string()).optional().describe('Filter by subcategory IDs'),
+        cardId: z.string().optional().describe('Filter by card ID'),
+      },
+    },
+    async (input) => {
+      try {
+        const service = new ExpensesService(userId, sequelizeClient);
+        const expenses = await service.getExpensesByCategory(
+          input.periodId,
+          input.startDate ? new Date(input.startDate) : undefined,
+          input.endDate ? new Date(input.endDate) : undefined,
+          input.subCategoryIds,
+          input.cardId
+        );
+        return textResponse(adaptExpensesByCategoryDTO(expenses));
       } catch (error) {
         return errorResponse(error.message);
       }

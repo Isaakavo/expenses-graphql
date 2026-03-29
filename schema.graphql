@@ -192,6 +192,18 @@ type ExpensesBy {
   expensesTotal: Float
 }
 
+type ExpensesBySubCategory {
+  subCategory: SubCategory!
+  expenses: [Expense!]!
+  total: String!
+}
+
+type ExpensesByCategory {
+  category: CategoryType!
+  subCategories: [ExpensesBySubCategory!]!
+  total: String!
+}
+
 type CategorySetting {
   id: ID!
   message: String!
@@ -363,6 +375,7 @@ type Query {
   incomesGroupedBy: [IncomesGroupedBy!]
   incomesWithExpenses(input: FilterInput!): IncomesListAndExpenses!
   allExpenses: [Expense]
+  expensesByCategory(input: FilterInput!): [ExpensesByCategory!]!
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   categoryList: [Categories!]

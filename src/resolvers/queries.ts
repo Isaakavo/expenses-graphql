@@ -5,6 +5,7 @@ import {
   cardById,
   cardList,
   expenseById,
+  expensesByCategory,
   financialBalanceByFortnight,
   incomeById,
   incomesList,
@@ -23,6 +24,7 @@ import {
 
 const queries: QueryResolvers = {
   allExpenses: withErrorHandling('allExpenses', allExpenses),
+  expensesByCategory: withErrorHandling('expensesByCategory', expensesByCategory),
   expenseById: withErrorHandling('expenseById', expenseById),
   financialBalanceByFortnight: withErrorHandling('financialBalanceByFortnight', financialBalanceByFortnight),
   incomesGroupedBy: withErrorHandling('incomesGroupedBy', incomesGroupedBy),
