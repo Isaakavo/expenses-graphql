@@ -250,6 +250,57 @@ export class ExpenseRepository {
     return result.map((row) => adaptExpenseWithCategoryAllocationDTO(row));
   }
 
+  async getExpensesByCategory(
+    periodId?: string,
+    startDate?: Date,
+    endDate?: Date,
+    subCategoryIds?: string[],
+    cardId?: string
+  ): Promise<ExpenseDTO[]> {
+    const where: FindOptions['where'] = { userId: this.userId };
+
+    if (periodId) {
+      where.periodId = periodId;
+    } else if (startDate && endDate) {
+      where.payBefore = { [Op.between]: [startDate, endDate] };
+    }
+
+    if (cardId) {
+      where.cardId = cardId;
+    }
+
+    const subCategoryWhere: FindOptions['where'] = subCategoryIds
+      ? { id: { [Op.in]: subCategoryIds } }
+      : {};
+
+    const expenses = (await Expense.findAll({
+      where,
+      include: [
+        {
+          model: SubCategory,
+          as: 'sub_category',
+          where: subCategoryWhere,
+          include: [
+            {
+              model: Category,
+              as: 'category',
+              where: {
+                [Op.or]: [{ userId: null }, { userId: this.userId }],
+              },
+            },
+          ],
+        },
+        {
+          model: Card,
+          as: 'card',
+        },
+      ],
+      order: [['payBefore', 'DESC']],
+    })) as ExpenseWithCategoryRaw[];
+
+    return adaptRawListExpense(expenses);
+  }
+
   async getExpenseByPK(
     id: string,
     options: { transaction?: Transaction } = {}

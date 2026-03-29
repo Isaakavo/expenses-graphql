@@ -1,6 +1,7 @@
 export { cardById } from './card/card-by-id.js';
 export { cardList } from './card/card-list.js';
 export { allExpenses } from './expense/all-expenses.js';
+export { expensesByCategory } from './expense/expenses-by-category.js';
 export { expenseById } from './expense/expense-by-id.js';
 export { financialBalanceByFortnight } from './expense/financial-balance-by-fortnight.js';
 export { incomeById } from './income/income-by-id.js';

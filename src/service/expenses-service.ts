@@ -139,6 +139,25 @@ export class ExpensesService {
     };
   }
 
+  async getExpensesByCategory(
+    periodId?: string,
+    startDate?: Date,
+    endDate?: Date,
+    subCategoryIds?: string[],
+    cardId?: string
+  ) {
+    const parsedStartDate = startDate ? new Date(startDate) : undefined;
+    const parsedEndDate = endDate ? new Date(endDate) : undefined;
+
+    return this.expenseRepository.getExpensesByCategory(
+      periodId,
+      parsedStartDate,
+      parsedEndDate,
+      subCategoryIds,
+      cardId
+    );
+  }
+
   async getExpenseById(id: string) {
     return this.expenseRepository.getExpenseByPK(id);
   }
