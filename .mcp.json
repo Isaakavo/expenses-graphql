@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "expenses": {
+      "command": "pnpm",
+      "args": ["mcp"],
+      "cwd": "/home/ihaas/projects/expenses-project/expenses-graphql",
+      "env": {
+        "MCP_USER_ID": "3168f5f0-ac37-4dc4-bc79-0b16f36a5dad"
+      }
+    }
+  }
+}
