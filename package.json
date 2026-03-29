@@ -2,6 +2,7 @@
   "author": "",
   "dependencies": {
     "@apollo/server": "^4.10.0",
+    "@modelcontextprotocol/sdk": "^1.28.0",
     "axios": "^1.6.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
@@ -12,7 +13,8 @@
     "lodash": "^4.17.21",
     "pg": "^8.11.4",
     "sequelize": "^6.35.0",
-    "winston": "^3.11.1"
+    "winston": "^3.11.1",
+    "zod": "^4.3.6"
   },
   "description": "",
   "devDependencies": {
@@ -55,6 +57,7 @@
     "lint": "eslint . --ext .ts",
     "migrate": "npx sequelize-cli db:migrate",
     "seeds": "npx sequelize-cli db:seed:all",
+    "mcp": "node --loader ts-node/esm src/mcp/index.ts",
     "test": "vitest",
     "watch": "concurrently  --names \"CodeGen,TS,Nodemon\" -c \"bgYellow,bgBlue,bgMagenta\" \"pnpm codegen:watch\"  \"tsc -w \" \"pnpm dev \""
   },
