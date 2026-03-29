@@ -18,6 +18,9 @@ if (process.env.NODE_ENV !== 'prod') {
   logger.add(
     new transports.Console({
       format: combine(colorize(), timestamp(), splat(), customFormat),
+      stderrLevels: process.env.MCP_USER_ID
+        ? ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly']
+        : [],
     })
   );
 }
