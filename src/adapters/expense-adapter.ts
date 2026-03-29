@@ -1,5 +1,5 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { GroupedExpenses } from 'generated/graphql.js';
+import { ExpensesByCategory, GroupedExpenses } from 'generated/graphql.js';
 import {
   ExpenseDTO,
   ExpenseWithCategoryAllocationDTO,
@@ -75,6 +75,50 @@ export const adaptExpenseDTO = (expense): ExpenseDTO => {
     createdAt: expense.expense.createdAt,
     updatedAt: expense.expense.updatedAt,
   };
+};
+
+export const adaptExpensesByCategoryDTO = (
+  expenses: ExpenseDTO[]
+): ExpensesByCategory[] => {
+  const grouped = expenses.reduce((acc, expense) => {
+    const cat = expense.category;
+    const subCat = cat.subCategories?.[0];
+
+    if (!acc[cat.id]) {
+      acc[cat.id] = {
+        category: { id: cat.id, userId: cat.userId, name: cat.name },
+        subCategories: {},
+        total: 0,
+      };
+    }
+
+    acc[cat.id].total += expense.total;
+
+    if (subCat) {
+      if (!acc[cat.id].subCategories[subCat.id]) {
+        acc[cat.id].subCategories[subCat.id] = {
+          subCategory: { id: subCat.id, userId: subCat.userId, name: subCat.name },
+          expenses: [],
+          total: 0,
+        };
+      }
+
+      acc[cat.id].subCategories[subCat.id].expenses.push(expense);
+      acc[cat.id].subCategories[subCat.id].total += expense.total;
+    }
+
+    return acc;
+  }, {} as Record<string, any>);
+
+  return Object.values(grouped).map((catGroup: any) => ({
+    category: catGroup.category,
+    subCategories: Object.values(catGroup.subCategories).map((subGroup: any) => ({
+      subCategory: subGroup.subCategory,
+      expenses: subGroup.expenses.map((exp) => adaptExpensesDTOInput(exp)),
+      total: formatCurrency(subGroup.total),
+    })),
+    total: formatCurrency(catGroup.total),
+  }));
 };
 
 export const adaptGroupedExpensesDTO = (groupedExpense): GroupedExpensesDTO => {
