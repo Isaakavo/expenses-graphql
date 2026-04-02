@@ -136,12 +136,13 @@ export type CreateExpenseInput = {
 
 export type CreateFixedExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
-  category: Category;
+  categoryId: Scalars['String']['input'];
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
-  frequency?: InputMaybe<FixedExpenseFrequency>;
-  numberOfMonthsOrWeeks: Scalars['Int']['input'];
+  frequency: FixedExpenseFrequency;
+  numberOfRepetitions: Scalars['Int']['input'];
   payBefore: Scalars['Date']['input'];
+  subCategoryId: Scalars['String']['input'];
   total: Scalars['Float']['input'];
 };
 

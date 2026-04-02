@@ -274,9 +274,10 @@ input CreateFixedExpenseInput {
   total: Float!
   payBefore: Date!
   comment: String
-  category: Category!
-  numberOfMonthsOrWeeks: Int!
-  frequency: FixedExpenseFrequency
+  categoryId: String!
+  subCategoryId: String!
+  numberOfRepetitions: Int!
+  frequency: FixedExpenseFrequency!
 }
 
 input UpdateExpenseInput {
