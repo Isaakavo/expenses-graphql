@@ -1,3 +1,4 @@
+import { startOfDay } from 'date-fns';
 import {
   Op,
   Sequelize,
@@ -37,37 +38,38 @@ export class PeriodRepository {
     input: PeriodInputs,
     options: { transaction?: Transaction } = {}
   ) {
-    try {
-      const { date, id } = input;
-      const where: WhereOptions = {
-        userId: this.userId,
-      };
+    const { date, id } = input;
+    const where: WhereOptions = {
+      userId: this.userId,
+    };
 
-      if (id) {
-        where['id'] = id;
-      }
-      if (date) {
-        where['startDate'] = { [Op.lte]: date };
-        where['endDate'] = { [Op.gte]: date };
-      }
-
-      const period = await Period.findOne({
-        where,
-        transaction: options.transaction,
-      });
-
-      logger.info(`Found period ${period.id}`);
-
-      return adaptPeriodDTO(period);
-    } catch (error) {
-      logger.error(error.message);
+    if (id) {
+      where['id'] = id;
     }
+    if (date) {
+      where['startDate'] = { [Op.lte]: date };
+      where['endDate'] = { [Op.gte]: date };
+    }
+
+    const period = await Period.findOne({
+      where,
+      transaction: options.transaction,
+    });
+
+    if (!period) {
+      logger.info('No period found for the given input');
+      return null;
+    }
+
+    logger.info(`Found period ${period.id}`);
+    return adaptPeriodDTO(period);
   }
 
   async createPeriod(
     startDate: Date,
     options: { transaction?: Transaction } = {}
   ) {
+    startDate = startOfDay(startDate);
     const endDate = new Date(startDate);
     const periodType: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY' = 'FORTNIGHTLY';
 
@@ -93,13 +95,7 @@ export class PeriodRepository {
       logger.info(
         `Found existing period: ${existing.id} ${startDate} to ${endDate}`
       );
-      if (startDate > existing.startDate) {
-        await existing.update(
-          { startDate, endDate },
-          { transaction: options.transaction }
-        );
-      }
-      return existing.reload({ transaction: options.transaction });
+      return existing;
     }
 
     const latestBefore = await Period.findOne({
@@ -114,7 +110,7 @@ export class PeriodRepository {
 
     let chainStart: Date;
     if (latestBefore) {
-      chainStart = new Date(latestBefore.endDate);
+      chainStart = startOfDay(new Date(latestBefore.endDate));
       chainStart.setDate(chainStart.getDate() + 1);
     } else {
       chainStart = startDate;
@@ -127,21 +123,36 @@ export class PeriodRepository {
       const currentEnd = new Date(currentStart);
       currentEnd.setDate(currentEnd.getDate() + FORTNIGHTLY_NUMBER_OF_DAYS);
 
-      result = await Period.create(
-        {
+      const overlapping = await Period.findOne({
+        where: {
           userId: this.userId,
           type: periodType,
-          startDate: currentStart,
-          endDate: currentEnd,
+          startDate: { [Op.lte]: currentEnd },
+          endDate: { [Op.gte]: currentStart },
         },
-        { transaction: options.transaction }
-      );
+        transaction: options.transaction,
+      });
 
-      logger.info(
-        `Period created: ${result.id} - ${currentStart.toISOString()} to ${currentEnd.toISOString()}`
-      );
+      if (overlapping) {
+        result = overlapping;
+        logger.info(`Found overlapping period: ${overlapping.id}`);
+      } else {
+        result = await Period.create(
+          {
+            userId: this.userId,
+            type: periodType,
+            startDate: currentStart,
+            endDate: currentEnd,
+          },
+          { transaction: options.transaction }
+        );
 
-      currentStart = new Date(currentEnd);
+        logger.info(
+          `Period created: ${result.id} - ${currentStart.toISOString()} to ${currentEnd.toISOString()}`
+        );
+      }
+
+      currentStart = startOfDay(new Date(result.endDate));
       currentStart.setDate(currentStart.getDate() + 1);
     }
 

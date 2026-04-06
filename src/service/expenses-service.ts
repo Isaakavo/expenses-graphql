@@ -77,7 +77,7 @@ export class ExpensesService {
         { transaction }
       );
 
-      if(!period) {
+      if (!period) {
         logger.error('No period found for the given payBefore date');
       }
 
