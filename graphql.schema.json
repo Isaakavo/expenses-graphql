@@ -989,14 +989,14 @@
             "deprecationReason": null
           },
           {
-            "name": "category",
+            "name": "categoryId",
             "description": null,
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "ENUM",
-                "name": "Category",
+                "kind": "SCALAR",
+                "name": "String",
                 "ofType": null
               }
             },
@@ -1036,16 +1036,20 @@
             "name": "frequency",
             "description": null,
             "type": {
-              "kind": "ENUM",
-              "name": "FixedExpenseFrequency",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "FixedExpenseFrequency",
+                "ofType": null
+              }
             },
             "defaultValue": null,
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "numberOfMonthsOrWeeks",
+            "name": "numberOfRepetitions",
             "description": null,
             "type": {
               "kind": "NON_NULL",
@@ -1069,6 +1073,22 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "Date",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "subCategoryId",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
                 "ofType": null
               }
             },

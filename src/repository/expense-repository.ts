@@ -20,13 +20,19 @@ export class ExpenseRepository {
     this.sequelizeClient = sequelizeClient;
   }
 
-  async createExpense(input: ExpenseInput) {
-    const expense = await Expense.create({
-      userId: this.userId,
-      ...input,
-    });
+  async createExpense(
+    input: ExpenseInput,
+    options: { transaction?: Transaction } = {}
+  ) {
+    const expense = await Expense.create(
+      {
+        userId: this.userId,
+        ...input,
+      },
+      { transaction: options.transaction }
+    );
 
-    return await this.getExpenseByPK(expense.id);
+    return await this.getExpenseByPK(expense.id, options);
   }
 
   async updateExpense(

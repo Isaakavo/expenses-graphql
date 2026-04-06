@@ -1,5 +1,4 @@
 import {
-  CreateOptions,
   Op,
   Sequelize,
   Transaction,
@@ -14,10 +13,11 @@ export type PeriodInputs = {
   id?: string;
 };
 
+export const FORTNIGHTLY_NUMBER_OF_DAYS = 13;
+
 export class PeriodRepository {
   userId: string;
   sequelize: Sequelize;
-  FORTNIGHTLY_NUMBER_OF_DAYS = 13;
 
   constructor(userId: string, sequelize: Sequelize) {
     this.userId = userId;
@@ -64,62 +64,86 @@ export class PeriodRepository {
     }
   }
 
-  async createPeriod(startDate: Date, options?: CreateOptions) {
+  async createPeriod(
+    startDate: Date,
+    options: { transaction?: Transaction } = {}
+  ) {
     const endDate = new Date(startDate);
-    // TODO create table for user settings where the period type can be stored
-    // and retrieved dynamically based on user preferences.
-    // For now, we will use a hardcoded value for the period type.
-    // Default value for now, this value should come from user settings or input
     const periodType: 'WEEKLY' | 'FORTNIGHTLY' | 'MONTHLY' = 'FORTNIGHTLY';
 
     switch (periodType) {
-    // case 'WEEKLY':
-    //   endDate.setDate(endDate.getDate() + 7);
-    //   break;
     case 'FORTNIGHTLY':
-      endDate.setDate(endDate.getDate() + this.FORTNIGHTLY_NUMBER_OF_DAYS);
+      endDate.setDate(endDate.getDate() + FORTNIGHTLY_NUMBER_OF_DAYS);
       break;
-      // case 'MONTHLY':
-      //   endDate.setMonth(endDate.getMonth() + 1);
-      //   break;
     default:
       throw new Error('Invalid period type');
     }
 
-    const period = await Period.findOne({
+    const existing = await Period.findOne({
       where: {
         userId: this.userId,
         type: periodType,
         startDate: { [Op.lte]: startDate },
         endDate: { [Op.gte]: startDate },
       },
+      transaction: options.transaction,
     });
 
-    if (period) {
+    if (existing) {
       logger.info(
-        `Found existing period: ${period.id} ${startDate} to ${endDate}`
+        `Found existing period: ${existing.id} ${startDate} to ${endDate}`
       );
-      if (startDate > period.startDate) {
-        await period.update({ startDate, endDate });
+      if (startDate > existing.startDate) {
+        await existing.update(
+          { startDate, endDate },
+          { transaction: options.transaction }
+        );
       }
-      return period.reload();
+      return existing.reload({ transaction: options.transaction });
     }
 
-    const result = await Period.create(
-      {
+    const latestBefore = await Period.findOne({
+      where: {
         userId: this.userId,
         type: periodType,
-        startDate,
-        endDate,
+        endDate: { [Op.lt]: startDate },
       },
-      options
-    );
+      order: [['endDate', 'DESC']],
+      transaction: options.transaction,
+    });
 
-    logger.info(
-      `Period created: ${
-        result.id
-      } - ${startDate.toISOString()} to ${endDate.toISOString()}`
-    );
+    let chainStart: Date;
+    if (latestBefore) {
+      chainStart = new Date(latestBefore.endDate);
+      chainStart.setDate(chainStart.getDate() + 1);
+    } else {
+      chainStart = startDate;
+    }
+
+    let result: Period;
+    let currentStart = chainStart;
+
+    while (currentStart <= startDate) {
+      const currentEnd = new Date(currentStart);
+      currentEnd.setDate(currentEnd.getDate() + FORTNIGHTLY_NUMBER_OF_DAYS);
+
+      result = await Period.create(
+        {
+          userId: this.userId,
+          type: periodType,
+          startDate: currentStart,
+          endDate: currentEnd,
+        },
+        { transaction: options.transaction }
+      );
+
+      logger.info(
+        `Period created: ${result.id} - ${currentStart.toISOString()} to ${currentEnd.toISOString()}`
+      );
+
+      currentStart = new Date(currentEnd);
+      currentStart.setDate(currentStart.getDate() + 1);
+    }
 
     return result;
   }

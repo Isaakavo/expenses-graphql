@@ -1,17 +1,35 @@
+import { addDays, addMonths } from 'date-fns';
 import { FindOptions, Sequelize } from 'sequelize';
 import { ExpenseDTO } from '../dto';
+import { FixedExpenseFrequency } from '../generated/graphql.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 import { logger } from '../logger.js';
-import { PeriodRepository } from '../repository/period-repository.js';
+import {
+  FORTNIGHTLY_NUMBER_OF_DAYS,
+  PeriodRepository,
+} from '../repository/period-repository.js';
 
 export type ExpenseInput = {
   concept: string;
   total: number;
   cardId?: string;
   periodId: string;
+  payBefore?: Date;
   comments?: string;
   categoryId: string;
   subCategoryId: string;
+};
+
+export type FixedExpenseInput = {
+  concept: string;
+  total: number;
+  cardId?: string;
+  payBefore: Date;
+  comment?: string;
+  categoryId: string;
+  subCategoryId: string;
+  numberOfRepetitions: number;
+  frequency: FixedExpenseFrequency;
 };
 
 export class ExpensesService {
@@ -160,6 +178,60 @@ export class ExpensesService {
 
   async getExpenseById(id: string) {
     return this.expenseRepository.getExpenseByPK(id);
+  }
+
+  async createFixedExpenses(input: FixedExpenseInput) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const expenses: ExpenseDTO[] = [];
+      const baseDate = input.payBefore;
+
+      for (let i = 0; i < input.numberOfRepetitions; i++) {
+        const targetDate =
+          input.frequency === FixedExpenseFrequency.MONTHLY
+            ? addMonths(baseDate, i)
+            : addDays(baseDate, FORTNIGHTLY_NUMBER_OF_DAYS * i);
+
+        let period = await this.periodRepository.getPeriodBy(
+          { date: targetDate },
+          { transaction }
+        );
+
+        if (!period) {
+          const created = await this.periodRepository.createPeriod(
+            targetDate,
+            { transaction }
+          );
+          period = { id: created.id } as any;
+        }
+
+        const expense = await this.expenseRepository.createExpense(
+          {
+            concept: input.concept,
+            total: input.total,
+            cardId: input.cardId,
+            periodId: period.id,
+            categoryId: input.categoryId,
+            subCategoryId: input.subCategoryId,
+            comments: input.comment,
+            payBefore: targetDate,
+          },
+          { transaction }
+        );
+
+        expenses.push(expense);
+      }
+
+      await transaction.commit();
+      logger.info(
+        `Created ${expenses.length} fixed expenses (${input.frequency})`
+      );
+      return expenses;
+    } catch (error) {
+      await transaction.rollback();
+      logger.error('Error creating fixed expenses: ' + error.message);
+      throw error;
+    }
   }
 
   calculateTotal(expenses: ExpenseDTO[]) {
