@@ -56,6 +56,7 @@
     "dev": "NODE_ENV=dev nodemon",
     "lint": "eslint . --ext .ts",
     "migrate": "npx sequelize-cli db:migrate",
+    "db:migrate": "npx sequelize-cli db:migrate",
     "seeds": "npx sequelize-cli db:seed:all",
     "mcp": "node --loader ts-node/esm src/mcp/index.ts",
     "test": "vitest",
