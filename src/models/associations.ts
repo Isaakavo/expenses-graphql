@@ -10,6 +10,7 @@ import {
 import { Income } from './income.js';
 import { Period } from './periods.js';
 import { SubCategory } from './sub-category.js';
+import { StagedTransaction } from './staged-transaction.js';
 
 
 export const associateModels = () => {
@@ -25,4 +26,5 @@ export const associateModels = () => {
   SubCategory.associate();
   IncomeCategoryAllocation.associate();
   CategorySettings.associate();
+  StagedTransaction.associate();
 }
