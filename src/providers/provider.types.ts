@@ -1,4 +1,4 @@
-export type ProviderName = 'teller';
+export type ProviderName = 'plaid';
 
 export type ProviderTransaction = {
   providerTransactionId: string;
@@ -7,6 +7,7 @@ export type ProviderTransaction = {
   amount: number; // positive = money out, same sign convention as Expense.total
   date: Date;
   pending: boolean;
+  pendingTransactionId?: string;
   raw: unknown;
 };
 
@@ -17,25 +18,36 @@ export type ProviderAccount = {
   last4?: string;
 };
 
+export type ProviderTransactionSyncResult = {
+  transactions: ProviderTransaction[];
+  removedProviderTransactionIds: string[];
+  nextCursor: string;
+  hasMore: boolean;
+};
+
 export type ProviderWebhookEvent =
-  | { type: 'TRANSACTIONS_UPDATED'; providerAccountIds: string[] }
+  | { type: 'TRANSACTIONS_UPDATED'; providerConnectionId: string }
   | { type: 'CONNECTION_DISCONNECTED'; providerConnectionId: string }
   | { type: 'UNKNOWN'; raw: unknown };
 
 export interface TransactionProvider {
   readonly name: ProviderName;
   listAccounts(accessToken: string): Promise<ProviderAccount[]>;
+  createLinkSession?(input: { userId: string }): Promise<{ linkToken: string }>;
+  exchangeToken?(rawToken: string): Promise<{
+    accessToken: string;
+    providerConnectionId: string;
+  }>;
   listTransactions(input: {
     accessToken: string;
-    providerAccountId: string;
-    since?: Date;
-  }): Promise<ProviderTransaction[]>;
+    cursor: string | null;
+  }): Promise<ProviderTransactionSyncResult>;
   verifyWebhookSignature(input: {
     rawBody: string;
     headers: Record<string, string>;
-  }): boolean;
+  }): Promise<boolean>;
   parseWebhookPayload(input: {
     rawBody: string;
     headers: Record<string, string>;
-  }): ProviderWebhookEvent;
+  }): Promise<ProviderWebhookEvent>;
 }
