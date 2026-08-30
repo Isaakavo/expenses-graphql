@@ -3,3 +3,4 @@ export * from './income-dto.js';
 export * from './period-dto.js';
 export * from './expense-dto.js';
 export * from './category-dto.js';
+export * from './staged-transaction-dto.js';
