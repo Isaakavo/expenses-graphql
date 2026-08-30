@@ -14,6 +14,7 @@ import { initSubCategoryModel } from './sub-category.js';
 import { initInvestmentRecordModel } from './investment-record.js';
 import { initInvestmentFeeRecordModel } from './investment-fee-record.js';
 import { initStagedTransactionModel } from './staged-transaction.js';
+import { initProviderConnectionModel } from './provider-connection.js';
 
 export const initModels = (sequelize: Sequelize) => {
   initExpenseModel(sequelize);
@@ -27,4 +28,5 @@ export const initModels = (sequelize: Sequelize) => {
   initInvestmentRecordModel(sequelize);
   initInvestmentFeeRecordModel(sequelize);
   initStagedTransactionModel(sequelize);
+  initProviderConnectionModel(sequelize);
 };
