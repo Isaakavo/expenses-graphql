@@ -161,7 +161,7 @@ Additive, nullable, no backfill, no downtime:
 | `providerAccessTokenCiphertext`   | `TEXT`              | yes      | AES-256-GCM ciphertext, base64. See §3.3. |
 | `providerAccessTokenIv`           | `STRING`            | yes      | Base64 IV used for that ciphertext. |
 | `providerAccessTokenAuthTag`      | `STRING`            | yes      | Base64 GCM auth tag. |
-| `providerStatus`                  | `STRING`            | yes      | App-level enum-as-string: `'ACTIVE' \| 'DISCONNECTED' \| 'ERROR'`. String, not Postgres ENUM — altering a Postgres ENUM type later (adding a value) requires `ALTER TYPE ... ADD VALUE` outside a transaction, which is exactly the kind of migration friction this column should never cause. |
+| `providerStatus`                  | `STRING`            | yes      | App-level enum-as-string: `'ACTIVE' \| 'PENDING_DISCONNECT' \| 'DISCONNECTED' \| 'ERROR'`. `PENDING_DISCONNECT` is the 7-day advance warning (§4.3) and **still syncs**; only `DISCONNECTED` stops syncing. That value was added after the column shipped and needed no migration — which is exactly the friction this column was made a string to avoid. String, not Postgres ENUM — altering a Postgres ENUM type later (adding a value) requires `ALTER TYPE ... ADD VALUE` outside a transaction, which is exactly the kind of migration friction this column should never cause. |
 | `providerLinkedAt`                | `DATE`              | yes      | When `linkCardToProvider` succeeded. |
 | `providerLastSyncedAt`            | `DATE`              | yes      | Updated by `TransactionSyncService` after every successful sync of this card, regardless of trigger (webhook/cron/manual). |
 
@@ -507,7 +507,9 @@ export type ProviderTransactionSyncResult = {
 
 export type ProviderWebhookEvent =
   | { type: 'TRANSACTIONS_UPDATED'; providerConnectionId: string }
+  | { type: 'CONNECTION_EXPIRING'; providerConnectionId: string }
   | { type: 'CONNECTION_DISCONNECTED'; providerConnectionId: string }
+  | { type: 'CONNECTION_RESTORED'; providerConnectionId: string }
   | { type: 'UNKNOWN'; raw: unknown };
 
 export interface TransactionProvider {
@@ -621,17 +623,52 @@ conventions, still need judgement (§4.4, §12b).
     mapper doesn't need to distinguish them any further than Plaid already
     has), `removed[].transaction_id` → `removedProviderTransactionIds`,
     `next_cursor` → `nextCursor`, `has_more` → `hasMore`.
-  - `mapWebhookPayload(claims)` → `ProviderWebhookEvent`, from the already
-    JWT-verified claims (see `plaid-provider.ts` below): `webhook_type:
-    'TRANSACTIONS'` + `webhook_code: 'SYNC_UPDATES_AVAILABLE'` (and likely
-    other transaction-related codes — confirm the full set) →
-    `{ type: 'TRANSACTIONS_UPDATED', providerConnectionId: claims.item_id }`;
-    `webhook_type: 'ITEM'` + a disconnect-shaped `webhook_code` (e.g.
-    `PENDING_EXPIRATION`/`ERROR`/`USER_PERMISSION_REVOKED` — Plaid has
-    several Item-error codes, confirm which map to "treat as disconnected"
-    at implementation time) → `{ type: 'CONNECTION_DISCONNECTED',
-    providerConnectionId: claims.item_id }`; anything else →
-    `{ type: 'UNKNOWN', raw: claims }`.
+  - `mapWebhookPayload(body)` → `ProviderWebhookEvent`, from the **parsed
+    raw POST body**, not from the JWT's claims.
+
+    **Correction — an earlier draft of this section got this wrong.** It
+    described this function as taking "already JWT-verified claims" and read
+    `claims.item_id` / `claims.webhook_type` / `claims.webhook_code`. Those
+    fields do not exist on the JWT. Verified against the installed SDK's
+    types (`plaid` v46): `SyncUpdatesAvailableWebhook` and `ItemErrorWebhook`
+    declare `webhook_type`, `webhook_code`, `item_id` (plus `environment`,
+    `error`) as top-level fields of the **POST body object**; the only
+    JWT-related type in the SDK is `JWTHeader`, carrying just
+    `id`/`kid`/`alg`. Plaid's `Plaid-Verification` JWT proves body integrity
+    (`request_body_sha256`, `iat`) and carries no event data at all. So the
+    division of labour is: `plaid-provider.ts` verifies the JWT *and* that
+    the body hashes to the signed digest, then this function parses the
+    verified body. Reading event fields off the JWT would have been
+    non-functional against real Plaid webhooks.
+
+    Mapping, from `body.webhook_type` + `body.webhook_code`:
+    - `TRANSACTIONS` + `SYNC_UPDATES_AVAILABLE` →
+      `{ type: 'TRANSACTIONS_UPDATED', providerConnectionId: body.item_id }`
+    - `ITEM` + `PENDING_DISCONNECT` or `PENDING_EXPIRATION` →
+      `{ type: 'CONNECTION_EXPIRING', ... }`. These are **7-day advance
+      warnings, not disconnections** — see the note below.
+    - `ITEM` + `USER_PERMISSION_REVOKED` or `USER_ACCOUNT_REVOKED` →
+      `{ type: 'CONNECTION_DISCONNECTED', ... }`
+    - `ITEM` + `ERROR` → inspect `body.error.error_code`;
+      `ITEM_LOGIN_REQUIRED` → `CONNECTION_DISCONNECTED`; any other code →
+      `UNKNOWN`. Mapping `ITEM: ERROR` unconditionally would let a transient
+      institution outage permanently flag the cards.
+    - `ITEM` + `LOGIN_REPAIRED` → `{ type: 'CONNECTION_RESTORED', ... }`
+    - anything else → `{ type: 'UNKNOWN', raw: body }`
+
+    **On the two warning codes, and why they are not disconnections.**
+    `PENDING_DISCONNECT` is the US code; `PENDING_EXPIRATION` is documented
+    as EU/UK-only, and `plaid-client.ts` pins `country_codes: ['US']`, so in
+    practice only the former fires here — both are mapped anyway, cheaply,
+    in case that pin ever changes. Both fire **seven days before** the Item
+    is expected to break. Treating them as `CONNECTION_DISCONNECTED` would
+    stop syncing for a week of transactions that would have synced fine, so
+    per an explicit product decision they instead set the card's
+    `providerStatus` to a new `PENDING_DISCONNECT` value which **keeps
+    syncing**; only a real failure moves a card to `DISCONNECTED`, which
+    stops it. `LOGIN_REPAIRED` exists to move a card back to `ACTIVE` —
+    without it, nothing in this design could ever un-disconnect a card short
+    of a full re-link.
 - `src/providers/plaid/plaid-provider.ts` — implements `TransactionProvider`,
   composing `plaid-client.ts` + `plaid-mapper.ts`:
   - `createLinkSession({ userId })` calls `createLinkToken`, returns
@@ -648,37 +685,66 @@ conventions, still need judgement (§4.4, §12b).
     transaction) that the provider layer has no business doing; the
     provider stays a thin, stateless translator of one HTTP call per
     invocation, consistent with how Teller's provider was scoped.
-  - Webhook verification owns a small in-memory cache,
-    `Map<string, JWK>` keyed by `kid`, populated lazily via
-    `getWebhookVerificationKey` and never expired within process lifetime.
-    **Resolved since the first draft: no TTL is needed.** Plaid rotates
-    verification keys by issuing a *new* `kid`, not by changing the key
-    behind an existing one, so a cache keyed on `kid` cannot go stale — a
-    rotated-in key simply arrives as a cache miss and is fetched on demand,
-    and the superseded entry becomes inert rather than wrong. Uses
+  - Webhook verification owns a small in-memory cache of verification keys
+    keyed by `kid`, populated lazily via `getWebhookVerificationKey`. Uses
     the `jose` library (new dependency — see below) rather than
     `jsonwebtoken` + a separate JWK→PEM conversion package, since `jose` can
     verify a JWT directly against a JWK without a PEM round-trip:
     1. Decode the JWT header only (no verification yet) to read `kid`.
     2. Look up `kid` in the cache; on a miss, call
-       `getWebhookVerificationKey(kid)` and cache the returned JWK.
-    3. `jose.jwtVerify(token, importedJwk)` — verifies the signature and
-       standard claims (`exp`, etc.); throws on failure.
+       `getWebhookVerificationKey(kid)` and cache the returned key. **The
+       `kid` at this point is attacker-controlled** — it came from an
+       unverified header on an unauthenticated public endpoint — so this
+       step is rate-limited; see the fetch-budget note below.
+    3. `jose.jwtVerify(token, importedKey, { algorithms: ['ES256'], maxTokenAge: '5m' })`.
+       **Both options are required, and an earlier draft of this step
+       omitted them** (it said jose "verifies the signature and standard
+       claims (`exp`, etc.)", which is false here): Plaid's webhook JWTs
+       carry `iat` but **no `exp`**, so without `maxTokenAge` the default
+       claim checks are a no-op and a correctly-signed token of any age
+       verifies — demonstrated with a one-year-old token. `maxTokenAge: '5m'`
+       matches Plaid's documented procedure, and also causes a token with no
+       `iat` at all to be rejected. `algorithms: ['ES256']` pins the
+       algorithm rather than trusting the token header's own `alg`; the key
+       import must pin `'ES256'` too, not fall back to the header's value.
     4. Additionally verify body integrity: compute SHA-256 of the raw
        webhook body and compare against the verified payload's
-       `request_body_sha256` claim (Plaid's documented mechanism, as best
-       recalled, for binding the JWT to this exact body even though the
-       body itself isn't embedded in the token — reconfirm the claim name).
+       `request_body_sha256` claim — this is what binds the JWT to this
+       exact body, since the body is not embedded in the token (and, per the
+       correction above, neither are the event fields).
+
+    **Cache and fetch budget.** Two properties matter here, and the naive
+    version of each is wrong:
+    - Entries honor the key's `expired_at`; an expired cached entry is
+      treated as a miss. (An earlier draft asserted no TTL was needed on the
+      grounds that rotation issues a new `kid`, so a `kid`-keyed entry
+      "cannot go stale". The `kid` reasoning is right, but the SDK's
+      `JWKPublicKey` carries `expired_at` and honoring it is nearly free.)
+    - Eviction must promote on use (LRU), not evict oldest-inserted (FIFO),
+      or the one legitimate, constantly-used key becomes the eviction victim
+      under churn from bogus lookups.
+    - **A per-`kid` negative cache does not bound the fetch rate** and must
+      not be relied on as the control: the attacker chooses the key space,
+      so rotating more distinct `kid`s than the cache holds defeats it
+      entirely. This was measured on an implementation that tried it — 90
+      requests across 30 rotating bogus `kid`s produced 90 outbound Plaid
+      calls, i.e. no improvement at all. The actual control is a **global
+      budget on `getWebhookVerificationKey` calls per unit time**, shared
+      across all `kid`s. When it is exhausted, verification **fails closed**
+      — return `false` without fetching. Rejecting is the right tradeoff:
+      Plaid retries webhooks, legitimate key rotation is rare, and the
+      alternative is letting an unauthenticated caller drive unbounded
+      traffic into Plaid's API on our credentials.
+
     `verifyWebhookSignature` returns `true`/`false` based on whether steps
     1–4 all succeed, never throwing past its own boundary (catches and
-    returns `false`), matching the Teller-era contract's behavior even
-    though the mechanism is completely different. `parseWebhookPayload`
-    re-decodes and re-verifies (simplest correct thing; a request-scoped
-    memoization of the decoded claims, keyed by `rawBody`, is a reasonable
-    internal optimization since §5.2's router always calls
+    returns `false`). `parseWebhookPayload` re-decodes and re-verifies
+    (simplest correct thing; a request-scoped memoization keyed by `rawBody`
+    is a reasonable internal optimization since §5.2's router always calls
     `verifyWebhookSignature` immediately before `parseWebhookPayload` on the
     same request — not required for correctness, left as an implementation
-    detail).
+    detail, though note it doubles the fetch exposure above for a `kid` that
+    never resolves).
 
 New env vars (direct `process.env.X` reads, no new config abstraction, per
 existing `BMX_TOKEN` precedent): `PLAID_CLIENT_ID`, `PLAID_SECRET`,
@@ -740,12 +806,20 @@ properties of Plaid's API, not of how we call it.
   `removedProviderTransactionIds` by `transaction_id`; `has_more: true` →
   `hasMore: true`; `next_cursor` passed through verbatim; empty
   `added`/`modified`/`removed` → `{ transactions: [], removedProviderTransactionIds: [] }`, not an error.
-- `plaid-mapper.mapWebhookPayload`: `TRANSACTIONS`/`SYNC_UPDATES_AVAILABLE`
-  claims → `{ type: 'TRANSACTIONS_UPDATED', providerConnectionId }`; an
-  Item-error claim recognized as a disconnect →
-  `{ type: 'CONNECTION_DISCONNECTED', providerConnectionId }`; an
-  unrecognized `webhook_type`/`webhook_code` combination →
-  `{ type: 'UNKNOWN', raw: claims }`, never throws.
+- `plaid-mapper.mapWebhookPayload` (operating on the parsed body, per §4.3):
+  `TRANSACTIONS`/`SYNC_UPDATES_AVAILABLE` → `TRANSACTIONS_UPDATED`;
+  `ITEM`/`PENDING_DISCONNECT` and `ITEM`/`PENDING_EXPIRATION` →
+  `CONNECTION_EXPIRING` (**not** disconnected — regression test for the
+  warning-vs-disconnection distinction); `ITEM`/`USER_PERMISSION_REVOKED`
+  and `ITEM`/`USER_ACCOUNT_REVOKED` → `CONNECTION_DISCONNECTED`;
+  `ITEM`/`ERROR` with `error.error_code === 'ITEM_LOGIN_REQUIRED'` →
+  `CONNECTION_DISCONNECTED`, but `ITEM`/`ERROR` with **any other** error
+  code, and with no `error` object at all, → `UNKNOWN` (regression test —
+  mapping `ITEM: ERROR` unconditionally would let a transient institution
+  outage permanently flag every card on the connection);
+  `ITEM`/`LOGIN_REPAIRED` → `CONNECTION_RESTORED`; a body missing `item_id`
+  → `UNKNOWN`; an unrecognized `webhook_type`/`webhook_code` combination →
+  `{ type: 'UNKNOWN', raw: body }`, never throws.
 - `plaid-provider.createLinkSession`: returns the `link_token` from the
   client response; asserts the outgoing `/link/token/create` body carries a
   non-empty `webhook` field taken from `PLAID_WEBHOOK_URL` (regression test
@@ -771,7 +845,31 @@ properties of Plaid's API, not of how we call it.
   JWT → `false`; JWT whose `request_body_sha256` claim doesn't match the
   actual raw body (body tampered in transit after signing, or wrong body
   passed in) → `false`; malformed/non-JWT `rawBody`/header → `false`, never
-  throws.
+  throws. Plus the cases an earlier implementation passed *without* actually
+  verifying anything — every one of these must fail if `jwtVerify` were
+  removed and the JWT merely decoded:
+  - **JWT signed by a different keypair**, while the fetched JWK is the
+    legitimate public key → `false`. This is the single test that makes the
+    function security-relevant; without it the whole suite passes on a
+    base64 decode.
+  - **Stale token**: correctly signed, correct body hash, `iat` older than
+    5 minutes → `false`. Also a token with **no `iat`** → `false`.
+  - **Algorithm confusion**: an `HS256`-headered token → `false`, including
+    when the server-returned JWK itself declares a symmetric algorithm.
+  - **Expired key**: a cached entry past its `expired_at` is re-fetched and
+    verification succeeds against the fresh key.
+  - **Fetch budget**: rotating **more distinct bogus `kid`s than any
+    internal cache holds** (e.g. 30 kids over several passes) must produce a
+    number of outbound `getWebhookVerificationKey` calls bounded by the
+    budget, **not** one per request — and once the budget is exhausted,
+    further unknown-`kid` requests return `false` with no further fetches.
+    Testing only the repeated-*same*-`kid` case is what let a 1:1
+    amplification bug ship past one review; the rotating case is the
+    regression test that matters.
+  Note these tests need explicit cache isolation between cases (a reset
+  helper, or module re-import) — relying on each test happening to use a
+  fresh random `kid` makes the suite pass for incidental reasons and hides
+  exactly this class of defect.
 - `plaid-client`: missing `PLAID_CLIENT_ID`/`PLAID_SECRET` throws a clear
   error at first use, not silently making an unauthenticated request
   (mirrors the Teller-era `teller-client` requirement for its own
@@ -1080,9 +1178,18 @@ Route behavior:
      Item whose card(s) were all unlinked) is logged at `warn` and skipped,
      not an error — the webhook still returns `200` so Plaid doesn't retry
      forever.
+   - `CONNECTION_EXPIRING`: mark **every** card sharing
+     `providerConnectionId` `providerStatus = 'PENDING_DISCONNECT'`. This is
+     a 7-day advance warning (§4.3), so **syncing continues normally** — the
+     status exists to surface "re-link this soon" in the UI, not to stop
+     anything. Do not skip or short-circuit a sync on this status.
    - `CONNECTION_DISCONNECTED`: mark **every** card sharing
      `providerConnectionId` `providerStatus = 'DISCONNECTED'`. No sync
      attempted.
+   - `CONNECTION_RESTORED`: mark **every** card sharing
+     `providerConnectionId` `providerStatus = 'ACTIVE'`, clearing a previous
+     `PENDING_DISCONNECT`/`DISCONNECTED`. Without this branch nothing in the
+     design can ever un-disconnect a card short of a full re-link.
    - `UNKNOWN`: log at `info`, return `200` (ack and ignore — a forward-compatible
      event type from the provider shouldn't cause retries).
 5. Respond `200` only after processing completes. A crash mid-processing
@@ -1245,6 +1352,7 @@ enum TransactionProviderName {
 
 enum ProviderConnectionStatus {
   ACTIVE
+  PENDING_DISCONNECT
   DISCONNECTED
   ERROR
 }
@@ -1845,17 +1953,58 @@ errors, not judgement calls.
     into compile errors. Full rationale in §4.3's dependency note. The SDK
     is confined to `plaid-client.ts`; no design mechanics change.
 
+19. **Webhook event fields were described as living in the JWT. They do
+    not.** §4.3's `mapWebhookPayload` took "already JWT-verified claims" and
+    read `claims.item_id`/`claims.webhook_type`/`claims.webhook_code`.
+    Verified against the installed `plaid` v46 types: those fields are
+    top-level on the **POST body**; the `Plaid-Verification` JWT carries only
+    body-integrity proof (`request_body_sha256`, `iat`). Implementing the
+    doc literally would have produced a webhook handler that never matched
+    a real Plaid delivery. §4.3 now describes the correct division: verify
+    JWT and body hash, then parse the verified body. Note this also
+    invalidates #16's claim that the remaining Plaid unknowns were all
+    resolved — this one was not, and was caught only by checking the SDK.
+20. **The disconnect webhook-code set was wrong in four ways**, all verified
+    against the SDK. `PENDING_DISCONNECT` (the US code) was missing while
+    `PENDING_EXPIRATION` (documented EU/UK-only) was present, against a
+    client pinned to `country_codes: ['US']`. Both are 7-day *warnings* and
+    were treated as disconnections, which would have stopped syncing for a
+    week of transactions that would have synced fine. `ITEM: ERROR` was
+    mapped unconditionally without inspecting `error.error_code`, so a
+    transient institution outage would permanently flag every card on the
+    connection. And `LOGIN_REPAIRED` was unhandled, so no card could ever
+    return to `ACTIVE` short of a full re-link. Fixed in §4.3 and §5.2, with
+    a new `PENDING_DISCONNECT` status that keeps syncing (product decision:
+    a warning is a notice, not a disconnection) and new
+    `CONNECTION_EXPIRING`/`CONNECTION_RESTORED` event variants.
+21. **Webhook JWT verification lacked replay protection.** Plaid's webhook
+    JWTs carry `iat` but no `exp`, so a verifier's default claim checks pass
+    a correctly-signed token of any age — demonstrated with a one-year-old
+    token. `jwtVerify` now pins `{ algorithms: ['ES256'], maxTokenAge: '5m' }`,
+    matching Plaid's documented procedure. The pinned algorithm also removes
+    reliance on the token header's own `alg`. §4.3's step 3 previously
+    described jose as checking "standard claims (`exp`, etc.)", which is the
+    false premise this defect grew from; it has been corrected in place.
+22. **The first attempt at bounding `kid`-driven fetches did not work, and
+    the test written for it could not have caught that.** The `kid` comes
+    from an unverified header on a public endpoint, so a cache miss lets an
+    unauthenticated caller drive an outbound Plaid API call. A per-`kid`
+    negative cache with a 20-entry cap and FIFO eviction was added — but the
+    attacker picks the key space, so rotating more than 20 `kid`s never hits
+    the negative cache. Measured: 90 requests across 30 rotating kids → 90
+    outbound calls, exactly the unfixed behavior. The accompanying test only
+    repeated a *single* bogus `kid`, the one case the broken design handles.
+    Replaced with a **global fetch budget that fails closed**, plus LRU
+    (not FIFO) eviction on the positive cache so the one legitimate key is
+    not evicted by churn, plus a rotating-`kid` regression test. Recorded
+    here because the lesson generalizes: a bound whose key is chosen by the
+    attacker is not a bound, and a test that exercises only the friendly
+    case will happily certify one.
+
 Still genuinely unverified, and to be confirmed during implementation —
 though the surface has shrunk substantially now that the official `plaid`
-SDK's generated types cover the request/response shapes (#18). What the
-SDK's type checker cannot settle, and still needs a judgement call:
-the precise set of `webhook_code` values that should map to
-`CONNECTION_DISCONNECTED` (the SDK will enumerate the possible codes, but
-not which of them this app should treat as "stop syncing, tell the user to
-re-link"); and whether `removed` entries carry an `account_id` (§5.1 step 8
-is deliberately written not to depend on it either way, so this one is
-informational rather than blocking). The exact SDK method spellings used
-throughout §4.3 (`linkTokenCreate`, `itemPublicTokenExchange`,
-`transactionsSync`, `accountsGet`, `webhookVerificationKeyGet`) were
-likewise written from memory — `tsc` will confirm or correct each of them
-on first compile.
+SDK's generated types cover the request/response shapes (#18), and the
+webhook semantics that the types could not settle have now been worked out
+against them directly (#19, #20). What remains: whether `removed` entries
+carry an `account_id` (§5.1 step 8 is deliberately written not to depend on
+it either way, so this is informational rather than blocking).

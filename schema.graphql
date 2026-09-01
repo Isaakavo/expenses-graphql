@@ -34,6 +34,17 @@ enum FixedExpenseFrequency {
   Monthly
 }
 
+enum TransactionProviderName {
+  PLAID
+}
+
+enum ProviderConnectionStatus {
+  ACTIVE
+  PENDING_DISCONNECT
+  DISCONNECTED
+  ERROR
+}
+
 type CategoryType {
   id: ID!
   userId: ID
@@ -144,6 +155,14 @@ type Card {
   bank: String!
   isDigital: Boolean
   isDebit: Boolean
+  provider: TransactionProviderName
+  providerStatus: ProviderConnectionStatus
+  providerLinkedAt: String
+  providerLastSyncedAt: String
+}
+
+type ProviderLinkSession {
+  linkToken: String!
 }
 
 type TotalByCardId {
@@ -305,6 +324,21 @@ input UpdateCardInput {
   isDebit: Boolean
 }
 
+input CreateProviderLinkTokenInput {
+  provider: TransactionProviderName!
+}
+
+input LinkCardAccountInput {
+  cardId: ID!
+  providerAccountId: String!
+}
+
+input LinkCardToProviderInput {
+  provider: TransactionProviderName!
+  publicToken: String!
+  cards: [LinkCardAccountInput!]!
+}
+
 input PayBeforeInput {
   payBefore: Date
   periodId: String
@@ -408,4 +442,7 @@ type Mutation {
   deleteCategorySetting(categoryId: ID!): CategorySetting!
   updateCategoryAllocation(input: UpdateCategoryAllocationInput): CategorySetting!
   createInvestmentRecord(input: InvestmentRecordInput): InvestmentRecord!
+  createProviderLinkToken(input: CreateProviderLinkTokenInput!): ProviderLinkSession!
+  linkCardToProvider(input: LinkCardToProviderInput!): [Card!]!
+  unlinkCardFromProvider(cardId: ID!): Card!
 }
