@@ -45,6 +45,12 @@ enum ProviderConnectionStatus {
   ERROR
 }
 
+enum TransactionReviewStatus {
+  PENDING
+  PROMOTED
+  DISMISSED
+}
+
 type CategoryType {
   id: ID!
   userId: ID
@@ -163,6 +169,29 @@ type Card {
 
 type ProviderLinkSession {
   linkToken: String!
+}
+
+type StagedTransaction {
+  id: ID!
+  card: Card!
+  description: String!
+  total: String!
+  transactionDate: String!
+  providerPending: Boolean!
+  reviewStatus: TransactionReviewStatus!
+  suggestedSubCategory: SubCategory
+  suggestedPeriod: Period
+  promotedExpense: Expense
+  createdAt: String
+  updatedAt: String
+}
+
+type TransactionSyncResult {
+  cardId: ID!
+  newTransactions: Int!
+  updatedTransactions: Int!
+  syncedAt: String!
+  error: String
 }
 
 type TotalByCardId {
@@ -339,6 +368,15 @@ input LinkCardToProviderInput {
   cards: [LinkCardAccountInput!]!
 }
 
+input StagedTransactionsFilterInput {
+  cardId: ID
+  reviewStatus: TransactionReviewStatus
+}
+
+input SyncTransactionsInput {
+  cardId: ID
+}
+
 input PayBeforeInput {
   payBefore: Date
   periodId: String
@@ -424,6 +462,8 @@ type Query {
   investmentDetails: InvestmentDetail!
   #TODO add input for query dates
   udiValue: UdiValue!
+  stagedTransactions(input: StagedTransactionsFilterInput): [StagedTransaction!]!
+  stagedTransactionById(id: ID!): StagedTransaction
 }
 
 type Mutation {
@@ -445,4 +485,5 @@ type Mutation {
   createProviderLinkToken(input: CreateProviderLinkTokenInput!): ProviderLinkSession!
   linkCardToProvider(input: LinkCardToProviderInput!): [Card!]!
   unlinkCardFromProvider(cardId: ID!): Card!
+  syncTransactions(input: SyncTransactionsInput): [TransactionSyncResult!]!
 }

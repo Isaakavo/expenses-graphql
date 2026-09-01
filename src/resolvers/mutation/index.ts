@@ -16,3 +16,4 @@ export { createInvestmentRecord } from './investment/create-investment-record.js
 export { createProviderLinkToken } from './card/create-provider-link-token.js';
 export { linkCardToProvider } from './card/link-card-to-provider.js';
 export { unlinkCardFromProvider } from './card/unlink-card-from-provider.js';
+export { syncTransactions } from './transaction/sync-transactions.js';

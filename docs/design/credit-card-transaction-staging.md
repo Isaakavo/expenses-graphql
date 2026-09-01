@@ -943,6 +943,7 @@ class TransactionSyncService {
     newTransactions: number;
     updatedTransactions: number;
     syncedAt: Date;
+    error?: string;
   }>;
 
   async syncAllLinkedCards(): Promise<Array<Awaited<ReturnType<TransactionSyncService['syncCard']>>>>;
@@ -956,6 +957,13 @@ per Item, and slices out the requested card's counts from the result:
 1. Load the card (scoped by `userId`), fail if not found or not linked
    (`provider`/`providerAccessTokenCiphertext` null) — throws a clear error,
    not a silent no-op, so the manual mutation and cron job both surface it.
+   Also refuse a card whose `providerStatus` is `'DISCONNECTED'`: per §3.1
+   only that status stops syncing, and calling the provider anyway just
+   earns an auth error that downgrades the card to `'ERROR'`, losing the
+   more specific state. Note `'PENDING_DISCONNECT'` is **not** refused —
+   that is the warning state, and it syncs normally. `syncAllLinkedCards`
+   applies the same rule by filtering `DISCONNECTED` cards out; both entry
+   points must agree on what "syncable" means.
 2. Load every **sibling card** for this user sharing
    `(card.provider, card.providerConnectionId)` — this is the full set of
    cards that will actually get synced by this call, not just `cardId`.
@@ -1043,9 +1051,25 @@ per Item, and slices out the requested card's counts from the result:
    `removed` entries carry an `account_id` field (unconfirmed either way,
    see §4.3) — it scopes by the sibling-card set instead, which is
    sufficient.
-9. On success: update every sibling card's `providerLastSyncedAt` and
-   `providerStatus = 'ACTIVE'`, and the connection's `sync_cursor` to the
-   final `nextCursor`, all in the same transaction as steps 7–8. Commit.
+9. On success: update every sibling card's `providerLastSyncedAt`, and the
+   connection's `sync_cursor` to the final `nextCursor`, all in the same
+   transaction as steps 7–8. Commit.
+
+   **`providerStatus` on success — set `'ACTIVE'` only when the current
+   status is `'ERROR'` or unset.** An earlier draft of this step said to
+   write `'ACTIVE'` unconditionally, which is a real bug and shipped once
+   before being caught: `PENDING_DISCONNECT` is a seven-day warning that
+   deliberately **keeps syncing** (§4.3, §5.2), so an unconditional write
+   means the first successful sync inside the warning window silently
+   resets the card to `'ACTIVE'`, the warning is destroyed, and the Item
+   later breaks with no notice — undoing the whole point of that state.
+   `'DISCONNECTED'` must likewise not be cleared here; §5.2's
+   `CONNECTION_RESTORED` webhook is the *only* thing that restores those
+   two. `'ERROR'` is different and must be cleared: this service writes it
+   itself on its own failure, and no webhook ever clears it
+   (`LOGIN_REPAIRED` fires for auth breakage, not a transient provider
+   500), so without clearing it here a card that hit one blip would stay
+   `'ERROR'` forever.
 
    **Failure path — do not fold this into the same transaction.** An earlier
    draft of this step said to write `providerStatus = 'ERROR'` "in the same
@@ -1063,6 +1087,19 @@ per Item, and slices out the requested card's counts from the result:
     `syncCard(cardId)` can slice out just the requested card's entry to
     satisfy its stable return type.
 
+**On the `error` field.** `syncCard` (the single-card path) still *throws* on
+failure — the caller wants the exception. `error` exists for
+`syncAllLinkedCards`, which deliberately swallows a per-connection failure so
+one broken connection doesn't abort the rest. When a connection fails it must
+emit **one entry per sibling card under that connection**, with zero counts
+and `error` set to the failure message — it must **not** drop those cards from
+the result array. Dropping them (an earlier implementation did exactly this)
+means a user syncing three cards with one connection down receives two results
+and no signal whatsoever that the third failed; they would have to diff the
+response against their own card list to notice. §7's
+`TransactionSyncResult.error` field exists for precisely this and must
+actually be populated.
+
 **Documented behavior change from the pre-Plaid design:** calling
 `syncCard(cardId)` for one card now has the side effect of also syncing and
 updating `staged_transactions` for any sibling cards sharing its Item — this
@@ -1079,12 +1116,25 @@ would still be *correct*, just wasteful — because step 3's row lock and the
 cursor-driven "second call sees an already-advanced cursor and gets an
 empty delta" behavior make it safe, just not free.)
 
-**Behaviors / test cases:** unlinked card → throws; provider API error →
+**Behaviors / test cases:** unlinked card → throws; `DISCONNECTED` card →
+throws without calling the provider (step 1); **a `PENDING_DISCONNECT` card
+syncs normally and is still `PENDING_DISCONNECT` afterwards** (step 9 — the
+regression test for the warning-clobbering bug; without it nothing catches a
+reversion, since the old behavior fails silently); a card in `'ERROR'` that
+syncs successfully becomes `'ACTIVE'`; the happy path asserts
+`providerLastSyncedAt` is written at all; provider API error →
 card's **persisted** `providerStatus` is `'ERROR'` after the sync
 transaction rolled back (the separate-transaction requirement in step 9 —
 this test fails if the ERROR write is folded into the rolled-back
 transaction), method rethrows, other cards/connections in
-`syncAllLinkedCards` still processed; re-syncing with no new transactions →
+`syncAllLinkedCards` still processed **and the failed connection's cards
+still appear in the result with a non-null `error`**; the paginated loop is
+capped (a provider stuck on `hasMore: true` must terminate rather than spin
+holding the row lock — §12b #14's "bounded by `timeout × pages`" claim is
+only true if `pages` is actually bounded); the row-lock test asserts the
+underlying query received a `lock` option, not merely that the repository
+method was called (sqlite ignores `FOR UPDATE`, so a call-count assertion
+passes even with the lock deleted); re-syncing with no new transactions →
 `newTransactions: 0`; a transaction already staged and since promoted is not
 touched by a later poll that re-delivers it (its `review_status` stays
 `'PROMOTED'` — the upsert must not overwrite rows whose
@@ -2000,6 +2050,25 @@ errors, not judgement calls.
     here because the lesson generalizes: a bound whose key is chosen by the
     attacker is not a bound, and a test that exercises only the friendly
     case will happily certify one.
+
+23. **§5.1 step 9 specified a bug, and it shipped once before being caught.**
+    The step said to write `providerStatus = 'ACTIVE'` on every successful
+    sync, unconditionally. That sentence predates the `PENDING_DISCONNECT`
+    state introduced by #20 and was never revisited when it was added, so
+    the two directly contradict: #20 makes `PENDING_DISCONNECT` a seven-day
+    warning that *keeps syncing*, and step 9 then wipes it on the first
+    sync inside the window. The implementor followed the doc correctly; the
+    doc was wrong. Now: write `'ACTIVE'` only over `'ERROR'`/unset, never
+    over `'PENDING_DISCONNECT'`/`'DISCONNECTED'`. The generalizable lesson —
+    the same one as #22 — is that adding a state means auditing every
+    existing write to that column, not just the new paths.
+24. **Failed connections vanished from `syncAllLinkedCards`'s results.**
+    The per-connection catch returned an empty array, so cards under a
+    failed connection produced no result entry at all, while the adapter
+    hardcoded `error: null`. A user syncing three cards with one connection
+    down got two results and no indication of the third. §5.1 now specifies
+    one entry per affected card carrying the error, and §5.1's return type
+    carries the `error` field that §7's GraphQL type always had.
 
 Still genuinely unverified, and to be confirmed during implementation —
 though the surface has shrunk substantially now that the official `plaid`

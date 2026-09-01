@@ -19,6 +19,7 @@ import {
   createProviderLinkToken,
   linkCardToProvider,
   unlinkCardFromProvider,
+  syncTransactions,
 } from './mutation/index.js';
 
 //TODO add mutation for deletion
@@ -42,6 +43,7 @@ const mutations: MutationResolvers = {
   createProviderLinkToken: withErrorHandling('createProviderLinkToken', createProviderLinkToken),
   linkCardToProvider: withErrorHandling('linkCardToProvider', linkCardToProvider),
   unlinkCardFromProvider: withErrorHandling('unlinkCardFromProvider', unlinkCardFromProvider),
+  syncTransactions: withErrorHandling('syncTransactions', syncTransactions),
 };
 
 export default mutations;

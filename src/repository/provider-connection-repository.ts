@@ -33,4 +33,19 @@ export class ProviderConnectionRepository {
   ) {
     return this.updateCursor({ id: input.id, cursor: null }, options);
   }
+
+  async findForUpdate(
+    input: { userId: string; provider: string; providerConnectionId: string },
+    options: { transaction?: Transaction } = {}
+  ): Promise<ProviderConnection | null> {
+    return ProviderConnection.findOne({
+      where: {
+        userId: input.userId,
+        provider: input.provider,
+        providerConnectionId: input.providerConnectionId,
+      },
+      transaction: options.transaction,
+      lock: options.transaction?.LOCK.UPDATE,
+    });
+  }
 }

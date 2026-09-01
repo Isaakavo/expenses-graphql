@@ -121,3 +121,54 @@ describe('CardRepository.unlinkProvider', () => {
     await expect(repository.unlinkProvider(card.id, 'user-2')).rejects.toThrow();
   });
 });
+
+describe('CardRepository.findLinkedCards', () => {
+  it('returns only cards with a provider set, scoped by userId', async () => {
+    const linked = await createCard({ userId: 'user-1', alias: 'Linked' });
+    await repository.linkProvider(linked.id, 'user-1', {
+      provider: 'plaid',
+      providerAccountId: 'acct-1',
+      providerConnectionId: 'item-1',
+      ciphertext: 'ciphertext-value',
+      iv: 'iv-value',
+      authTag: 'authtag-value',
+    });
+    await createCard({ userId: 'user-1', alias: 'Unlinked' });
+    await createCard({ userId: 'user-2', alias: 'Other user linked' });
+
+    const linkedCards = await repository.findLinkedCards('user-1');
+
+    expect(linkedCards).toHaveLength(1);
+    expect(linkedCards[0].id).toBe(linked.id);
+  });
+});
+
+describe('CardRepository.updateProviderSyncMetadata', () => {
+  it('updates providerStatus and providerLastSyncedAt', async () => {
+    const card = await createCard();
+    const syncedAt = new Date('2026-04-01T12:00:00Z');
+
+    const updated = await repository.updateProviderSyncMetadata(card.id, 'user-1', {
+      providerStatus: 'ACTIVE',
+      providerLastSyncedAt: syncedAt,
+    });
+
+    expect(updated.providerStatus).toBe('ACTIVE');
+    expect(updated.providerLastSyncedAt).toEqual(syncedAt);
+  });
+
+  it('is scoped by userId: updating another user\'s card writes nothing', async () => {
+    const card = await createCard({ userId: 'user-1', providerStatus: 'ACTIVE' });
+    const syncedAt = new Date('2026-04-01T12:00:00Z');
+
+    const updated = await repository.updateProviderSyncMetadata(card.id, 'user-2', {
+      providerStatus: 'ERROR',
+      providerLastSyncedAt: syncedAt,
+    });
+
+    expect(updated).toBeNull();
+    const reloaded = await Card.findByPk(card.id);
+    expect(reloaded?.providerStatus).toBe('ACTIVE');
+    expect(reloaded?.providerLastSyncedAt ?? null).toBeNull();
+  });
+});

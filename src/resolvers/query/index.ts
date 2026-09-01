@@ -17,3 +17,5 @@ export { period } from './period/period.js'
 export { allInvestmentRecords } from './investment/all-investment-records.js'
 export { investmentDetails } from './investment/investment-details.js'
 export { udiValue } from './investment/udi-value.js'
+export { stagedTransactions } from './transaction/staged-transactions.js';
+export { stagedTransactionById } from './transaction/staged-transaction-by-id.js';

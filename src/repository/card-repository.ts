@@ -1,6 +1,6 @@
 import { Card } from '../models/card.js';
 import { logger } from '../logger.js';
-import { Transaction, WhereOptions } from 'sequelize';
+import { Op, Transaction, WhereOptions } from 'sequelize';
 
 export type LinkProviderInput = {
   provider: string;
@@ -85,5 +85,31 @@ export class CardRepository {
       },
       { transaction: options.transaction }
     );
+  }
+
+  async findLinkedCards(
+    userId: string,
+    options: { transaction?: Transaction } = {}
+  ): Promise<Card[]> {
+    return Card.findAll({
+      where: {
+        userId,
+        provider: { [Op.ne]: null },
+      },
+      transaction: options.transaction,
+    });
+  }
+
+  async updateProviderSyncMetadata(
+    cardId: string,
+    userId: string,
+    input: { providerStatus?: string; providerLastSyncedAt?: Date },
+    options: { transaction?: Transaction } = {}
+  ): Promise<Card> {
+    await Card.update(input, {
+      where: { id: cardId, userId },
+      transaction: options.transaction,
+    });
+    return Card.findOne({ where: { id: cardId, userId }, transaction: options.transaction });
   }
 }

@@ -20,6 +20,8 @@ import {
   allInvestmentRecords,
   investmentDetails,
   udiValue,
+  stagedTransactions,
+  stagedTransactionById,
 } from './query/index.js';
 
 const queries: QueryResolvers = {
@@ -42,6 +44,8 @@ const queries: QueryResolvers = {
   allInvestmentRecords: withErrorHandling('allInvestmentRecords', allInvestmentRecords),
   investmentDetails: withErrorHandling('investmentDetails', investmentDetails),
   udiValue: withErrorHandling('udiValue', udiValue),
+  stagedTransactions: withErrorHandling('stagedTransactions', stagedTransactions),
+  stagedTransactionById: withErrorHandling('stagedTransactionById', stagedTransactionById),
 };
 
 export default queries;
