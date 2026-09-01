@@ -3,7 +3,16 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { PeriodDTO } from '../dto';
 import { logger } from '../logger.js';
 
-export const adaptPeriod = (period: PeriodDTO): GraphqlPeriod => {
+type PeriodLike = {
+  id: string;
+  userId: string;
+  startDate: Date | string;
+  endDate: Date | string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+};
+
+export const adaptPeriod = (period: PeriodLike): GraphqlPeriod => {
   return {
     id: period.id,
     userId: period.userId,

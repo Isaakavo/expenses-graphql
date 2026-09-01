@@ -307,6 +307,18 @@ export class ExpenseRepository {
     return adaptRawListExpense(expenses);
   }
 
+  async getRecentExpensesForSuggestion(
+    userId: string,
+    limit: number
+  ): Promise<Expense[]> {
+    return Expense.findAll({
+      where: { userId },
+      attributes: ['id', 'concept', 'subCategoryId', 'payBefore'],
+      order: [['payBefore', 'DESC']],
+      limit,
+    });
+  }
+
   async getExpenseByPK(
     id: string,
     options: { transaction?: Transaction } = {}

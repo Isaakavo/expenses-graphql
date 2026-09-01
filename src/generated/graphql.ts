@@ -324,6 +324,7 @@ export type Mutation = {
   deleteExpense: Scalars['Boolean']['output'];
   deleteIncomeById: Scalars['Boolean']['output'];
   linkCardToProvider: Array<Card>;
+  syncTransactions: Array<TransactionSyncResult>;
   unlinkCardFromProvider: Card;
   updateCard: Card;
   updateCategoryAllocation: CategorySetting;
@@ -390,6 +391,11 @@ export type MutationDeleteIncomeByIdArgs = {
 
 export type MutationLinkCardToProviderArgs = {
   input: LinkCardToProviderInput;
+};
+
+
+export type MutationSyncTransactionsArgs = {
+  input?: InputMaybe<SyncTransactionsInput>;
 };
 
 
@@ -476,6 +482,8 @@ export type Query = {
   login: LoginResponse;
   period?: Maybe<Period>;
   periodsList?: Maybe<Array<Period>>;
+  stagedTransactionById?: Maybe<StagedTransaction>;
+  stagedTransactions: Array<StagedTransaction>;
   udiValue: UdiValue;
 };
 
@@ -519,11 +527,46 @@ export type QueryPeriodArgs = {
   input: FilterInput;
 };
 
+
+export type QueryStagedTransactionByIdArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryStagedTransactionsArgs = {
+  input?: InputMaybe<StagedTransactionsFilterInput>;
+};
+
+export type StagedTransaction = {
+  __typename?: 'StagedTransaction';
+  card: Card;
+  createdAt?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  promotedExpense?: Maybe<Expense>;
+  providerPending: Scalars['Boolean']['output'];
+  reviewStatus: TransactionReviewStatus;
+  suggestedPeriod?: Maybe<Period>;
+  suggestedSubCategory?: Maybe<SubCategory>;
+  total: Scalars['String']['output'];
+  transactionDate: Scalars['String']['output'];
+  updatedAt?: Maybe<Scalars['String']['output']>;
+};
+
+export type StagedTransactionsFilterInput = {
+  cardId?: InputMaybe<Scalars['ID']['input']>;
+  reviewStatus?: InputMaybe<TransactionReviewStatus>;
+};
+
 export type SubCategory = {
   __typename?: 'SubCategory';
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   userId?: Maybe<Scalars['ID']['output']>;
+};
+
+export type SyncTransactionsInput = {
+  cardId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type Total = {
@@ -559,6 +602,21 @@ export type TotalByMonth = Total & {
 export enum TransactionProviderName {
   PLAID = 'PLAID'
 }
+
+export enum TransactionReviewStatus {
+  DISMISSED = 'DISMISSED',
+  PENDING = 'PENDING',
+  PROMOTED = 'PROMOTED'
+}
+
+export type TransactionSyncResult = {
+  __typename?: 'TransactionSyncResult';
+  cardId: Scalars['ID']['output'];
+  error?: Maybe<Scalars['String']['output']>;
+  newTransactions: Scalars['Int']['output'];
+  syncedAt: Scalars['String']['output'];
+  updatedTransactions: Scalars['Int']['output'];
+};
 
 export type UdiValue = {
   __typename?: 'UdiValue';
@@ -738,13 +796,18 @@ export type ResolversTypes = ResolversObject<{
   ProviderConnectionStatus: ProviderConnectionStatus;
   ProviderLinkSession: ResolverTypeWrapper<ProviderLinkSession>;
   Query: ResolverTypeWrapper<{}>;
+  StagedTransaction: ResolverTypeWrapper<StagedTransaction>;
+  StagedTransactionsFilterInput: StagedTransactionsFilterInput;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   SubCategory: ResolverTypeWrapper<SubCategory>;
+  SyncTransactionsInput: SyncTransactionsInput;
   Total: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Total']>;
   TotalByCardId: ResolverTypeWrapper<TotalByCardId>;
   TotalByFortnight: ResolverTypeWrapper<TotalByFortnight>;
   TotalByMonth: ResolverTypeWrapper<TotalByMonth>;
   TransactionProviderName: TransactionProviderName;
+  TransactionReviewStatus: TransactionReviewStatus;
+  TransactionSyncResult: ResolverTypeWrapper<TransactionSyncResult>;
   UdiValue: ResolverTypeWrapper<UdiValue>;
   UpdateCardInput: UpdateCardInput;
   UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
@@ -800,12 +863,16 @@ export type ResolversParentTypes = ResolversObject<{
   Period: Period;
   ProviderLinkSession: ProviderLinkSession;
   Query: {};
+  StagedTransaction: StagedTransaction;
+  StagedTransactionsFilterInput: StagedTransactionsFilterInput;
   String: Scalars['String']['output'];
   SubCategory: SubCategory;
+  SyncTransactionsInput: SyncTransactionsInput;
   Total: ResolversInterfaceTypes<ResolversParentTypes>['Total'];
   TotalByCardId: TotalByCardId;
   TotalByFortnight: TotalByFortnight;
   TotalByMonth: TotalByMonth;
+  TransactionSyncResult: TransactionSyncResult;
   UdiValue: UdiValue;
   UpdateCardInput: UpdateCardInput;
   UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
@@ -1004,6 +1071,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
   deleteIncomeById?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
   linkCardToProvider?: Resolver<Array<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<MutationLinkCardToProviderArgs, 'input'>>;
+  syncTransactions?: Resolver<Array<ResolversTypes['TransactionSyncResult']>, ParentType, ContextType, Partial<MutationSyncTransactionsArgs>>;
   unlinkCardFromProvider?: Resolver<ResolversTypes['Card'], ParentType, ContextType, RequireFields<MutationUnlinkCardFromProviderArgs, 'cardId'>>;
   updateCard?: Resolver<ResolversTypes['Card'], ParentType, ContextType, Partial<MutationUpdateCardArgs>>;
   updateCategoryAllocation?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, Partial<MutationUpdateCategoryAllocationArgs>>;
@@ -1052,7 +1120,25 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
   period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType, RequireFields<QueryPeriodArgs, 'input'>>;
   periodsList?: Resolver<Maybe<Array<ResolversTypes['Period']>>, ParentType, ContextType>;
+  stagedTransactionById?: Resolver<Maybe<ResolversTypes['StagedTransaction']>, ParentType, ContextType, RequireFields<QueryStagedTransactionByIdArgs, 'id'>>;
+  stagedTransactions?: Resolver<Array<ResolversTypes['StagedTransaction']>, ParentType, ContextType, Partial<QueryStagedTransactionsArgs>>;
   udiValue?: Resolver<ResolversTypes['UdiValue'], ParentType, ContextType>;
+}>;
+
+export type StagedTransactionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['StagedTransaction'] = ResolversParentTypes['StagedTransaction']> = ResolversObject<{
+  card?: Resolver<ResolversTypes['Card'], ParentType, ContextType>;
+  createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  description?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  promotedExpense?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType>;
+  providerPending?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  reviewStatus?: Resolver<ResolversTypes['TransactionReviewStatus'], ParentType, ContextType>;
+  suggestedPeriod?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType>;
+  suggestedSubCategory?: Resolver<Maybe<ResolversTypes['SubCategory']>, ParentType, ContextType>;
+  total?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  transactionDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
@@ -1093,6 +1179,15 @@ export type TotalByMonthResolvers<ContextType = Context, ParentType extends Reso
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type TransactionSyncResultResolvers<ContextType = Context, ParentType extends ResolversParentTypes['TransactionSyncResult'] = ResolversParentTypes['TransactionSyncResult']> = ResolversObject<{
+  cardId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  newTransactions?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  syncedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  updatedTransactions?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type UdiValueResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UdiValue'] = ResolversParentTypes['UdiValue']> = ResolversObject<{
   amount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   date?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -1126,11 +1221,13 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Period?: PeriodResolvers<ContextType>;
   ProviderLinkSession?: ProviderLinkSessionResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  StagedTransaction?: StagedTransactionResolvers<ContextType>;
   SubCategory?: SubCategoryResolvers<ContextType>;
   Total?: TotalResolvers<ContextType>;
   TotalByCardId?: TotalByCardIdResolvers<ContextType>;
   TotalByFortnight?: TotalByFortnightResolvers<ContextType>;
   TotalByMonth?: TotalByMonthResolvers<ContextType>;
+  TransactionSyncResult?: TransactionSyncResultResolvers<ContextType>;
   UdiValue?: UdiValueResolvers<ContextType>;
 }>;
 

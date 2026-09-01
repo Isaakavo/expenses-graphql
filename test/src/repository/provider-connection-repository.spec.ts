@@ -76,3 +76,56 @@ describe('ProviderConnectionRepository.resetCursor', () => {
     expect(reloaded?.syncCursor).toBeNull();
   });
 });
+
+describe('ProviderConnectionRepository.findForUpdate', () => {
+  it('returns the matching row inside a transaction', async () => {
+    const [connection] = await repository.findOrCreate({
+      userId: 'user-1',
+      provider: 'plaid',
+      providerConnectionId: 'item-1',
+    });
+    await repository.updateCursor({ id: connection.id, cursor: 'cursor-abc' });
+
+    const dbTransaction = await sequelize.transaction();
+    const found = await repository.findForUpdate(
+      { userId: 'user-1', provider: 'plaid', providerConnectionId: 'item-1' },
+      { transaction: dbTransaction }
+    );
+    await dbTransaction.commit();
+
+    expect(found?.id).toBe(connection.id);
+    expect(found?.syncCursor).toBe('cursor-abc');
+  });
+
+  it('returns null when no connection exists yet', async () => {
+    const dbTransaction = await sequelize.transaction();
+    const found = await repository.findForUpdate(
+      { userId: 'user-1', provider: 'plaid', providerConnectionId: 'item-missing' },
+      { transaction: dbTransaction }
+    );
+    await dbTransaction.commit();
+
+    expect(found).toBeNull();
+  });
+
+  it('requests a row lock from the underlying findOne call', async () => {
+    await repository.findOrCreate({
+      userId: 'user-1',
+      provider: 'plaid',
+      providerConnectionId: 'item-1',
+    });
+
+    const findOneSpy = vi.spyOn(ProviderConnection, 'findOne');
+    const dbTransaction = await sequelize.transaction();
+
+    await repository.findForUpdate(
+      { userId: 'user-1', provider: 'plaid', providerConnectionId: 'item-1' },
+      { transaction: dbTransaction }
+    );
+    await dbTransaction.commit();
+
+    expect(findOneSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ lock: expect.anything() })
+    );
+  });
+});
