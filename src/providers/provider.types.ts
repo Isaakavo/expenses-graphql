@@ -28,6 +28,8 @@ export type ProviderTransactionSyncResult = {
 export type ProviderWebhookEvent =
   | { type: 'TRANSACTIONS_UPDATED'; providerConnectionId: string }
   | { type: 'CONNECTION_DISCONNECTED'; providerConnectionId: string }
+  | { type: 'CONNECTION_EXPIRING'; providerConnectionId: string }
+  | { type: 'CONNECTION_RESTORED'; providerConnectionId: string }
   | { type: 'UNKNOWN'; raw: unknown };
 
 export interface TransactionProvider {

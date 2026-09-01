@@ -7,7 +7,12 @@ import {
 import { logger } from '../logger.js';
 import { Expense, ExpenseWithCategory } from '../models';
 import { calculateFortnight } from '../utils/date-utils.js';
-import { adaptCardDTO } from './card-adapter.js';
+import {
+  adaptCardDTO,
+  adaptProviderDate,
+  adaptProviderNameToGraphql,
+  adaptProviderStatusToGraphql,
+} from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';
 import { adaptPeriod, adaptPeriodDTO } from './period-adapter.js';
 import { ExpenseDTO, IncomeDTO, IncomeWithCategoryAllocationDTO, PeriodDTO } from '../dto';
@@ -150,6 +155,10 @@ export function adaptCard(card: Card) {
       bank: card.bank,
       isDigital: card.isDigital,
       isDebit: card.isDebit,
+      provider: adaptProviderNameToGraphql(card.provider),
+      providerStatus: adaptProviderStatusToGraphql(card.providerStatus),
+      providerLinkedAt: adaptProviderDate(card.providerLinkedAt),
+      providerLastSyncedAt: adaptProviderDate(card.providerLastSyncedAt),
     };
   } catch (error) {
     logger.error(error);
