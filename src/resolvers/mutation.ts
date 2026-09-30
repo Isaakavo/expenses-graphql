@@ -16,6 +16,12 @@ import {
   updateCategorySetting,
   updateCategoryAllocation,
   createInvestmentRecord,
+  createCategory,
+  createSubCategory,
+  archiveCategory,
+  restoreCategory,
+  archiveSubCategory,
+  restoreSubCategory,
 } from './mutation/index.js';
 
 //TODO add mutation for deletion
@@ -36,6 +42,12 @@ const mutations: MutationResolvers = {
   deleteCategorySetting: withErrorHandling('deleteCategorySetting', deleteCategorySetting),
   updateCategoryAllocation: withErrorHandling('updateCategoryAllocation', updateCategoryAllocation),
   createInvestmentRecord: withErrorHandling('createInvestmentRecord', createInvestmentRecord),
+  createCategory: withErrorHandling('createCategory', createCategory),
+  createSubCategory: withErrorHandling('createSubCategory', createSubCategory),
+  archiveCategory: withErrorHandling('archiveCategory', archiveCategory),
+  restoreCategory: withErrorHandling('restoreCategory', restoreCategory),
+  archiveSubCategory: withErrorHandling('archiveSubCategory', archiveSubCategory),
+  restoreSubCategory: withErrorHandling('restoreSubCategory', restoreSubCategory),
 };
 
 export default mutations;
