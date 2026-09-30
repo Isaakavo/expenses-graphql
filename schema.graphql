@@ -45,6 +45,8 @@ type SubCategory {
   id: ID!
   userId: ID
   name: String!
+  isCustom: Boolean!      # userId != null
+  isArchived: Boolean!    # archived_at != null
 }
 
 type Categories {
@@ -52,6 +54,8 @@ type Categories {
   userId: ID
   name: String
   subCategory: [SubCategory!]
+  isCustom: Boolean!
+  isArchived: Boolean!
 }
 
 type CategorySettings {
@@ -360,6 +364,16 @@ input UpdateCategoryAllocationInput {
     percentage: Float!
 }
 
+input CreateCategoryInput {
+  name: String!
+  subCategoryNames: [String!]!   # at least 1
+}
+
+input CreateSubCategoryInput {
+  categoryId: ID!
+  name: String!
+}
+
 input InvestmentRecordInput {
     amount: Float!
     date: Date!
@@ -379,7 +393,9 @@ type Query {
   expensesByCategory(input: FilterInput!): [ExpensesByCategory!]!
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
-  categoryList: [Categories!]
+  # includeArchived=false (default): archived categories are excluded AND archived subcategories are excluded.
+  # includeArchived=true: everything the user can see, each item flagged with isArchived.
+  categoryList(includeArchived: Boolean = false): [Categories!]
   categorySettings: CategorySettings
   categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
@@ -408,4 +424,10 @@ type Mutation {
   deleteCategorySetting(categoryId: ID!): CategorySetting!
   updateCategoryAllocation(input: UpdateCategoryAllocationInput): CategorySetting!
   createInvestmentRecord(input: InvestmentRecordInput): InvestmentRecord!
+  createCategory(input: CreateCategoryInput!): Categories!
+  createSubCategory(input: CreateSubCategoryInput!): SubCategory!
+  archiveCategory(id: ID!): Categories!
+  restoreCategory(id: ID!): Categories!
+  archiveSubCategory(id: ID!): SubCategory!
+  restoreSubCategory(id: ID!): SubCategory!
 }

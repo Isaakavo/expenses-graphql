@@ -1,5 +1,10 @@
 import {CategoryDTO, CategorySettingDTO, SubCategoryDTO} from '../dto';
-import {Category, CategorySettings} from '../generated/graphql.js';
+import {
+  Categories,
+  Category,
+  CategorySettings,
+  SubCategory,
+} from '../generated/graphql.js';
 
 function formatNumber(num: number): number {
   const EPSILON = 1e-8;
@@ -37,6 +42,7 @@ export const adaptCategoryDTO = (category, subCategory?): CategoryDTO => {
     subCategories: subCategory
       ? [adaptSubCategoryDTO(subCategory)]
       : category?.subCategories?.map(adaptSubCategoryDTO),
+    archivedAt: category?.archivedAt ?? null,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt,
   };
@@ -48,6 +54,7 @@ export const adaptSubCategoryDTO = (subCategory): SubCategoryDTO => {
     userId: subCategory.userId,
     categoryId: subCategory.categoryId,
     name: subCategory.name,
+    archivedAt: subCategory?.archivedAt ?? null,
     createdAt: subCategory.createdAt,
     updatedAt: subCategory.updatedAt,
   };
@@ -62,3 +69,39 @@ export const adaptCategorySettingDTO = (categorySetting): CategorySettingDTO => 
     percentage: categorySetting.percentage,
   }
 }
+
+type CategoryLike = {
+  id: string;
+  userId?: string | null;
+  name: string;
+  archivedAt?: Date | null;
+};
+
+// Sequelize Category (with the `subCategory` include) → CategoryDTO
+export const adaptCategoryModelDTO = (category): CategoryDTO => ({
+  id: category.id,
+  userId: category.userId ?? null,
+  name: category.name,
+  subCategories: (category.subCategory ?? []).map(adaptSubCategoryDTO),
+  archivedAt: category.archivedAt ?? null,
+  createdAt: category.createdAt,
+  updatedAt: category.updatedAt,
+});
+
+// Single source of truth for the isCustom / isArchived flags exposed through GraphQL.
+export const adaptSubCategoryToGraphql = (subCategory: CategoryLike): SubCategory => ({
+  id: subCategory.id,
+  userId: subCategory.userId ?? null,
+  name: subCategory.name,
+  isCustom: subCategory.userId != null,
+  isArchived: subCategory.archivedAt != null,
+});
+
+export const adaptCategoryToGraphql = (category: CategoryDTO): Categories => ({
+  id: category.id,
+  userId: category.userId ?? null,
+  name: category.name,
+  subCategory: (category.subCategories ?? []).map(adaptSubCategoryToGraphql),
+  isCustom: category.userId != null,
+  isArchived: category.archivedAt != null,
+});
