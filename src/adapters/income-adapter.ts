@@ -1,6 +1,8 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { Card } from 'models/card.js';
 import {
+  CategoryOrigin,
+  CategoryStatus,
   Expense as GraphqlExpense,
   Income as GraphqlIncome,
 } from '../generated/graphql.js';
@@ -8,7 +10,7 @@ import { logger } from '../logger.js';
 import { Expense, ExpenseWithCategory } from '../models';
 import { calculateFortnight } from '../utils/date-utils.js';
 import { adaptCardDTO } from './card-adapter.js';
-import { adaptCategoryDTO } from './category-adapter.js';
+import { adaptCategoryDTO, adaptSubCategoryToGraphql } from './category-adapter.js';
 import { adaptPeriod, adaptPeriodDTO } from './period-adapter.js';
 import { ExpenseDTO, IncomeDTO, IncomeWithCategoryAllocationDTO, PeriodDTO } from '../dto';
 
@@ -81,6 +83,8 @@ export function adaptExpensesWithCard(x: Expense, card?: Card) {
         id: '',
         name: '',
         userId: '',
+        status: CategoryStatus.ACTIVE,
+        origin: CategoryOrigin.DEFAULT,
       },
     };
   } catch (error) {
@@ -109,11 +113,7 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
         name: expenseWithCategory.sub_category.category.name,
         userId: expenseWithCategory.sub_category.category.userId,
       },
-      subCategory: {
-        id: expenseWithCategory.sub_category.id,
-        name: expenseWithCategory.sub_category.name,
-        userId: expenseWithCategory.sub_category.userId,
-      },
+      subCategory: adaptSubCategoryToGraphql(expenseWithCategory.sub_category),
     };
   } catch (error) {
     logger.error(error);
@@ -134,7 +134,7 @@ export function adaptExpensesDTOInput(x: ExpenseDTO): GraphqlExpense {
       updatedAt: x?.updatedAt,
       card: x?.card ? adaptCardDTO(x.card) : null,
       category: adaptCategoryDTO(x.category),
-      subCategory: adaptCategoryDTO(x.category.subCategories[0]),
+      subCategory: adaptSubCategoryToGraphql(x.category.subCategories[0]),
     };
   } catch (error) {
     logger.error(error.message);

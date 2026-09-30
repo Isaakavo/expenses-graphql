@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Sequelize } from 'sequelize';
 import { ExpensesService } from '../../../src/service/expenses-service.js';
+import { GraphQLError } from 'graphql';
 import { FixedExpenseFrequency } from '../../../src/generated/graphql.js';
+import { CategoryService } from '../../../src/service/category-service.js';
 
 const userId = 'test-user';
 let service: ExpensesService;
@@ -32,9 +34,15 @@ const baseFixedInput = {
   frequency: FixedExpenseFrequency.MONTHLY,
 };
 
+const mockAssertSubCategoryAssignable = vi.fn();
+
 beforeEach(() => {
   vi.clearAllMocks();
+  mockAssertSubCategoryAssignable.mockResolvedValue(undefined);
   service = new ExpensesService(userId, mockSequelize);
+  service.categoryService = {
+    assertSubCategoryAssignable: mockAssertSubCategoryAssignable,
+  } as unknown as CategoryService;
 });
 
 describe('createFixedExpenses', () => {
@@ -213,5 +221,124 @@ describe('createFixedExpenses', () => {
     });
 
     expect(mockCreateExpense.mock.calls[0][0].cardId).toBe('card-123');
+  });
+});
+
+describe('sub category guards on expenses', () => {
+  const archivedError = () =>
+    new GraphQLError('archived', { extensions: { code: 'SUBCATEGORY_ARCHIVED' } });
+  const notFoundError = () =>
+    new GraphQLError('not found', { extensions: { code: 'NOT_FOUND' } });
+
+  const expenseDTO = (subCategoryId: string) => ({
+    id: 'exp-1',
+    userId,
+    subCategoryId,
+    concept: 'Concert',
+    total: 100,
+    card: null,
+    category: { id: 'cat-1', name: 'Test', subCategories: [{ id: subCategoryId, name: 'Sub' }] },
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  const mockUpdateDeps = (currentSubCategoryId: string | null) => {
+    const updateExpense = vi.fn().mockImplementation((_id, input) => expenseDTO(input.subCategoryId));
+    const getExpenseSubCategoryId = vi.fn().mockResolvedValue(currentSubCategoryId);
+    Object.assign(service, {
+      periodRepository: { getPeriodBy: vi.fn().mockResolvedValue(basePeriod) },
+      expenseRepository: { updateExpense, getExpenseSubCategoryId },
+    });
+    return { updateExpense, getExpenseSubCategoryId };
+  };
+
+  const updateInput = (subCategoryId: string) => ({
+    concept: 'Concert',
+    total: 100,
+    payBefore: new Date('2026-04-01T00:00:00Z'),
+    subCategoryId,
+  });
+
+  it('createExpense validates the sub category before creating', async () => {
+    const createExpense = vi.fn().mockResolvedValue(expenseDTO('sub-1'));
+    Object.assign(service, { expenseRepository: { createExpense } });
+
+    await service.createExpense({
+      concept: 'Concert',
+      total: 100,
+      periodId: 'period-1',
+      categoryId: 'cat-1',
+      subCategoryId: 'sub-1',
+    });
+
+    expect(mockAssertSubCategoryAssignable).toHaveBeenCalledWith('sub-1');
+    expect(createExpense).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['SUBCATEGORY_ARCHIVED', archivedError],
+    ['NOT_FOUND', notFoundError],
+  ])('createExpense rejects with %s', async (code, makeError) => {
+    mockAssertSubCategoryAssignable.mockRejectedValue(makeError());
+    const createExpense = vi.fn();
+    Object.assign(service, { expenseRepository: { createExpense } });
+
+    await expect(
+      service.createExpense({
+        concept: 'Concert',
+        total: 100,
+        periodId: 'period-1',
+        categoryId: 'cat-1',
+        subCategoryId: 'sub-archived',
+      })
+    ).rejects.toMatchObject({ extensions: { code } });
+    expect(createExpense).not.toHaveBeenCalled();
+  });
+
+  it('createFixedExpenses rejects an archived sub category before opening a transaction', async () => {
+    mockAssertSubCategoryAssignable.mockRejectedValue(archivedError());
+    const createExpense = vi.fn();
+    Object.assign(service, { expenseRepository: { createExpense } });
+
+    await expect(service.createFixedExpenses(baseFixedInput)).rejects.toMatchObject({
+      extensions: { code: 'SUBCATEGORY_ARCHIVED' },
+    });
+    expect(mockAssertSubCategoryAssignable).toHaveBeenCalledWith('sub-1');
+    expect(mockSequelize.transaction).not.toHaveBeenCalled();
+    expect(createExpense).not.toHaveBeenCalled();
+  });
+
+  it('updateExpense keeps an unchanged (even archived) sub category without validating it', async () => {
+    mockAssertSubCategoryAssignable.mockRejectedValue(archivedError());
+    const { updateExpense } = mockUpdateDeps('sub-archived');
+
+    await service.updateExpense('exp-1', updateInput('sub-archived'));
+
+    expect(mockAssertSubCategoryAssignable).not.toHaveBeenCalled();
+    expect(updateExpense).toHaveBeenCalled();
+    expect(mockTransaction.commit).toHaveBeenCalled();
+  });
+
+  it('updateExpense validates a changed sub category', async () => {
+    const { updateExpense } = mockUpdateDeps('sub-old');
+
+    await service.updateExpense('exp-1', updateInput('sub-new'));
+
+    expect(mockAssertSubCategoryAssignable).toHaveBeenCalledWith('sub-new');
+    expect(updateExpense).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['SUBCATEGORY_ARCHIVED', archivedError],
+    ['NOT_FOUND', notFoundError],
+  ])('updateExpense rejects a changed sub category with %s', async (code, makeError) => {
+    mockAssertSubCategoryAssignable.mockRejectedValue(makeError());
+    const { updateExpense } = mockUpdateDeps('sub-old');
+
+    await expect(
+      service.updateExpense('exp-1', updateInput('sub-archived'))
+    ).rejects.toMatchObject({ extensions: { code } });
+    expect(updateExpense).not.toHaveBeenCalled();
+    expect(mockSequelize.transaction).not.toHaveBeenCalled();
   });
 });

@@ -6,7 +6,7 @@ import {
   GroupedExpensesDTO,
 } from '../dto';
 import { adaptCardDTO } from './card-adapter.js';
-import { adaptCategoryDTO } from './category-adapter.js';
+import { adaptCategoryDTO, adaptSubCategoryToGraphql } from './category-adapter.js';
 import { adaptExpensesDTOInput, formatCurrency } from './income-adapter.js';
 
 export const adaptSingleRawExpenseDTO = (exp): ExpenseDTO => {
@@ -97,7 +97,7 @@ export const adaptExpensesByCategoryDTO = (
     if (subCat) {
       if (!acc[cat.id].subCategories[subCat.id]) {
         acc[cat.id].subCategories[subCat.id] = {
-          subCategory: { id: subCat.id, userId: subCat.userId, name: subCat.name },
+          subCategory: adaptSubCategoryToGraphql(subCat),
           expenses: [],
           total: 0,
         };
