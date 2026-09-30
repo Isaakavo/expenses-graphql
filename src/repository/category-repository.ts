@@ -2,10 +2,34 @@ import { SubCategory } from '../models/sub-category.js';
 import { Category } from '../models/category.js';
 import { CategorySettings } from '../models/category-settings.js';
 import { Op, Sequelize, WhereOptions, col, fn, where } from 'sequelize';
+import { CategoryStatus } from '../generated/graphql.js';
+
+export const ALL_CATEGORY_STATUSES: readonly CategoryStatus[] = [
+  CategoryStatus.ACTIVE,
+  CategoryStatus.ARCHIVED,
+];
 
 export type CategoryListOptions = {
-  includeArchived?: boolean;
+  /** Statuses to keep, applied independently to categories and sub categories. Default [ACTIVE]. */
+  statuses?: readonly CategoryStatus[];
   categoryId?: string;
+};
+
+/** archived_at condition matching the requested statuses ({} when every status is requested). */
+export const archivedAtWhere = (statuses: readonly CategoryStatus[]): WhereOptions => {
+  const active = statuses.includes(CategoryStatus.ACTIVE);
+  const archived = statuses.includes(CategoryStatus.ARCHIVED);
+  if (active && archived) {
+    return {};
+  }
+  if (archived) {
+    return { archivedAt: { [Op.ne]: null } };
+  }
+  if (active) {
+    return { archivedAt: null };
+  }
+  // No status requested: match nothing (the service rejects this case before reaching here).
+  return { id: null };
 };
 
 export class CategoryRepository {
@@ -30,15 +54,19 @@ export class CategoryRepository {
    * (global or owned by the user — never other users' sub categories).
    * Ordering is applied in the service.
    */
-  async getCategoryList({ includeArchived = false, categoryId }: CategoryListOptions = {}) {
+  async getCategoryList({
+    statuses = [CategoryStatus.ACTIVE],
+    categoryId,
+  }: CategoryListOptions = {}) {
+    const statusWhere = archivedAtWhere(statuses);
     const categoryWhere: WhereOptions = {
       ...this.visibleScope(),
       ...(categoryId ? { id: categoryId } : {}),
-      ...(includeArchived ? {} : { archivedAt: null }),
+      ...statusWhere,
     };
     const subCategoryWhere: WhereOptions = {
       ...this.visibleScope(),
-      ...(includeArchived ? {} : { archivedAt: null }),
+      ...statusWhere,
     };
 
     return Category.findAll({
@@ -113,7 +141,7 @@ export class CategoryRepository {
       return category.id;
     });
 
-    const [created] = await this.getCategoryList({ includeArchived: true, categoryId });
+    const [created] = await this.getCategoryList({ statuses: ALL_CATEGORY_STATUSES, categoryId });
     return created;
   }
 
@@ -124,7 +152,7 @@ export class CategoryRepository {
   /** Sets archived_at on a category owned by the user (null restores it). */
   async setCategoryArchivedAt(id: string, archivedAt: Date | null) {
     await Category.update({ archivedAt }, { where: { id, userId: this.userId } });
-    const [category] = await this.getCategoryList({ includeArchived: true, categoryId: id });
+    const [category] = await this.getCategoryList({ statuses: ALL_CATEGORY_STATUSES, categoryId: id });
     return category;
   }
 

@@ -42,9 +42,9 @@ export type Card = {
 export type Categories = {
   __typename?: 'Categories';
   id?: Maybe<Scalars['ID']['output']>;
-  isArchived: Scalars['Boolean']['output'];
-  isCustom: Scalars['Boolean']['output'];
   name?: Maybe<Scalars['String']['output']>;
+  origin: CategoryOrigin;
+  status: CategoryStatus;
   subCategory?: Maybe<Array<SubCategory>>;
   userId?: Maybe<Scalars['ID']['output']>;
 };
@@ -84,6 +84,14 @@ export type CategoryAllocationInput = {
   periodId: Scalars['String']['input'];
 };
 
+/** Who owns the item: seeded global default (user_id IS NULL) or created by the user. */
+export enum CategoryOrigin {
+  /** Created by the current user (user_id IS NOT NULL); editable. */
+  CUSTOM = 'CUSTOM',
+  /** Seeded global default shared by every user (user_id IS NULL); read-only. */
+  DEFAULT = 'DEFAULT'
+}
+
 export type CategorySetting = {
   __typename?: 'CategorySetting';
   id: Scalars['ID']['output'];
@@ -95,6 +103,14 @@ export type CategorySettings = {
   percentageTotal: Scalars['Float']['output'];
   settings?: Maybe<Array<CategoryType>>;
 };
+
+/** Lifecycle of a category or sub-category. */
+export enum CategoryStatus {
+  /** Visible and selectable (archived_at IS NULL). */
+  ACTIVE = 'ACTIVE',
+  /** Hidden from pickers but kept for history (archived_at IS NOT NULL). */
+  ARCHIVED = 'ARCHIVED'
+}
 
 export type CategorySum = {
   __typename?: 'CategorySum';
@@ -490,7 +506,7 @@ export type QueryCategoryAllocationArgs = {
 
 
 export type QueryCategoryListArgs = {
-  includeArchived?: InputMaybe<Scalars['Boolean']['input']>;
+  statuses?: Array<CategoryStatus>;
 };
 
 
@@ -526,9 +542,9 @@ export type QueryPeriodArgs = {
 export type SubCategory = {
   __typename?: 'SubCategory';
   id: Scalars['ID']['output'];
-  isArchived: Scalars['Boolean']['output'];
-  isCustom: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
+  origin: CategoryOrigin;
+  status: CategoryStatus;
   userId?: Maybe<Scalars['ID']['output']>;
 };
 
@@ -700,8 +716,10 @@ export type ResolversTypes = ResolversObject<{
   Category: Category;
   CategoryAllocation: ResolverTypeWrapper<CategoryAllocation>;
   CategoryAllocationInput: CategoryAllocationInput;
+  CategoryOrigin: CategoryOrigin;
   CategorySetting: ResolverTypeWrapper<CategorySetting>;
   CategorySettings: ResolverTypeWrapper<CategorySettings>;
+  CategoryStatus: CategoryStatus;
   CategorySum: ResolverTypeWrapper<CategorySum>;
   CategoryType: ResolverTypeWrapper<CategoryType>;
   CreateCardInput: CreateCardInput;
@@ -824,9 +842,9 @@ export type CardResolvers<ContextType = Context, ParentType extends ResolversPar
 
 export type CategoriesResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Categories'] = ResolversParentTypes['Categories']> = ResolversObject<{
   id?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
-  isArchived?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  isCustom?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  origin?: Resolver<ResolversTypes['CategoryOrigin'], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['CategoryStatus'], ParentType, ContextType>;
   subCategory?: Resolver<Maybe<Array<ResolversTypes['SubCategory']>>, ParentType, ContextType>;
   userId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1031,7 +1049,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   cardById?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<QueryCardByIdArgs, 'cardId'>>;
   cardList?: Resolver<Maybe<Array<Maybe<ResolversTypes['Card']>>>, ParentType, ContextType>;
   categoryAllocation?: Resolver<Maybe<ResolversTypes['CategoryAllocation']>, ParentType, ContextType, RequireFields<QueryCategoryAllocationArgs, 'input'>>;
-  categoryList?: Resolver<Maybe<Array<ResolversTypes['Categories']>>, ParentType, ContextType, RequireFields<QueryCategoryListArgs, 'includeArchived'>>;
+  categoryList?: Resolver<Maybe<Array<ResolversTypes['Categories']>>, ParentType, ContextType, RequireFields<QueryCategoryListArgs, 'statuses'>>;
   categorySettings?: Resolver<Maybe<ResolversTypes['CategorySettings']>, ParentType, ContextType>;
   expenseById?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<QueryExpenseByIdArgs, 'id'>>;
   expensesByCategory?: Resolver<Array<ResolversTypes['ExpensesByCategory']>, ParentType, ContextType, RequireFields<QueryExpensesByCategoryArgs, 'input'>>;
@@ -1049,9 +1067,9 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 
 export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  isArchived?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  isCustom?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  origin?: Resolver<ResolversTypes['CategoryOrigin'], ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['CategoryStatus'], ParentType, ContextType>;
   userId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;

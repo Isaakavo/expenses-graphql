@@ -4,12 +4,12 @@ import { CategoryService } from '../../../service/category-service.js';
 
 export const categoryList: QueryResolvers['categoryList'] = async (
   _,
-  { includeArchived },
+  { statuses },
   { user: { userId }, sequelizeClient }
 ) => {
   const categoryService = new CategoryService(userId, sequelizeClient);
 
-  const categories = await categoryService.getCategoryList(includeArchived ?? false);
+  const categories = await categoryService.getCategoryList(statuses);
 
   return categories.map(adaptCategoryToGraphql);
 };

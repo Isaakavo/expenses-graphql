@@ -6,6 +6,7 @@ import {
   normalizeCategoryName,
 } from '../../../src/service/category-service.js';
 import { CategoryRepository } from '../../../src/repository/category-repository.js';
+import { CategoryStatus } from '../../../src/generated/graphql.js';
 
 const userId = 'user-1';
 const now = new Date('2026-09-30T00:00:00Z');
@@ -87,12 +88,30 @@ describe('normalizeCategoryName', () => {
 });
 
 describe('getCategoryList', () => {
-  it('excludes archived by default and passes includeArchived through', async () => {
+  it('defaults to [ACTIVE]', async () => {
     repo.getCategoryList.mockResolvedValue([]);
     await service.getCategoryList();
-    expect(repo.getCategoryList).toHaveBeenCalledWith({ includeArchived: false });
-    await service.getCategoryList(true);
-    expect(repo.getCategoryList).toHaveBeenLastCalledWith({ includeArchived: true });
+    expect(repo.getCategoryList).toHaveBeenCalledWith({ statuses: [CategoryStatus.ACTIVE] });
+  });
+
+  it.each([
+    [[CategoryStatus.ARCHIVED]],
+    [[CategoryStatus.ACTIVE, CategoryStatus.ARCHIVED]],
+  ])('passes statuses %o through to the repository', async (statuses) => {
+    repo.getCategoryList.mockResolvedValue([]);
+    await service.getCategoryList(statuses);
+    expect(repo.getCategoryList).toHaveBeenCalledWith({ statuses });
+  });
+
+  it('de-duplicates statuses', async () => {
+    repo.getCategoryList.mockResolvedValue([]);
+    await service.getCategoryList([CategoryStatus.ARCHIVED, CategoryStatus.ARCHIVED]);
+    expect(repo.getCategoryList).toHaveBeenCalledWith({ statuses: [CategoryStatus.ARCHIVED] });
+  });
+
+  it('rejects an empty statuses list with BAD_USER_INPUT without querying', async () => {
+    await expectCode(service.getCategoryList([]), 'BAD_USER_INPUT');
+    expect(repo.getCategoryList).not.toHaveBeenCalled();
   });
 
   it('orders global first then custom, alphabetically case-insensitive (categories and sub categories)', async () => {
@@ -128,7 +147,10 @@ describe('getCategoryList', () => {
     repo.getCategoryList.mockResolvedValue([
       category({ archivedAt: now, subCategory: [sub({ archivedAt: now })] }),
     ]);
-    const [result] = await service.getCategoryList(true);
+    const [result] = await service.getCategoryList([
+      CategoryStatus.ACTIVE,
+      CategoryStatus.ARCHIVED,
+    ]);
     expect(result.archivedAt).toEqual(now);
     expect(result.subCategories[0].archivedAt).toEqual(now);
   });

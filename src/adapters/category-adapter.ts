@@ -2,7 +2,9 @@ import {CategoryDTO, CategorySettingDTO, SubCategoryDTO} from '../dto';
 import {
   Categories,
   Category,
+  CategoryOrigin,
   CategorySettings,
+  CategoryStatus,
   SubCategory,
 } from '../generated/graphql.js';
 
@@ -88,13 +90,19 @@ export const adaptCategoryModelDTO = (category): CategoryDTO => ({
   updatedAt: category.updatedAt,
 });
 
-// Single source of truth for the isCustom / isArchived flags exposed through GraphQL.
+// Single source of truth for the status / origin enums exposed through GraphQL.
+export const toCategoryStatus = (archivedAt: Date | string | null | undefined): CategoryStatus =>
+  archivedAt != null ? CategoryStatus.ARCHIVED : CategoryStatus.ACTIVE;
+
+export const toCategoryOrigin = (userId: string | null | undefined): CategoryOrigin =>
+  userId != null ? CategoryOrigin.CUSTOM : CategoryOrigin.DEFAULT;
+
 export const adaptSubCategoryToGraphql = (subCategory: CategoryLike): SubCategory => ({
   id: subCategory.id,
   userId: subCategory.userId ?? null,
   name: subCategory.name,
-  isCustom: subCategory.userId != null,
-  isArchived: subCategory.archivedAt != null,
+  status: toCategoryStatus(subCategory.archivedAt),
+  origin: toCategoryOrigin(subCategory.userId),
 });
 
 export const adaptCategoryToGraphql = (category: CategoryDTO): Categories => ({
@@ -102,6 +110,6 @@ export const adaptCategoryToGraphql = (category: CategoryDTO): Categories => ({
   userId: category.userId ?? null,
   name: category.name,
   subCategory: (category.subCategories ?? []).map(adaptSubCategoryToGraphql),
-  isCustom: category.userId != null,
-  isArchived: category.archivedAt != null,
+  status: toCategoryStatus(category.archivedAt),
+  origin: toCategoryOrigin(category.userId),
 });

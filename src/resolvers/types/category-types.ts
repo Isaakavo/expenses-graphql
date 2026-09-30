@@ -1,28 +1,34 @@
-import { CategoriesResolvers, SubCategoryResolvers } from '../../generated/graphql.js';
+import {
+  CategoriesResolvers,
+  CategoryOrigin,
+  CategoryStatus,
+  SubCategoryResolvers,
+} from '../../generated/graphql.js';
+import { toCategoryOrigin, toCategoryStatus } from '../../adapters/category-adapter.js';
 
-// Parents may come from adapters (flags already set), Sequelize rows or DTOs (userId/archivedAt)
-// or raw SQL rows (snake_case). Derive the flags defensively so the non-null fields always resolve.
-type FlagSource = {
-  isCustom?: boolean | null;
-  isArchived?: boolean | null;
+// Parents may come from adapters (enums already set), Sequelize rows or DTOs (userId/archivedAt)
+// or raw SQL rows (snake_case). Derive the enums defensively so the non-null fields always resolve.
+type EnumSource = {
+  status?: CategoryStatus | null;
+  origin?: CategoryOrigin | null;
   userId?: string | null;
   user_id?: string | null;
   archivedAt?: Date | string | null;
   archived_at?: Date | string | null;
 };
 
-export const resolveIsCustom = (parent: FlagSource): boolean =>
-  parent.isCustom ?? (parent.userId ?? parent.user_id) != null;
+export const resolveStatus = (parent: EnumSource): CategoryStatus =>
+  parent.status ?? toCategoryStatus(parent.archivedAt ?? parent.archived_at);
 
-export const resolveIsArchived = (parent: FlagSource): boolean =>
-  parent.isArchived ?? (parent.archivedAt ?? parent.archived_at) != null;
+export const resolveOrigin = (parent: EnumSource): CategoryOrigin =>
+  parent.origin ?? toCategoryOrigin(parent.userId ?? parent.user_id);
 
 export const SubCategory: SubCategoryResolvers = {
-  isCustom: (parent) => resolveIsCustom(parent as FlagSource),
-  isArchived: (parent) => resolveIsArchived(parent as FlagSource),
+  status: (parent) => resolveStatus(parent as EnumSource),
+  origin: (parent) => resolveOrigin(parent as EnumSource),
 };
 
 export const Categories: CategoriesResolvers = {
-  isCustom: (parent) => resolveIsCustom(parent as FlagSource),
-  isArchived: (parent) => resolveIsArchived(parent as FlagSource),
+  status: (parent) => resolveStatus(parent as EnumSource),
+  origin: (parent) => resolveOrigin(parent as EnumSource),
 };

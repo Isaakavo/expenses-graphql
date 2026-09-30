@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Sequelize, UniqueConstraintError } from 'sequelize';
 import { adaptCategoryModelDTO, adaptSubCategoryDTO } from '../adapters/category-adapter.js';
 import { CategoryDTO, SubCategoryDTO } from '../dto/index.js';
+import { CategoryStatus } from '../generated/graphql.js';
 import { CategoryRepository } from '../repository/category-repository.js';
 
 export const CATEGORY_NAME_MAX_LENGTH = 50;
@@ -63,10 +64,21 @@ export class CategoryService {
 
   /**
    * Categories visible to the user: global first then custom, alphabetically (case-insensitive);
-   * sub categories ordered the same way. Archived items are excluded unless `includeArchived`.
+   * sub categories ordered the same way. `statuses` filters categories and sub categories
+   * independently (default [ACTIVE]); an empty list is rejected with BAD_USER_INPUT.
    */
-  async getCategoryList(includeArchived = false): Promise<CategoryDTO[]> {
-    const categories = await this.categoryRepository.getCategoryList({ includeArchived });
+  async getCategoryList(
+    statuses: readonly CategoryStatus[] = [CategoryStatus.ACTIVE]
+  ): Promise<CategoryDTO[]> {
+    if (!statuses.length) {
+      throw categoryError(
+        CategoryErrorCode.BAD_USER_INPUT,
+        'statuses must contain at least one CategoryStatus'
+      );
+    }
+    const categories = await this.categoryRepository.getCategoryList({
+      statuses: [...new Set(statuses)],
+    });
     return categories
       .map(adaptCategoryModelDTO)
       .map((category) => ({

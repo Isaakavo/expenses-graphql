@@ -1,6 +1,8 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { Card } from 'models/card.js';
 import {
+  CategoryOrigin,
+  CategoryStatus,
   Expense as GraphqlExpense,
   Income as GraphqlIncome,
 } from '../generated/graphql.js';
@@ -81,8 +83,8 @@ export function adaptExpensesWithCard(x: Expense, card?: Card) {
         id: '',
         name: '',
         userId: '',
-        isCustom: false,
-        isArchived: false,
+        status: CategoryStatus.ACTIVE,
+        origin: CategoryOrigin.DEFAULT,
       },
     };
   } catch (error) {

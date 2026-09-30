@@ -4,42 +4,46 @@ import { ApolloServer } from '@apollo/server';
 import {
   Categories,
   SubCategory,
-  resolveIsArchived,
-  resolveIsCustom,
+  resolveOrigin,
+  resolveStatus,
 } from '../../../src/resolvers/types/category-types.js';
 import { adaptSubCategoryToGraphql } from '../../../src/adapters/category-adapter.js';
+import { CategoryOrigin, CategoryStatus } from '../../../src/generated/graphql.js';
 
 const typeDefs = readFileSync('./schema.graphql', { encoding: 'utf-8' });
 const archivedAt = new Date('2026-09-30T00:00:00Z');
 
-describe('SubCategory / Categories flag resolvers', () => {
+describe('SubCategory / Categories status and origin resolvers', () => {
   it.each([
-    [{ userId: 'u1' }, true],
-    [{ userId: null }, false],
-    [{ user_id: 'u1' }, true],
-    [{}, false],
-    [{ userId: null, isCustom: true }, true],
-  ])('resolveIsCustom(%o) = %s', (parent, expected) => {
-    expect(resolveIsCustom(parent)).toBe(expected);
+    [{ userId: 'u1' }, CategoryOrigin.CUSTOM],
+    [{ userId: null }, CategoryOrigin.DEFAULT],
+    [{ user_id: 'u1' }, CategoryOrigin.CUSTOM],
+    [{}, CategoryOrigin.DEFAULT],
+    [{ userId: null, origin: CategoryOrigin.CUSTOM }, CategoryOrigin.CUSTOM],
+  ])('resolveOrigin(%o) = %s', (parent, expected) => {
+    expect(resolveOrigin(parent)).toBe(expected);
   });
 
   it.each([
-    [{ archivedAt }, true],
-    [{ archivedAt: null }, false],
-    [{ archived_at: '2026-09-30T00:00:00Z' }, true],
-    [{}, false],
-    [{ archivedAt: null, isArchived: true }, true],
-  ])('resolveIsArchived(%o) = %s', (parent, expected) => {
-    expect(resolveIsArchived(parent)).toBe(expected);
+    [{ archivedAt }, CategoryStatus.ARCHIVED],
+    [{ archivedAt: null }, CategoryStatus.ACTIVE],
+    [{ archived_at: '2026-09-30T00:00:00Z' }, CategoryStatus.ARCHIVED],
+    [{}, CategoryStatus.ACTIVE],
+    [{ archivedAt: null, status: CategoryStatus.ARCHIVED }, CategoryStatus.ARCHIVED],
+  ])('resolveStatus(%o) = %s', (parent, expected) => {
+    expect(resolveStatus(parent)).toBe(expected);
   });
 
   it('adapter output agrees with the field resolvers', () => {
     const row = { id: 's1', userId: 'u1', name: 'Concerts', archivedAt };
-    expect(adaptSubCategoryToGraphql(row)).toMatchObject({ isCustom: true, isArchived: true });
+    expect(adaptSubCategoryToGraphql(row)).toMatchObject({
+      status: CategoryStatus.ARCHIVED,
+      origin: CategoryOrigin.CUSTOM,
+    });
   });
 
   it('resolves both non-null fields for SubCategory nested in expenses and categories', async () => {
-    // Parents deliberately lack isCustom/isArchived, like raw Sequelize rows or older adapters.
+    // Parents deliberately lack status/origin, like raw Sequelize rows or older adapters.
     const server = new ApolloServer({
       typeDefs,
       resolvers: {
@@ -80,11 +84,11 @@ describe('SubCategory / Categories flag resolvers', () => {
       query: `{
         expensesByCategory(input: {}) {
           subCategories {
-            subCategory { id isCustom isArchived }
-            expenses { subCategory { id isCustom isArchived } }
+            subCategory { id status origin }
+            expenses { subCategory { id status origin } }
           }
         }
-        categoryList { id isCustom isArchived }
+        categoryList { id status origin }
       }`,
     });
 
@@ -96,13 +100,13 @@ describe('SubCategory / Categories flag resolvers', () => {
         {
           subCategories: [
             {
-              subCategory: { id: 's1', isCustom: true, isArchived: true },
-              expenses: [{ subCategory: { id: 's2', isCustom: false, isArchived: false } }],
+              subCategory: { id: 's1', status: 'ARCHIVED', origin: 'CUSTOM' },
+              expenses: [{ subCategory: { id: 's2', status: 'ACTIVE', origin: 'DEFAULT' } }],
             },
           ],
         },
       ],
-      categoryList: [{ id: 'c2', isCustom: true, isArchived: false }],
+      categoryList: [{ id: 'c2', status: 'ACTIVE', origin: 'CUSTOM' }],
     });
   });
 });
