@@ -3,6 +3,7 @@ export type CategoryDTO = {
   userId: string | null;
   name: string;
   subCategories: SubCategoryDTO[];
+  archivedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -12,6 +13,7 @@ export type SubCategoryDTO = {
   userId: string | null;
   categoryId: string;
   name: string;
+  archivedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 };
