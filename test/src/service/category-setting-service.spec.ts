@@ -13,6 +13,7 @@ beforeEach(() => {
   mockRepo = {
     getCategorySettings: vi.fn(),
     createCategorySetting: vi.fn(),
+    updateCategorySetting: vi.fn(),
   } as unknown as CategorySettingsRepository;
   service = new CategorySettingsService(userId, sequelize);
   service.categorySettingsRepository = mockRepo;
@@ -86,5 +87,29 @@ describe('CategorySettingsService', () => {
     await expect(
       service.createCategorySetting({ categoryId: 'cat1', percentage: 0.5 })
     ).rejects.toThrow('Duplicate key');
+  });
+
+  it('ignores the current value of the setting being updated', async () => {
+    vi.mocked(mockRepo.getCategorySettings).mockResolvedValue([
+      { id: '1', userId, categoryId: 'cat1', percentage: 0.5, category: { name: 'Cat 1' } },
+      { id: '2', userId, categoryId: 'cat2', percentage: 0.3, category: { name: 'Cat 2' } },
+    ] as never);
+    vi.mocked(mockRepo.updateCategorySetting).mockResolvedValue({ id: '2', percentage: 0.5 } as never);
+
+    await service.updateCategorySetting({ id: '2', percentage: 0.5 });
+
+    expect(mockRepo.updateCategorySetting).toHaveBeenCalledWith('2', 0.5);
+  });
+
+  it('throws when the updated setting makes the total exceed 100%', async () => {
+    vi.mocked(mockRepo.getCategorySettings).mockResolvedValue([
+      { id: '1', userId, categoryId: 'cat1', percentage: 0.5, category: { name: 'Cat 1' } },
+      { id: '2', userId, categoryId: 'cat2', percentage: 0.3, category: { name: 'Cat 2' } },
+    ] as never);
+
+    await expect(
+      service.updateCategorySetting({ id: '2', percentage: 0.6 })
+    ).rejects.toThrow('Total percentage exceeds 100%');
+    expect(mockRepo.updateCategorySetting).not.toHaveBeenCalled();
   });
 });
