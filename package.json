@@ -66,5 +66,10 @@
     "documents": "**/*.{graphql,js,ts}"
   },
   "type": "module",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sqlite3"
+    ]
+  }
 }
