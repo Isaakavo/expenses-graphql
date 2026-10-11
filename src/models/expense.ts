@@ -4,6 +4,8 @@ import { SubCategory } from './sub-category.js';
 import { Category } from './category.js';
 import { Period } from './periods.js';
 
+export type GoalRole = 'CONTRIBUTION' | 'SPENDING';
+
 export type ExpenseWithCategory = Expense & {
   card: Card;
   sub_category: SubCategory & {
@@ -17,6 +19,8 @@ export class Expense extends Model {
   public cardId!: ForeignKey<string>;
   public periodId!: ForeignKey<string>;
   public subCategoryId!: ForeignKey<string>;
+  public goalId!: ForeignKey<string> | null;
+  public goalRole!: GoalRole | null;
   public concept!: string;
   public total!: number;
   public comments!: string;
@@ -66,6 +70,21 @@ export function initExpenseModel(sequelize: Sequelize) {
           key: 'id',
         },
         onDelete: 'SET NULL',
+      },
+      goalId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'goal_id',
+        references: {
+          model: 'goals',
+          key: 'id',
+        },
+        onDelete: 'RESTRICT',
+      },
+      goalRole: {
+        type: DataTypes.ENUM('CONTRIBUTION', 'SPENDING'),
+        allowNull: true,
+        field: 'goal_role',
       },
       concept: {
         type: DataTypes.STRING,
