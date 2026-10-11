@@ -3,6 +3,7 @@ import { FindOptions, Sequelize } from 'sequelize';
 import { ExpenseDTO } from '../dto';
 import { FixedExpenseFrequency } from '../generated/graphql.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
+import { CategoryService } from './category-service.js';
 import { logger } from '../logger.js';
 import {
   FORTNIGHTLY_NUMBER_OF_DAYS,
@@ -35,12 +36,14 @@ export type FixedExpenseInput = {
 export class ExpensesService {
   private expenseRepository: ExpenseRepository;
   private periodRepository: PeriodRepository;
+  categoryService: CategoryService;
   userId: string;
   sequelize: Sequelize;
 
   constructor(userId: string, sequelize?: Sequelize) {
     this.expenseRepository = new ExpenseRepository(userId, sequelize);
     this.periodRepository = new PeriodRepository(userId, sequelize);
+    this.categoryService = new CategoryService(userId, sequelize);
     this.userId = userId;
     this.sequelize = sequelize;
   }
@@ -63,6 +66,8 @@ export class ExpensesService {
       throw new Error(`Concept lenght must be lower than ${conceptLengthMax}`);
     }
 
+    await this.categoryService.assertSubCategoryAssignable(input.subCategoryId);
+
     return await this.expenseRepository.createExpense(input);
   }
 
@@ -70,6 +75,15 @@ export class ExpensesService {
     id: string,
     input: Partial<ExpenseInput & { payBefore: Date }>
   ) {
+    if (input.subCategoryId) {
+      // Keeping the current (possibly archived) sub category is allowed so old expenses stay editable;
+      // switching to a different one follows the same rules as create.
+      const currentSubCategoryId = await this.expenseRepository.getExpenseSubCategoryId(id);
+      if (input.subCategoryId !== currentSubCategoryId) {
+        await this.categoryService.assertSubCategoryAssignable(input.subCategoryId);
+      }
+    }
+
     const transaction = await this.sequelize.transaction();
     try {
       const period = await this.periodRepository.getPeriodBy(
@@ -181,6 +195,8 @@ export class ExpensesService {
   }
 
   async createFixedExpenses(input: FixedExpenseInput) {
+    await this.categoryService.assertSubCategoryAssignable(input.subCategoryId);
+
     const transaction = await this.sequelize.transaction();
     try {
       const expenses: ExpenseDTO[] = [];

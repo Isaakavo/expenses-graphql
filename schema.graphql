@@ -41,10 +41,28 @@ type CategoryType {
   percentage: Float
 }
 
+"Lifecycle of a category or sub-category."
+enum CategoryStatus {
+  "Visible and selectable (archived_at IS NULL)."
+  ACTIVE
+  "Hidden from pickers but kept for history (archived_at IS NOT NULL)."
+  ARCHIVED
+}
+
+"Who owns the item: seeded global default (user_id IS NULL) or created by the user."
+enum CategoryOrigin {
+  "Seeded global default shared by every user (user_id IS NULL); read-only."
+  DEFAULT
+  "Created by the current user (user_id IS NOT NULL); editable."
+  CUSTOM
+}
+
 type SubCategory {
   id: ID!
   userId: ID
   name: String!
+  status: CategoryStatus!
+  origin: CategoryOrigin!
 }
 
 type Categories {
@@ -52,6 +70,8 @@ type Categories {
   userId: ID
   name: String
   subCategory: [SubCategory!]
+  status: CategoryStatus!
+  origin: CategoryOrigin!
 }
 
 type CategorySettings {
@@ -360,6 +380,16 @@ input UpdateCategoryAllocationInput {
     percentage: Float!
 }
 
+input CreateCategoryInput {
+  name: String!
+  subCategoryNames: [String!]!   # at least 1
+}
+
+input CreateSubCategoryInput {
+  categoryId: ID!
+  name: String!
+}
+
 input InvestmentRecordInput {
     amount: Float!
     date: Date!
@@ -379,7 +409,9 @@ type Query {
   expensesByCategory(input: FilterInput!): [ExpensesByCategory!]!
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
-  categoryList: [Categories!]
+  # Filter applied independently at both levels (category and sub-category).
+  # Omitted => [ACTIVE] (released app keeps working). Empty list => BAD_USER_INPUT.
+  categoryList(statuses: [CategoryStatus!]! = [ACTIVE]): [Categories!]
   categorySettings: CategorySettings
   categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
@@ -408,4 +440,10 @@ type Mutation {
   deleteCategorySetting(categoryId: ID!): CategorySetting!
   updateCategoryAllocation(input: UpdateCategoryAllocationInput): CategorySetting!
   createInvestmentRecord(input: InvestmentRecordInput): InvestmentRecord!
+  createCategory(input: CreateCategoryInput!): Categories!
+  createSubCategory(input: CreateSubCategoryInput!): SubCategory!
+  archiveCategory(id: ID!): Categories!
+  restoreCategory(id: ID!): Categories!
+  archiveSubCategory(id: ID!): SubCategory!
+  restoreSubCategory(id: ID!): SubCategory!
 }

@@ -13,3 +13,9 @@ export { deleteCategorySetting } from './category/delete-category-setting.js';
 export { updateCategorySetting } from './category/update-category-setting.js';
 export { updateCategoryAllocation } from './category/update-category-allocation.js'
 export { createInvestmentRecord } from './investment/create-investment-record.js'
+export { createCategory } from './category/create-category.js';
+export { createSubCategory } from './category/create-sub-category.js';
+export { archiveCategory } from './category/archive-category.js';
+export { restoreCategory } from './category/restore-category.js';
+export { archiveSubCategory } from './category/archive-sub-category.js';
+export { restoreSubCategory } from './category/restore-sub-category.js';

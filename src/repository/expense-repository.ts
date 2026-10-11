@@ -66,6 +66,19 @@ export class ExpenseRepository {
     });
   }
 
+  /** Current sub category of one of the user's expenses, or null when the expense does not exist. */
+  async getExpenseSubCategoryId(
+    id: string,
+    options: { transaction?: Transaction } = {}
+  ): Promise<string | null> {
+    const expense = await Expense.findOne({
+      where: { id, userId: this.userId },
+      attributes: ['id', 'subCategoryId'],
+      transaction: options.transaction,
+    });
+    return expense?.subCategoryId ?? null;
+  }
+
   async deleteExpense(id: string) {
     const deletedCount = await Expense.destroy({
       where: {
