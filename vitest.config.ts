@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 import tsconfigPaths from 'vite-tsconfig-paths'
 
@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    exclude: [...configDefaults.exclude, 'dist/**'],
     alias: {
       '@/': new URL('./src/', import.meta.url).pathname, 
     }

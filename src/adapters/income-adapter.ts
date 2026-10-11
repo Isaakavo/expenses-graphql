@@ -2,6 +2,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { Card } from 'models/card.js';
 import {
   Expense as GraphqlExpense,
+  GoalRole,
   Income as GraphqlIncome,
 } from '../generated/graphql.js';
 import { logger } from '../logger.js';
@@ -98,6 +99,8 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
       total: formatCurrency(x.total),
       userId: x.userId,
       periodId: x.periodId,
+      goalId: x.goalId ?? null,
+      goalRole: (x.goalRole as GoalRole | null) ?? null,
       comment: x.comments,
       createdAt: formatInTimeZone(x.createdAt, 'UTC', 'dd MMMM'),
       updatedAt: x.updatedAt,
@@ -129,6 +132,8 @@ export function adaptExpensesDTOInput(x: ExpenseDTO): GraphqlExpense {
       total: formatCurrency(x.total),
       userId: x?.userId,
       periodId: x?.periodId,
+      goalId: x?.goalId ?? null,
+      goalRole: x?.goalRole ?? null,
       comment: x?.comments,
       createdAt: formatInTimeZone(x?.createdAt, 'UTC', 'dd MMM yyyy'),
       updatedAt: x?.updatedAt,

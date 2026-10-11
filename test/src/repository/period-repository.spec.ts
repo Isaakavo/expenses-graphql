@@ -38,22 +38,31 @@ describe('Period Model', () => {
     expect(count).toBe(2);
   });
 
-  it('If a period exists for that type and range, it is overwritten only if the end is greater', async () => {
-    // Insert original period
-    await periodRepository.createPeriod(new Date('2025-08-08'));
-    // Intentar "expandir" el rango
-    const updated = await periodRepository.createPeriod(new Date('2025-08-09'));
-    const count = await Period.count();
+  it('Returns the existing period when the date falls inside it', async () => {
+    const original = await periodRepository.createPeriod(new Date('2025-08-08'));
+    const sameRange = await periodRepository.createPeriod(new Date('2025-08-09'));
 
-    expect(updated.startDate.toISOString()).toBe('2025-08-09T00:00:00.000Z');
-    expect(updated.endDate.toISOString()).toBe('2025-08-22T00:00:00.000Z');
-    expect(count).toBe(1);
-    // Ahora intenta acortar el periodo (NO debe actualizar)
-    const notUpdated = await periodRepository.createPeriod(
-      new Date('2025-08-09')
-    );
-    expect(notUpdated.endDate.toISOString()).toBe('2025-08-22T00:00:00.000Z'); // No cambia
+    expect(sameRange.id).toBe(original.id);
+    expect(sameRange.startDate.toISOString()).toBe('2025-08-08T00:00:00.000Z');
+    expect(sameRange.endDate.toISOString()).toBe('2025-08-21T00:00:00.000Z');
     expect(await Period.count()).toBe(1);
+  });
+
+  it('Fills the gap up to the new date with consecutive fortnightly periods', async () => {
+    await periodRepository.createPeriod(new Date('2025-08-08'));
+    const latest = await periodRepository.createPeriod(new Date('2025-09-08'));
+
+    expect(latest.startDate.toISOString()).toBe('2025-09-05T00:00:00.000Z');
+    expect(latest.endDate.toISOString()).toBe('2025-09-18T00:00:00.000Z');
+
+    const periods = await Period.findAll({ order: [['startDate', 'ASC']] });
+    expect(
+      periods.map((p) => [p.startDate.toISOString(), p.endDate.toISOString()])
+    ).toEqual([
+      ['2025-08-08T00:00:00.000Z', '2025-08-21T00:00:00.000Z'],
+      ['2025-08-22T00:00:00.000Z', '2025-09-04T00:00:00.000Z'],
+      ['2025-09-05T00:00:00.000Z', '2025-09-18T00:00:00.000Z'],
+    ]);
   });
 
   it('If a record is removed', async () => {
@@ -65,7 +74,8 @@ describe('Period Model', () => {
     );
     await period1.destroy();
     const periods = await Period.findAll();
-    expect(periods.length).toBe(1);
-    expect(periods[0].id).toBe(period2.id);
+    expect(periods.length).toBe(2);
+    expect(periods.map((p) => p.id)).not.toContain(period1.id);
+    expect(periods.map((p) => p.id)).toContain(period2.id);
   });
 });
