@@ -164,6 +164,43 @@ type Expense {
   comment: String
   category: CategoryType!
   subCategory: SubCategory!
+  goalId: ID
+  goalRole: GoalRole
+}
+
+enum GoalRole {
+  CONTRIBUTION
+  SPENDING
+}
+
+type Goal {
+  id: ID!
+  name: String!
+  targetAmount: String!
+  startDate: String!
+  endDate: String
+  expenses: [Expense!]!
+}
+
+# Goal dates are plain yyyy-MM-dd strings
+input CreateGoalInput {
+  name: String!
+  targetAmount: Float!
+  startDate: String!
+  endDate: String
+}
+
+input UpdateGoalInput {
+  id: ID!
+  name: String!
+  targetAmount: Float!
+  startDate: String!
+  endDate: String
+}
+
+input CloseGoalInput {
+  id: ID!
+  endDate: String!
 }
 
 type GroupedExpenses {
@@ -380,6 +417,8 @@ type Query {
   # TODO refine this query
   financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   categoryList: [Categories!]
+  goals: [Goal!]!
+  goal(id: ID!): Goal
   categorySettings: CategorySettings
   categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
@@ -403,6 +442,10 @@ type Mutation {
   createCard(input: CreateCardInput): Card
   updateCard(input: UpdateCardInput): Card!
   deleteCard(id: ID!): Boolean!
+  createGoal(input: CreateGoalInput!): Goal!
+  updateGoal(input: UpdateGoalInput!): Goal!
+  closeGoal(input: CloseGoalInput!): Goal!
+  deleteGoal(id: ID!): Boolean!
   createCategorySetting(input: CreateCategorySettingInput!): CategorySetting!
   updateCategorySetting(input: UpdateCategorySettingInput!): CategorySettings!
   deleteCategorySetting(categoryId: ID!): CategorySetting!

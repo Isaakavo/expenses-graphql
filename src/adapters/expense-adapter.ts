@@ -1,5 +1,5 @@
 import { formatInTimeZone } from 'date-fns-tz';
-import { ExpensesByCategory, GroupedExpenses } from 'generated/graphql.js';
+import { ExpensesByCategory, GoalRole, GroupedExpenses } from 'generated/graphql.js';
 import {
   ExpenseDTO,
   ExpenseWithCategoryAllocationDTO,
@@ -20,6 +20,8 @@ export const adaptSingleRawExpenseDTO = (exp): ExpenseDTO => {
     ),
     periodId: exp.periodId,
     subCategoryId: exp.subCategoryId,
+    goalId: exp.goalId ?? null,
+    goalRole: (exp.goalRole as GoalRole) ?? null,
     concept: exp.concept,
     total: exp.total,
     comments: exp.comments,
@@ -68,6 +70,8 @@ export const adaptExpenseDTO = (expense): ExpenseDTO => {
     category: adaptCategoryDTO(expense.category, expense.subCategory),
     periodId: expense.expense.periodId,
     subCategoryId: expense.expense.subCategoryId,
+    goalId: expense.expense.goalId ?? null,
+    goalRole: (expense.expense.goalRole as GoalRole) ?? null,
     concept: expense.expense.concept,
     total: expense.expense.total,
     comments: expense.expense.comments,

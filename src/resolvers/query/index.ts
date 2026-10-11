@@ -12,6 +12,8 @@ export { categorySettings } from './category/category-settings.js';
 export { incomesGroupedBy } from './income/incomes-grouped.js';
 export { categoryAllocation } from './category/category-allocation.js';
 export { categoryList } from './category/category-list.js';
+export { goalsList } from './goal/goals-list.js';
+export { goalById } from './goal/goal-by-id.js';
 export { periodsList } from './period/periods-list.js';
 export { period } from './period/period.js'
 export { allInvestmentRecords } from './investment/all-investment-records.js'
