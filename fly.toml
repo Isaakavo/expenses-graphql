@@ -8,6 +8,13 @@ primary_region = "mia"
 
 [build]
 
+# Run database migrations on every deploy. In production the schema is managed
+# exclusively by the SQL migrations in /migrations (the app no longer runs
+# sequelize.sync()). Assets are compiled into dist/ by the build step, so the
+# CLI is pointed at the compiled config/migrations.
+[deploy]
+  release_command = "npx sequelize-cli db:migrate --config dist/config/config.cjs --migrations-path dist/migrations"
+
 [http_service]
   internal_port = 3000
   force_https = true

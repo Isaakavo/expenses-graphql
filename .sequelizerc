@@ -1,0 +1,10 @@
+const path = require('path');
+
+// Point sequelize-cli at the .cjs config (CommonJS, so it can read env vars)
+// and the project's migration/seeder folders.
+module.exports = {
+  config: path.resolve('config', 'config.cjs'),
+  'migrations-path': path.resolve('migrations'),
+  'seeders-path': path.resolve('seeders'),
+  'models-path': path.resolve('src', 'models'),
+};

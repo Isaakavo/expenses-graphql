@@ -57,6 +57,11 @@ const startServer = async () => {
   });
 };
 
-startServer().then(({ url }) => {
-  logger.info(`Server ready at: ${url}`);
-});
+startServer()
+  .then(({ url }) => {
+    logger.info(`Server ready at: ${url}`);
+  })
+  .catch((error) => {
+    logger.error('Failed to start server', error);
+    process.exit(1);
+  });
