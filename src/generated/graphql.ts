@@ -133,8 +133,10 @@ export type CreateExpenseInput = {
   categoryId: Scalars['String']['input'];
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
+  goalId?: InputMaybe<Scalars['ID']['input']>;
+  goalRole?: InputMaybe<GoalRole>;
   payBefore: Scalars['Date']['input'];
-  periodId: Scalars['String']['input'];
+  periodId?: InputMaybe<Scalars['String']['input']>;
   subCategoryId: Scalars['String']['input'];
   total: Scalars['Float']['input'];
 };
@@ -145,6 +147,8 @@ export type CreateFixedExpenseInput = {
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
   frequency: FixedExpenseFrequency;
+  goalId?: InputMaybe<Scalars['ID']['input']>;
+  goalRole?: InputMaybe<GoalRole>;
   numberOfRepetitions: Scalars['Int']['input'];
   payBefore: Scalars['Date']['input'];
   subCategoryId: Scalars['String']['input'];
@@ -596,6 +600,8 @@ export type UpdateExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
+  goalId?: InputMaybe<Scalars['ID']['input']>;
+  goalRole?: InputMaybe<GoalRole>;
   id: Scalars['ID']['input'];
   payBefore: Scalars['Date']['input'];
   subCategoryId: Scalars['String']['input'];

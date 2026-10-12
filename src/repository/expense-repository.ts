@@ -10,6 +10,7 @@ import {Card, Category, Expense, SubCategory} from '../models/index.js';
 import {ExpenseInput} from '../service/expenses-service.js';
 import {toCamelCaseDeep} from '../utils/case-converter.js';
 import {logger} from '../logger.js';
+import {excludeGoalSpending} from '../utils/expenses-utils.js';
 
 export class ExpenseRepository {
   userId: string;
@@ -88,8 +89,7 @@ export class ExpenseRepository {
     const { limit, where } = queryOptions ?? {};
     const response = await Expense.findAll({
       where: {
-        ...where,
-        userId: this.userId,
+        [Op.and]: [{ ...where, userId: this.userId }, excludeGoalSpending],
       },
       include: [
         {
@@ -123,7 +123,10 @@ export class ExpenseRepository {
     endDate?: Date,
     subCategoryIds?: string[]
   ): Promise<ExpenseDTO[]> {
-    const where: FindOptions['where'] = { userId: this.userId };
+    const where: FindOptions['where'] = {
+      userId: this.userId,
+      ...excludeGoalSpending,
+    };
 
     if (periodId) {
       where.periodId = periodId;
@@ -173,7 +176,9 @@ export class ExpenseRepository {
     limit?: number
   ): Promise<GroupedExpensesDTO[]> {
     const replacements: any = { userId: this.userId };
-    let where = 'WHERE e.user_id = :userId';
+    // Keep in sync with GoalRole.SPENDING in generated/graphql.ts
+    let where =
+      'WHERE e.user_id = :userId AND e.goal_role IS DISTINCT FROM \'SPENDING\'';
 
     if (periodId) {
       where += ' AND e.period_id = :periodId';
@@ -245,7 +250,7 @@ export class ExpenseRepository {
           ],
         },
       ],
-      where: { periodId, userId: this.userId },
+      where: { periodId, userId: this.userId, ...excludeGoalSpending },
       group: [
         Sequelize.col('sub_category.category.id'),
         Sequelize.col('sub_category.category.name'),
@@ -263,7 +268,10 @@ export class ExpenseRepository {
     subCategoryIds?: string[],
     cardId?: string
   ): Promise<ExpenseDTO[]> {
-    const where: FindOptions['where'] = { userId: this.userId };
+    const where: FindOptions['where'] = {
+      userId: this.userId,
+      ...excludeGoalSpending,
+    };
 
     if (periodId) {
       where.periodId = periodId;

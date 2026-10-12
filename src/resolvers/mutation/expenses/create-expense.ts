@@ -5,9 +5,9 @@ import { ExpensesService } from '../../../service/expenses-service.js';
 export const createExpense: MutationResolvers['createExpense'] = async (
   _,
   { input },
-  { user: { userId } }
+  { user: { userId }, sequelizeClient }
 ) => {
-  const expenseService = new ExpensesService(userId);
+  const expenseService = new ExpensesService(userId, sequelizeClient);
   const newExpense = await expenseService.createExpense(input);
 
   return adaptExpensesDTOInput(newExpense);

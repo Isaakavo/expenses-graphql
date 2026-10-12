@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Sequelize } from 'sequelize';
 import { ExpensesService } from '../../../src/service/expenses-service.js';
-import { FixedExpenseFrequency } from '../../../src/generated/graphql.js';
+import { FixedExpenseFrequency, GoalRole } from '../../../src/generated/graphql.js';
 
 const userId = 'test-user';
 let service: ExpensesService;
@@ -213,5 +213,320 @@ describe('createFixedExpenses', () => {
     });
 
     expect(mockCreateExpense.mock.calls[0][0].cardId).toBe('card-123');
+  });
+});
+
+describe('goal link on expenses', () => {
+  const goalId = 'goal-1';
+  const baseCreateInput = {
+    concept: 'Flights',
+    total: 100,
+    periodId: 'period-1',
+    payBefore: new Date('2026-04-02T00:00:00Z'),
+    categoryId: 'cat-1',
+    subCategoryId: 'sub-1',
+  };
+  const withoutPeriod = (input: typeof baseCreateInput) => {
+    const rest: Partial<typeof baseCreateInput> = { ...input };
+    delete rest.periodId;
+    return rest as Omit<typeof baseCreateInput, 'periodId'>;
+  };
+  const echo = (input: object) => ({ id: 'e-1', ...input });
+
+  let mockCreateExpense: ReturnType<typeof vi.fn>;
+  let mockUpdateExpense: ReturnType<typeof vi.fn>;
+  let mockAssertGoalLinkable: ReturnType<typeof vi.fn>;
+  let mockGetPeriodBy: ReturnType<typeof vi.fn>;
+  let mockCreatePeriod: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    mockCreateExpense = vi.fn().mockImplementation(echo);
+    mockUpdateExpense = vi.fn().mockImplementation((_id: string, input: object) => echo(input));
+    mockAssertGoalLinkable = vi.fn().mockResolvedValue({ id: goalId });
+    mockGetPeriodBy = vi.fn().mockResolvedValue(basePeriod);
+    mockCreatePeriod = vi.fn().mockResolvedValue({ id: 'new-period' });
+    const internals = service as unknown as Record<string, unknown>;
+    internals.expenseRepository = {
+      createExpense: mockCreateExpense,
+      updateExpense: mockUpdateExpense,
+    };
+    internals.periodRepository = {
+      getPeriodBy: mockGetPeriodBy,
+      createPeriod: mockCreatePeriod,
+    };
+    internals.goalService = {
+      assertGoalLinkable: mockAssertGoalLinkable,
+    };
+  });
+
+  const goalNotFound = () =>
+    Object.assign(new Error('Goal not found'), {
+      extensions: { code: 'GOAL_NOT_FOUND' },
+    });
+
+  describe('createExpense', () => {
+    it('rejects goalId without goalRole', async () => {
+      await expect(
+        service.createExpense({ ...baseCreateInput, goalId })
+      ).rejects.toMatchObject({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'goalRole' },
+      });
+      expect(mockCreateExpense).not.toHaveBeenCalled();
+    });
+
+    it('rejects goalRole without goalId', async () => {
+      await expect(
+        service.createExpense({ ...baseCreateInput, goalRole: GoalRole.SPENDING })
+      ).rejects.toMatchObject({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'goalId' },
+      });
+      expect(mockCreateExpense).not.toHaveBeenCalled();
+    });
+
+    it('creates nothing when the goal is not found', async () => {
+      mockAssertGoalLinkable.mockRejectedValue(goalNotFound());
+      await expect(
+        service.createExpense({
+          ...baseCreateInput,
+          goalId,
+          goalRole: GoalRole.CONTRIBUTION,
+        })
+      ).rejects.toMatchObject({ extensions: { code: 'GOAL_NOT_FOUND' } });
+      expect(mockCreateExpense).not.toHaveBeenCalled();
+    });
+
+    it('links a CONTRIBUTION expense and keeps the client periodId', async () => {
+      await service.createExpense({
+        ...baseCreateInput,
+        goalId,
+        goalRole: GoalRole.CONTRIBUTION,
+      });
+      expect(mockAssertGoalLinkable).toHaveBeenCalledWith(goalId);
+      expect(mockCreateExpense.mock.calls[0][0]).toMatchObject({
+        goalId,
+        goalRole: GoalRole.CONTRIBUTION,
+        periodId: 'period-1',
+      });
+    });
+
+    it('does not touch goals for an unlinked expense', async () => {
+      await service.createExpense(baseCreateInput);
+      expect(mockAssertGoalLinkable).not.toHaveBeenCalled();
+      expect(mockCreateExpense).toHaveBeenCalledTimes(1);
+    });
+
+    it('assigns the period of payBefore to a SPENDING expense without periodId', async () => {
+      const noPeriod = withoutPeriod(baseCreateInput);
+      await service.createExpense({ ...noPeriod, goalId, goalRole: GoalRole.SPENDING });
+      expect(mockGetPeriodBy.mock.calls[0][0]).toEqual({
+        date: baseCreateInput.payBefore,
+      });
+      expect(mockCreatePeriod).not.toHaveBeenCalled();
+      expect(mockCreateExpense.mock.calls[0][0].periodId).toBe('period-1');
+    });
+
+    it('creates the period when none exists for a SPENDING expense', async () => {
+      mockGetPeriodBy.mockResolvedValue(null);
+      const noPeriod = withoutPeriod(baseCreateInput);
+      await service.createExpense({ ...noPeriod, goalId, goalRole: GoalRole.SPENDING });
+      expect(mockCreatePeriod).toHaveBeenCalledTimes(1);
+      expect(mockCreateExpense.mock.calls[0][0].periodId).toBe('new-period');
+    });
+
+    it('creates no period when the create is rejected by validation', async () => {
+      mockGetPeriodBy.mockResolvedValue(null);
+      const noPeriod = withoutPeriod(baseCreateInput);
+      await expect(
+        service.createExpense({
+          ...noPeriod,
+          concept: '',
+          goalId,
+          goalRole: GoalRole.SPENDING,
+        })
+      ).rejects.toThrow('Concept must not be empty');
+      expect(mockCreatePeriod).not.toHaveBeenCalled();
+      expect(mockSequelize.transaction).not.toHaveBeenCalled();
+    });
+
+    it('creates the SPENDING period and expense in one transaction and rolls back together', async () => {
+      mockGetPeriodBy.mockResolvedValue(null);
+      const noPeriod = withoutPeriod(baseCreateInput);
+      await service.createExpense({
+        ...noPeriod,
+        goalId,
+        goalRole: GoalRole.SPENDING,
+      });
+      expect(mockTransaction.commit).toHaveBeenCalled();
+      expect(mockCreateExpense.mock.calls[0][1]).toEqual({
+        transaction: mockTransaction,
+      });
+
+      mockCreateExpense.mockRejectedValueOnce(new Error('DB error'));
+      await expect(
+        service.createExpense({
+          ...noPeriod,
+          goalId,
+          goalRole: GoalRole.SPENDING,
+        })
+      ).rejects.toThrow('DB error');
+      expect(mockTransaction.rollback).toHaveBeenCalledTimes(1);
+    });
+
+    it('still requires periodId for unlinked and CONTRIBUTION expenses', async () => {
+      const noPeriod = withoutPeriod(baseCreateInput);
+      await expect(service.createExpense(noPeriod)).rejects.toMatchObject({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'periodId' },
+      });
+      await expect(
+        service.createExpense({ ...noPeriod, goalId, goalRole: GoalRole.CONTRIBUTION })
+      ).rejects.toMatchObject({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'periodId' },
+      });
+      expect(mockCreateExpense).not.toHaveBeenCalled();
+    });
+
+    it('allows a date outside the goal range (service never compares dates)', async () => {
+      await service.createExpense({
+        ...baseCreateInput,
+        payBefore: new Date('1999-01-01T00:00:00Z'),
+        goalId,
+        goalRole: GoalRole.CONTRIBUTION,
+      });
+      expect(mockCreateExpense).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('createFixedExpenses', () => {
+    it('rejects a half-set link and creates nothing', async () => {
+      await expect(
+        service.createFixedExpenses({ ...baseFixedInput, goalRole: GoalRole.SPENDING })
+      ).rejects.toMatchObject({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'goalId' },
+      });
+      expect(mockCreateExpense).not.toHaveBeenCalled();
+      expect(mockSequelize.transaction).not.toHaveBeenCalled();
+    });
+
+    it('creates nothing when the goal is not found', async () => {
+      mockAssertGoalLinkable.mockRejectedValue(goalNotFound());
+      await expect(
+        service.createFixedExpenses({
+          ...baseFixedInput,
+          goalId,
+          goalRole: GoalRole.CONTRIBUTION,
+        })
+      ).rejects.toMatchObject({ extensions: { code: 'GOAL_NOT_FOUND' } });
+      expect(mockCreateExpense).not.toHaveBeenCalled();
+    });
+
+    it('links every copy to the same goal and role', async () => {
+      const result = await service.createFixedExpenses({
+        ...baseFixedInput,
+        goalId,
+        goalRole: GoalRole.CONTRIBUTION,
+      });
+      expect(result).toHaveLength(3);
+      expect(mockAssertGoalLinkable).toHaveBeenCalledTimes(1);
+      mockCreateExpense.mock.calls.forEach(([created]) => {
+        expect(created).toMatchObject({ goalId, goalRole: GoalRole.CONTRIBUTION });
+      });
+    });
+
+    it('leaves copies unlinked when no goal is given', async () => {
+      await service.createFixedExpenses(baseFixedInput);
+      mockCreateExpense.mock.calls.forEach(([created]) => {
+        expect(created.goalId).toBeNull();
+        expect(created.goalRole).toBeNull();
+      });
+    });
+  });
+
+  describe('updateExpense', () => {
+    const baseUpdate = {
+      concept: 'Flights',
+      total: 100,
+      payBefore: new Date('2026-04-02T00:00:00Z'),
+      subCategoryId: 'sub-1',
+    };
+
+    it('leaves the link untouched when the keys are omitted', async () => {
+      await service.updateExpense('e-1', baseUpdate);
+      const sent = mockUpdateExpense.mock.calls[0][1];
+      expect('goalId' in sent).toBe(false);
+      expect('goalRole' in sent).toBe(false);
+      expect(mockAssertGoalLinkable).not.toHaveBeenCalled();
+    });
+
+    it('unlinks when both are null', async () => {
+      await service.updateExpense('e-1', {
+        ...baseUpdate,
+        goalId: null,
+        goalRole: null,
+      });
+      const sent = mockUpdateExpense.mock.calls[0][1];
+      expect(sent.goalId).toBeNull();
+      expect(sent.goalRole).toBeNull();
+      expect(mockAssertGoalLinkable).not.toHaveBeenCalled();
+    });
+
+    it('relinks when both are set', async () => {
+      await service.updateExpense('e-1', {
+        ...baseUpdate,
+        goalId,
+        goalRole: GoalRole.SPENDING,
+      });
+      expect(mockAssertGoalLinkable).toHaveBeenCalledWith(goalId);
+      expect(mockUpdateExpense.mock.calls[0][1]).toMatchObject({
+        goalId,
+        goalRole: GoalRole.SPENDING,
+      });
+    });
+
+    it('rejects sending only one of the two keys', async () => {
+      await expect(
+        service.updateExpense('e-1', { ...baseUpdate, goalId })
+      ).rejects.toMatchObject({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'goalRole' },
+      });
+      await expect(
+        service.updateExpense('e-1', { ...baseUpdate, goalRole: null })
+      ).rejects.toMatchObject({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'goalId' },
+      });
+      expect(mockUpdateExpense).not.toHaveBeenCalled();
+    });
+
+    it('rejects a mixed null and value pair', async () => {
+      await expect(
+        service.updateExpense('e-1', {
+          ...baseUpdate,
+          goalId: null,
+          goalRole: GoalRole.SPENDING,
+        })
+      ).rejects.toMatchObject({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'goalId' },
+      });
+      expect(mockUpdateExpense).not.toHaveBeenCalled();
+    });
+
+    it('updates nothing when the goal is not found, before opening a transaction', async () => {
+      mockAssertGoalLinkable.mockRejectedValue(goalNotFound());
+      await expect(
+        service.updateExpense('e-1', {
+          ...baseUpdate,
+          goalId,
+          goalRole: GoalRole.CONTRIBUTION,
+        })
+      ).rejects.toMatchObject({ extensions: { code: 'GOAL_NOT_FOUND' } });
+      expect(mockUpdateExpense).not.toHaveBeenCalled();
+      expect(mockSequelize.transaction).not.toHaveBeenCalled();
+    });
+
+    it('creates the period when the new date has none instead of crashing', async () => {
+      mockGetPeriodBy.mockResolvedValue(null);
+      await service.updateExpense('e-1', baseUpdate);
+      expect(mockCreatePeriod).toHaveBeenCalledTimes(1);
+      expect(mockUpdateExpense.mock.calls[0][1].periodId).toBe('new-period');
+    });
   });
 });
