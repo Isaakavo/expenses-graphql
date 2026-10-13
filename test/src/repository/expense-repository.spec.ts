@@ -116,11 +116,11 @@ describe('ExpenseRepository goal spending exclusion', () => {
     expect(found.goalRole).toBe('SPENDING');
   });
 
-  it('Goal.expenses (getGoalExpenses) still returns both roles', async () => {
+  it('Goal.expenses (getExpensesByGoalIds) still returns both roles', async () => {
     const goalExpenses = await new GoalRepository(
       userA,
       sequelize
-    ).getGoalExpenses(goalId);
+    ).getExpensesByGoalIds([goalId]);
     expect(concepts(goalExpenses)).toEqual(['contribution', 'spending']);
   });
 

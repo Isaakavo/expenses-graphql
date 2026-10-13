@@ -10,6 +10,7 @@ import { syncTables } from './database/sync-database.js';
 import resolvers from './resolvers/index.js';
 import { logger } from './logger.js';
 import { GraphQLError } from 'graphql';
+import { createLoaders, Loaders } from './loaders/index.js';
 
 export interface User {
   userId: string;
@@ -23,6 +24,7 @@ export interface Context {
   sequelizeClient: Sequelize;
   axiosClient: AxiosInstance;
   user: User;
+  loaders: Loaders;
 }
 
 const startServer = async () => {
@@ -39,10 +41,12 @@ const startServer = async () => {
     listen: { port: process.env.NODE_ENV === 'production' ? 3000 : 4000 },
     context: async ({ req }) => {
       try {
+        const user = await resolverUser(req);
         return {
           sequelizeClient: sequelizeClient,
           axiosClient: instance,
-          user: await resolverUser(req),
+          user,
+          loaders: createLoaders(user.userId, sequelizeClient),
         };
       } catch (error) {
         if (error instanceof GraphQLError) {

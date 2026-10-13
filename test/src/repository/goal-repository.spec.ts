@@ -104,7 +104,7 @@ describe('GoalRepository', () => {
     expect(byId(e3.id).goalId).toBe(other.id);
   });
 
-  describe('getGoalExpenses', () => {
+  describe('getExpensesByGoalIds', () => {
     // The sub category / category / period rows are not seeded, so the
     // inner-joined include would drop every expense; seed them.
     const seedRefs = async () => {
@@ -135,7 +135,7 @@ describe('GoalRepository', () => {
       // unrelated expense of the same user
       await newExpense(userA, null);
 
-      const expenses = await repoA.getGoalExpenses(goal.id);
+      const expenses = await repoA.getExpensesByGoalIds([goal.id]);
 
       expect(expenses.map((e) => e.id)).toEqual([early.id, late.id]);
       expect(expenses.map((e) => e.goalRole)).toEqual([
@@ -143,6 +143,24 @@ describe('GoalRepository', () => {
         'SPENDING',
       ]);
       expect(expenses.every((e) => e.goalId === goal.id)).toBe(true);
+    });
+
+    it('returns expenses of several goals in one call', async () => {
+      await seedRefs();
+      const g1 = await repoA.createGoal(newGoal('A'));
+      const g2 = await repoA.createGoal(newGoal('B'));
+      await newExpense(userA, g1.id);
+      await newExpense(userA, g2.id);
+      const notRequested = await repoA.createGoal(newGoal('C'));
+      await newExpense(userA, notRequested.id);
+      await newExpense(userB, g1.id);
+
+      const expenses = await repoA.getExpensesByGoalIds([g1.id, g2.id]);
+
+      expect(expenses).toHaveLength(2);
+      expect(expenses.map((e) => e.goalId).sort()).toEqual(
+        [g1.id, g2.id].sort()
+      );
     });
   });
 });

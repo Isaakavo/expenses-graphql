@@ -97,10 +97,12 @@ export class GoalRepository {
     });
   }
 
-  // All the expenses linked to the goal, both CONTRIBUTION and SPENDING
-  async getGoalExpenses(goalId: string): Promise<ExpenseDTO[]> {
+  // All the expenses linked to the goals, both CONTRIBUTION and SPENDING
+  async getExpensesByGoalIds(
+    goalIds: readonly string[]
+  ): Promise<ExpenseDTO[]> {
     const expenses = (await Expense.findAll({
-      where: { userId: this.userId, goalId },
+      where: { userId: this.userId, goalId: { [Op.in]: goalIds } },
       include: [
         {
           model: SubCategory,

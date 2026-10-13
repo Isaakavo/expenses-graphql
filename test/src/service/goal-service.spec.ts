@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Sequelize } from 'sequelize';
 import { GoalService } from '../../../src/service/goal-service.js';
+import { ExpenseDTO } from '../../../src/dto/expense-dto.js';
 import { GoalRepository } from '../../../src/repository/goal-repository.js';
 
 const userId = 'test-user';
@@ -41,7 +42,7 @@ beforeEach(() => {
     updateGoal: vi.fn(),
     closeGoal: vi.fn(),
     deleteGoal: vi.fn(),
-    getGoalExpenses: vi.fn(),
+    getExpensesByGoalIds: vi.fn(),
   } as unknown as GoalRepository;
   service = new GoalService(
     userId,
@@ -277,6 +278,26 @@ describe('GoalService', () => {
       await expect(service.assertGoalLinkable('goal-1')).resolves.toEqual(
         goalDto
       );
+    });
+  });
+
+  describe('getExpensesGroupedByGoalIds', () => {
+    const exp = (id: string, goalId: string) => ({ id, goalId }) as ExpenseDTO;
+
+    it('groups per key in input order, [] for missing, keeps repo order', async () => {
+      vi.mocked(mockRepo.getExpensesByGoalIds).mockResolvedValue([
+        exp('e1', 'b'),
+        exp('e2', 'a'),
+        exp('e3', 'b'),
+      ]);
+
+      const result = await service.getExpensesGroupedByGoalIds(['a', 'c', 'b']);
+
+      expect(result.map((l) => l.map((e) => e.id))).toEqual([
+        ['e2'],
+        [],
+        ['e1', 'e3'],
+      ]);
     });
   });
 });

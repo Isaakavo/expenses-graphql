@@ -98,8 +98,18 @@ export class GoalService {
     return this.goalRepository.getGoalByPk(id);
   }
 
-  async getGoalExpenses(goalId: string): Promise<ExpenseDTO[]> {
-    return this.goalRepository.getGoalExpenses(goalId);
+  async getExpensesGroupedByGoalIds(
+    goalIds: readonly string[]
+  ): Promise<ExpenseDTO[][]> {
+    const expenses = await this.goalRepository.getExpensesByGoalIds(goalIds);
+    const byGoal = new Map<string, ExpenseDTO[]>();
+    for (const expense of expenses) {
+      if (!expense.goalId) continue;
+      const list = byGoal.get(expense.goalId);
+      if (list) list.push(expense);
+      else byGoal.set(expense.goalId, [expense]);
+    }
+    return goalIds.map((id) => byGoal.get(id) ?? []);
   }
 
   async createGoal(input: GoalServiceInput): Promise<GoalDTO> {
