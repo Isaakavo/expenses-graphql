@@ -78,4 +78,22 @@ describe('Period Model', () => {
     expect(periods.map((p) => p.id)).not.toContain(period1.id);
     expect(periods.map((p) => p.id)).toContain(period2.id);
   });
+
+  it('Creates the correct period for a date before the first period instead of returning the first one', async () => {
+    const first = await periodRepository.createPeriod(new Date('2025-08-08'));
+    const earlier = await periodRepository.createPeriod(new Date('2025-08-01'));
+
+    expect(earlier.id).not.toBe(first.id);
+    expect(earlier.startDate.toISOString()).toBe('2025-08-01T00:00:00.000Z');
+    expect(earlier.endDate.toISOString()).toBe('2025-08-07T00:00:00.000Z');
+    expect(await Period.count()).toBe(2);
+  });
+
+  it('Creates a full 14-day period before the first one when there is room', async () => {
+    await periodRepository.createPeriod(new Date('2025-08-08'));
+    const earlier = await periodRepository.createPeriod(new Date('2025-07-10'));
+
+    expect(earlier.startDate.toISOString()).toBe('2025-07-10T00:00:00.000Z');
+    expect(earlier.endDate.toISOString()).toBe('2025-07-23T00:00:00.000Z');
+  });
 });

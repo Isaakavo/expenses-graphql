@@ -1,9 +1,15 @@
-import { WhereOptions } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { adaptExpensesWithCard } from '../adapters/income-adapter.js';
 import { Card } from '../models/card.js';
 import { Expense } from '../models/expense.js';
 import { Income } from '../models/income.js';
+import { GoalRole } from '../generated/graphql.js';
 import { logger } from '../logger.js';
+
+// NULL-safe: a plain `<> 'SPENDING'` drops unlinked rows
+export const excludeGoalSpending: WhereOptions = {
+  goalRole: { [Op.or]: { [Op.is]: null, [Op.ne]: GoalRole.SPENDING } },
+};
 
 export const findIncomeByIdWithExpenses = async (
   incomeExpenses: WhereOptions = {}
@@ -15,7 +21,7 @@ export const findIncomeByIdWithExpenses = async (
 
 export const findAllExpensesWithCards = async (where: WhereOptions = {}) => {
   const allExpenses = await Expense.findAll({
-    where,
+    where: { [Op.and]: [where, excludeGoalSpending] },
     order: [['payBefore', 'DESC']],
   });
 

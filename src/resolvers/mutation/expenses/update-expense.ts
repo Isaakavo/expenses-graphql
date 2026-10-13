@@ -20,6 +20,9 @@ export const updateExpense: MutationResolvers['updateExpense'] = async (
     concept,
     subCategoryId,
     payBefore,
+    // Omitted keeps the link, null unlinks
+    ...('goalId' in input && { goalId: input.goalId }),
+    ...('goalRole' in input && { goalRole: input.goalRole }),
   });
 
   return adaptExpensesDTOInput(updatedExpense);

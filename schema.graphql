@@ -299,10 +299,12 @@ input CreateExpenseInput {
   concept: String!
   total: Float!
   payBefore: Date!
-  periodId: String!
+  periodId: String
   comment: String
   categoryId: String!
   subCategoryId: String!
+  goalId: ID
+  goalRole: GoalRole
 }
 
 input CreateFixedExpenseInput {
@@ -315,6 +317,8 @@ input CreateFixedExpenseInput {
   subCategoryId: String!
   numberOfRepetitions: Int!
   frequency: FixedExpenseFrequency!
+  goalId: ID
+  goalRole: GoalRole
 }
 
 input UpdateExpenseInput {
@@ -325,6 +329,9 @@ input UpdateExpenseInput {
   payBefore: Date!
   comment: String
   subCategoryId: String!
+  # Omitted => link untouched. Both null => unlink. Both set => relink.
+  goalId: ID
+  goalRole: GoalRole
 }
 
 input CreateCardInput {

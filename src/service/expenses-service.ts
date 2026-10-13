@@ -1,8 +1,10 @@
 import { addDays, addMonths } from 'date-fns';
-import { FindOptions, Sequelize } from 'sequelize';
+import { FindOptions, Sequelize, Transaction } from 'sequelize';
 import { ExpenseDTO } from '../dto';
-import { FixedExpenseFrequency } from '../generated/graphql.js';
+import { GraphQLError } from 'graphql';
+import { FixedExpenseFrequency, GoalRole } from '../generated/graphql.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
+import { GoalService } from './goal-service.js';
 import { logger } from '../logger.js';
 import {
   FORTNIGHTLY_NUMBER_OF_DAYS,
@@ -13,11 +15,13 @@ export type ExpenseInput = {
   concept: string;
   total: number;
   cardId?: string;
-  periodId: string;
+  periodId?: string;
   payBefore?: Date;
   comments?: string;
   categoryId: string;
   subCategoryId: string;
+  goalId?: string | null;
+  goalRole?: GoalRole | null;
 };
 
 export type FixedExpenseInput = {
@@ -28,24 +32,70 @@ export type FixedExpenseInput = {
   comment?: string;
   categoryId: string;
   subCategoryId: string;
+  goalId?: string | null;
+  goalRole?: GoalRole | null;
   numberOfRepetitions: number;
   frequency: FixedExpenseFrequency;
 };
 
+type GoalLink = { goalId?: string | null; goalRole?: GoalRole | null };
+
+const validationError = (message: string, argumentName: string) =>
+  new GraphQLError(message, {
+    extensions: { code: 'VALIDATION_ERROR', argumentName },
+  });
+
 export class ExpensesService {
   private expenseRepository: ExpenseRepository;
   private periodRepository: PeriodRepository;
+  private goalService: GoalService;
   userId: string;
   sequelize: Sequelize;
 
   constructor(userId: string, sequelize?: Sequelize) {
     this.expenseRepository = new ExpenseRepository(userId, sequelize);
     this.periodRepository = new PeriodRepository(userId, sequelize);
+    this.goalService = new GoalService(userId, sequelize);
     this.userId = userId;
     this.sequelize = sequelize;
   }
 
+  private async assertGoalLink({ goalId, goalRole }: GoalLink) {
+    if (goalId != null && goalRole == null) {
+      throw validationError('goalRole is required when goalId is set', 'goalRole');
+    }
+    if (goalId == null && goalRole != null) {
+      throw validationError('goalId is required when goalRole is set', 'goalId');
+    }
+    if (goalId != null) {
+      await this.goalService.assertGoalLinkable(goalId);
+    }
+  }
+
+  private async resolvePeriodId(
+    date: Date,
+    options: { transaction?: Transaction } = {}
+  ): Promise<string> {
+    const period = await this.periodRepository.getPeriodBy({ date }, options);
+    if (period) {
+      return period.id;
+    }
+    const created = await this.periodRepository.createPeriod(date, options);
+    return created.id;
+  }
+
   async createExpense(input: ExpenseInput) {
+    await this.assertGoalLink(input);
+    const needsPeriod = !input.periodId;
+    if (needsPeriod) {
+      if (input.goalRole !== GoalRole.SPENDING) {
+        throw validationError('periodId is required', 'periodId');
+      }
+      if (!input.payBefore) {
+        throw validationError('payBefore is required', 'payBefore');
+      }
+    }
+
     const conceptLengthMax = 100;
     const { concept, total } = input;
     if (concept.length === 0) {
@@ -63,29 +113,56 @@ export class ExpensesService {
       throw new Error(`Concept lenght must be lower than ${conceptLengthMax}`);
     }
 
-    return await this.expenseRepository.createExpense(input);
+    if (!needsPeriod) {
+      return await this.expenseRepository.createExpense(input);
+    }
+
+    // Resolved last so a rejected create leaves no orphan period
+    const transaction = await this.sequelize.transaction();
+    try {
+      const periodId = await this.resolvePeriodId(input.payBefore, {
+        transaction,
+      });
+      const created = await this.expenseRepository.createExpense(
+        { ...input, periodId },
+        { transaction }
+      );
+      await transaction.commit();
+      return created;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
   }
 
   async updateExpense(
     id: string,
     input: Partial<ExpenseInput & { payBefore: Date }>
   ) {
+    const goalKeys = (['goalId', 'goalRole'] as const).filter(
+      (key) => key in input && input[key] !== undefined
+    );
+    if (goalKeys.length === 1) {
+      throw validationError(
+        'goalId and goalRole must be provided together',
+        goalKeys[0] === 'goalId' ? 'goalRole' : 'goalId'
+      );
+    }
+    if (goalKeys.length === 2) {
+      await this.assertGoalLink(input);
+    }
+
     const transaction = await this.sequelize.transaction();
     try {
-      const period = await this.periodRepository.getPeriodBy(
-        { date: input.payBefore },
-        { transaction }
-      );
-
-      if (!period) {
-        logger.error('No period found for the given payBefore date');
-      }
+      const periodId = await this.resolvePeriodId(input.payBefore, {
+        transaction,
+      });
 
       const updated = await this.expenseRepository.updateExpense(
         id,
         {
           ...input,
-          periodId: period.id,
+          periodId,
         },
         {
           transaction,
@@ -181,6 +258,8 @@ export class ExpensesService {
   }
 
   async createFixedExpenses(input: FixedExpenseInput) {
+    await this.assertGoalLink(input);
+
     const transaction = await this.sequelize.transaction();
     try {
       const expenses: ExpenseDTO[] = [];
@@ -214,6 +293,8 @@ export class ExpensesService {
             categoryId: input.categoryId,
             subCategoryId: input.subCategoryId,
             comments: input.comment,
+            goalId: input.goalId ?? null,
+            goalRole: input.goalRole ?? null,
             payBefore: targetDate,
           },
           { transaction }

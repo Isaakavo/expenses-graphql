@@ -945,6 +945,30 @@
             "deprecationReason": null
           },
           {
+            "name": "goalId",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "ID",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "goalRole",
+            "description": null,
+            "type": {
+              "kind": "ENUM",
+              "name": "GoalRole",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "payBefore",
             "description": null,
             "type": {
@@ -964,13 +988,9 @@
             "name": "periodId",
             "description": null,
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -1087,6 +1107,30 @@
                 "name": "FixedExpenseFrequency",
                 "ofType": null
               }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "goalId",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "ID",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "goalRole",
+            "description": null,
+            "type": {
+              "kind": "ENUM",
+              "name": "GoalRole",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -4749,6 +4793,30 @@
                 "name": "String",
                 "ofType": null
               }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "goalId",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "ID",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "goalRole",
+            "description": null,
+            "type": {
+              "kind": "ENUM",
+              "name": "GoalRole",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,

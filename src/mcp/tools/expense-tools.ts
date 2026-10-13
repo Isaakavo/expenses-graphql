@@ -56,7 +56,7 @@ export function registerExpenseTools(server: McpServer, userId: string) {
     },
     async (input) => {
       try {
-        const service = new ExpensesService(userId);
+        const service = new ExpensesService(userId, sequelizeClient);
         const expense = await service.createExpense({
           concept: input.concept,
           total: input.total,

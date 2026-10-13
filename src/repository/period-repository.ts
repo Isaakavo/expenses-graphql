@@ -133,22 +133,29 @@ export class PeriodRepository {
         transaction: options.transaction,
       });
 
-      if (overlapping) {
+      // A period that starts after currentStart must not be reused
+      if (overlapping && new Date(overlapping.startDate) <= currentStart) {
         result = overlapping;
         logger.info(`Found overlapping period: ${overlapping.id}`);
       } else {
+        const newEnd = overlapping
+          ? startOfDay(new Date(overlapping.startDate))
+          : currentEnd;
+        if (overlapping) {
+          newEnd.setDate(newEnd.getDate() - 1);
+        }
         result = await Period.create(
           {
             userId: this.userId,
             type: periodType,
             startDate: currentStart,
-            endDate: currentEnd,
+            endDate: newEnd,
           },
           { transaction: options.transaction }
         );
 
         logger.info(
-          `Period created: ${result.id} - ${currentStart.toISOString()} to ${currentEnd.toISOString()}`
+          `Period created: ${result.id} - ${currentStart.toISOString()} to ${newEnd.toISOString()}`
         );
       }
 
