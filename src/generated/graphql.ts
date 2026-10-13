@@ -36,6 +36,10 @@ export type Card = {
   id: Scalars['ID']['output'];
   isDebit?: Maybe<Scalars['Boolean']['output']>;
   isDigital?: Maybe<Scalars['Boolean']['output']>;
+  provider?: Maybe<TransactionProviderName>;
+  providerLastSyncedAt?: Maybe<Scalars['String']['output']>;
+  providerLinkedAt?: Maybe<Scalars['String']['output']>;
+  providerStatus?: Maybe<ProviderConnectionStatus>;
   userId: Scalars['ID']['output'];
 };
 
@@ -150,6 +154,10 @@ export type CreateIncomeInput = {
   comment?: InputMaybe<Scalars['String']['input']>;
   paymentDate: Scalars['Date']['input'];
   total: Scalars['Float']['input'];
+};
+
+export type CreateProviderLinkTokenInput = {
+  provider: TransactionProviderName;
 };
 
 export type Expense = {
@@ -286,6 +294,17 @@ export type InvestmentRecordInput = {
   udiValue?: InputMaybe<Scalars['Float']['input']>;
 };
 
+export type LinkCardAccountInput = {
+  cardId: Scalars['ID']['input'];
+  providerAccountId: Scalars['String']['input'];
+};
+
+export type LinkCardToProviderInput = {
+  cards: Array<LinkCardAccountInput>;
+  provider: TransactionProviderName;
+  publicToken: Scalars['String']['input'];
+};
+
 export type LoginResponse = {
   __typename?: 'LoginResponse';
   status: Auth_Status;
@@ -299,10 +318,13 @@ export type Mutation = {
   createFixedExpense?: Maybe<Array<Maybe<Expense>>>;
   createIncome: Income;
   createInvestmentRecord: InvestmentRecord;
+  createProviderLinkToken: ProviderLinkSession;
   deleteCard: Scalars['Boolean']['output'];
   deleteCategorySetting: CategorySetting;
   deleteExpense: Scalars['Boolean']['output'];
   deleteIncomeById: Scalars['Boolean']['output'];
+  linkCardToProvider: Array<Card>;
+  unlinkCardFromProvider: Card;
   updateCard: Card;
   updateCategoryAllocation: CategorySetting;
   updateCategorySetting: CategorySettings;
@@ -341,6 +363,11 @@ export type MutationCreateInvestmentRecordArgs = {
 };
 
 
+export type MutationCreateProviderLinkTokenArgs = {
+  input: CreateProviderLinkTokenInput;
+};
+
+
 export type MutationDeleteCardArgs = {
   id: Scalars['ID']['input'];
 };
@@ -358,6 +385,16 @@ export type MutationDeleteExpenseArgs = {
 
 export type MutationDeleteIncomeByIdArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationLinkCardToProviderArgs = {
+  input: LinkCardToProviderInput;
+};
+
+
+export type MutationUnlinkCardFromProviderArgs = {
+  cardId: Scalars['ID']['input'];
 };
 
 
@@ -405,6 +442,18 @@ export type Period = {
   startDate: Scalars['String']['output'];
   updatedAt?: Maybe<Scalars['String']['output']>;
   userId: Scalars['String']['output'];
+};
+
+export enum ProviderConnectionStatus {
+  ACTIVE = 'ACTIVE',
+  DISCONNECTED = 'DISCONNECTED',
+  ERROR = 'ERROR',
+  PENDING_DISCONNECT = 'PENDING_DISCONNECT'
+}
+
+export type ProviderLinkSession = {
+  __typename?: 'ProviderLinkSession';
+  linkToken: Scalars['String']['output'];
 };
 
 export type Query = {
@@ -506,6 +555,10 @@ export type TotalByMonth = Total & {
   total: Scalars['Float']['output'];
   year: Scalars['String']['output'];
 };
+
+export enum TransactionProviderName {
+  PLAID = 'PLAID'
+}
 
 export type UdiValue = {
   __typename?: 'UdiValue';
@@ -654,6 +707,7 @@ export type ResolversTypes = ResolversObject<{
   CreateExpenseInput: CreateExpenseInput;
   CreateFixedExpenseInput: CreateFixedExpenseInput;
   CreateIncomeInput: CreateIncomeInput;
+  CreateProviderLinkTokenInput: CreateProviderLinkTokenInput;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
   ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
@@ -674,11 +728,15 @@ export type ResolversTypes = ResolversObject<{
   InvestmentDetail: ResolverTypeWrapper<InvestmentDetail>;
   InvestmentRecord: ResolverTypeWrapper<InvestmentRecord>;
   InvestmentRecordInput: InvestmentRecordInput;
+  LinkCardAccountInput: LinkCardAccountInput;
+  LinkCardToProviderInput: LinkCardToProviderInput;
   LoginResponse: ResolverTypeWrapper<LoginResponse>;
   Mutation: ResolverTypeWrapper<{}>;
   PayBeforeInput: PayBeforeInput;
   PaymentDate: ResolverTypeWrapper<PaymentDate>;
   Period: ResolverTypeWrapper<Period>;
+  ProviderConnectionStatus: ProviderConnectionStatus;
+  ProviderLinkSession: ResolverTypeWrapper<ProviderLinkSession>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   SubCategory: ResolverTypeWrapper<SubCategory>;
@@ -686,6 +744,7 @@ export type ResolversTypes = ResolversObject<{
   TotalByCardId: ResolverTypeWrapper<TotalByCardId>;
   TotalByFortnight: ResolverTypeWrapper<TotalByFortnight>;
   TotalByMonth: ResolverTypeWrapper<TotalByMonth>;
+  TransactionProviderName: TransactionProviderName;
   UdiValue: ResolverTypeWrapper<UdiValue>;
   UpdateCardInput: UpdateCardInput;
   UpdateCategoryAllocationInput: UpdateCategoryAllocationInput;
@@ -713,6 +772,7 @@ export type ResolversParentTypes = ResolversObject<{
   CreateExpenseInput: CreateExpenseInput;
   CreateFixedExpenseInput: CreateFixedExpenseInput;
   CreateIncomeInput: CreateIncomeInput;
+  CreateProviderLinkTokenInput: CreateProviderLinkTokenInput;
   Date: Scalars['Date']['output'];
   Expense: Expense;
   ExpensesBy: ExpensesBy;
@@ -731,11 +791,14 @@ export type ResolversParentTypes = ResolversObject<{
   InvestmentDetail: InvestmentDetail;
   InvestmentRecord: InvestmentRecord;
   InvestmentRecordInput: InvestmentRecordInput;
+  LinkCardAccountInput: LinkCardAccountInput;
+  LinkCardToProviderInput: LinkCardToProviderInput;
   LoginResponse: LoginResponse;
   Mutation: {};
   PayBeforeInput: PayBeforeInput;
   PaymentDate: PaymentDate;
   Period: Period;
+  ProviderLinkSession: ProviderLinkSession;
   Query: {};
   String: Scalars['String']['output'];
   SubCategory: SubCategory;
@@ -759,6 +822,10 @@ export type CardResolvers<ContextType = Context, ParentType extends ResolversPar
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   isDebit?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   isDigital?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
+  provider?: Resolver<Maybe<ResolversTypes['TransactionProviderName']>, ParentType, ContextType>;
+  providerLastSyncedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  providerLinkedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  providerStatus?: Resolver<Maybe<ResolversTypes['ProviderConnectionStatus']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -931,10 +998,13 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createFixedExpense?: Resolver<Maybe<Array<Maybe<ResolversTypes['Expense']>>>, ParentType, ContextType, Partial<MutationCreateFixedExpenseArgs>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
   createInvestmentRecord?: Resolver<ResolversTypes['InvestmentRecord'], ParentType, ContextType, Partial<MutationCreateInvestmentRecordArgs>>;
+  createProviderLinkToken?: Resolver<ResolversTypes['ProviderLinkSession'], ParentType, ContextType, RequireFields<MutationCreateProviderLinkTokenArgs, 'input'>>;
   deleteCard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteCardArgs, 'id'>>;
   deleteCategorySetting?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, RequireFields<MutationDeleteCategorySettingArgs, 'categoryId'>>;
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
   deleteIncomeById?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
+  linkCardToProvider?: Resolver<Array<ResolversTypes['Card']>, ParentType, ContextType, RequireFields<MutationLinkCardToProviderArgs, 'input'>>;
+  unlinkCardFromProvider?: Resolver<ResolversTypes['Card'], ParentType, ContextType, RequireFields<MutationUnlinkCardFromProviderArgs, 'cardId'>>;
   updateCard?: Resolver<ResolversTypes['Card'], ParentType, ContextType, Partial<MutationUpdateCardArgs>>;
   updateCategoryAllocation?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, Partial<MutationUpdateCategoryAllocationArgs>>;
   updateCategorySetting?: Resolver<ResolversTypes['CategorySettings'], ParentType, ContextType, RequireFields<MutationUpdateCategorySettingArgs, 'input'>>;
@@ -955,6 +1025,11 @@ export type PeriodResolvers<ContextType = Context, ParentType extends ResolversP
   startDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   userId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ProviderLinkSessionResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ProviderLinkSession'] = ResolversParentTypes['ProviderLinkSession']> = ResolversObject<{
+  linkToken?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -1049,6 +1124,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Mutation?: MutationResolvers<ContextType>;
   PaymentDate?: PaymentDateResolvers<ContextType>;
   Period?: PeriodResolvers<ContextType>;
+  ProviderLinkSession?: ProviderLinkSessionResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   SubCategory?: SubCategoryResolvers<ContextType>;
   Total?: TotalResolvers<ContextType>;

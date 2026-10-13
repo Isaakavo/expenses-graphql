@@ -16,6 +16,9 @@ import {
   updateCategorySetting,
   updateCategoryAllocation,
   createInvestmentRecord,
+  createProviderLinkToken,
+  linkCardToProvider,
+  unlinkCardFromProvider,
 } from './mutation/index.js';
 
 //TODO add mutation for deletion
@@ -36,6 +39,9 @@ const mutations: MutationResolvers = {
   deleteCategorySetting: withErrorHandling('deleteCategorySetting', deleteCategorySetting),
   updateCategoryAllocation: withErrorHandling('updateCategoryAllocation', updateCategoryAllocation),
   createInvestmentRecord: withErrorHandling('createInvestmentRecord', createInvestmentRecord),
+  createProviderLinkToken: withErrorHandling('createProviderLinkToken', createProviderLinkToken),
+  linkCardToProvider: withErrorHandling('linkCardToProvider', linkCardToProvider),
+  unlinkCardFromProvider: withErrorHandling('unlinkCardFromProvider', unlinkCardFromProvider),
 };
 
 export default mutations;

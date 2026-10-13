@@ -1,3 +1,5 @@
+import { ProviderConnectionStatus, TransactionProviderName } from '../generated/graphql.js';
+
 export type CardDTO = {
   id: string;
   bank: string;
@@ -5,10 +7,10 @@ export type CardDTO = {
   alias: string;
   isDebit: boolean;
   isDigital: boolean;
-  provider?: string | null;
+  provider?: TransactionProviderName | null;
   providerAccountId?: string | null;
   providerConnectionId?: string | null;
-  providerStatus?: string | null;
-  providerLinkedAt?: Date | null;
-  providerLastSyncedAt?: Date | null;
+  providerStatus?: ProviderConnectionStatus | null;
+  providerLinkedAt?: string | null;
+  providerLastSyncedAt?: string | null;
 }
