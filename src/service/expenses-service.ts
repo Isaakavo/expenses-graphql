@@ -15,7 +15,6 @@ export type ExpenseInput = {
   concept: string;
   total: number;
   cardId?: string;
-  // Optional only for goalRole SPENDING, where it is resolved from payBefore
   periodId?: string;
   payBefore?: Date;
   comments?: string;
@@ -61,8 +60,6 @@ export class ExpensesService {
     this.sequelize = sequelize;
   }
 
-  // goalId and goalRole are both set or both absent; a set goal must be the user's own.
-  // Linking to a closed goal or dating the expense outside the goal range is allowed.
   private async assertGoalLink({ goalId, goalRole }: GoalLink) {
     if (goalId != null && goalRole == null) {
       throw validationError('goalRole is required when goalId is set', 'goalRole');
@@ -75,7 +72,6 @@ export class ExpensesService {
     }
   }
 
-  // Finds the period containing the date, creating it when missing (same rule as fixed expenses)
   private async resolvePeriodId(
     date: Date,
     options: { transaction?: Transaction } = {}
@@ -90,7 +86,6 @@ export class ExpensesService {
 
   async createExpense(input: ExpenseInput) {
     await this.assertGoalLink(input);
-    // The app hides the period selector for goal spending, so its period comes from the date
     const needsPeriod = !input.periodId;
     if (needsPeriod) {
       if (input.goalRole !== GoalRole.SPENDING) {
@@ -122,7 +117,7 @@ export class ExpensesService {
       return await this.expenseRepository.createExpense(input);
     }
 
-    // Period is resolved last so a rejected create leaves no orphan period; one transaction covers both
+    // Resolved last so a rejected create leaves no orphan period
     const transaction = await this.sequelize.transaction();
     try {
       const periodId = await this.resolvePeriodId(input.payBefore, {
@@ -144,7 +139,6 @@ export class ExpensesService {
     id: string,
     input: Partial<ExpenseInput & { payBefore: Date }>
   ) {
-    // 'goalId' in input: omitted keeps the link, null unlinks, a value relinks. Keys travel together.
     const goalKeys = (['goalId', 'goalRole'] as const).filter(
       (key) => key in input && input[key] !== undefined
     );

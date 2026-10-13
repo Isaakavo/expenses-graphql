@@ -6,8 +6,7 @@ import { Income } from '../models/income.js';
 import { GoalRole } from '../generated/graphql.js';
 import { logger } from '../logger.js';
 
-// Goal spending lives in the goal, not in the budget. NULL-safe: a plain `<> 'SPENDING'` drops unlinked rows.
-// Keyed on the column, so it can be spread next to other conditions without clobbering a top-level Op.or.
+// NULL-safe: a plain `<> 'SPENDING'` drops unlinked rows
 export const excludeGoalSpending: WhereOptions = {
   goalRole: { [Op.or]: { [Op.is]: null, [Op.ne]: GoalRole.SPENDING } },
 };
@@ -22,7 +21,6 @@ export const findIncomeByIdWithExpenses = async (
 
 export const findAllExpensesWithCards = async (where: WhereOptions = {}) => {
   const allExpenses = await Expense.findAll({
-    // Goal spending is not part of the budget balance
     where: { [Op.and]: [where, excludeGoalSpending] },
     order: [['payBefore', 'DESC']],
   });

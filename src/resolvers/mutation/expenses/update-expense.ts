@@ -20,7 +20,7 @@ export const updateExpense: MutationResolvers['updateExpense'] = async (
     concept,
     subCategoryId,
     payBefore,
-    // Only forward the link keys the client sent: omitted keeps the link, null unlinks
+    // Omitted keeps the link, null unlinks
     ...('goalId' in input && { goalId: input.goalId }),
     ...('goalRole' in input && { goalRole: input.goalRole }),
   });

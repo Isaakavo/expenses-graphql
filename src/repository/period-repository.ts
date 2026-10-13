@@ -133,13 +133,11 @@ export class PeriodRepository {
         transaction: options.transaction,
       });
 
-      // Reuse only a period that actually contains currentStart; one that starts later
-      // (date before the user's first period) must not be returned for this date
+      // A period that starts after currentStart must not be reused
       if (overlapping && new Date(overlapping.startDate) <= currentStart) {
         result = overlapping;
         logger.info(`Found overlapping period: ${overlapping.id}`);
       } else {
-        // Stop the new period the day before the next existing one so they never overlap
         const newEnd = overlapping
           ? startOfDay(new Date(overlapping.startDate))
           : currentEnd;

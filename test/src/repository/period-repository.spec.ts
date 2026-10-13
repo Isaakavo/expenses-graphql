@@ -85,7 +85,6 @@ describe('Period Model', () => {
 
     expect(earlier.id).not.toBe(first.id);
     expect(earlier.startDate.toISOString()).toBe('2025-08-01T00:00:00.000Z');
-    // Ends the day before the existing period so the two never overlap
     expect(earlier.endDate.toISOString()).toBe('2025-08-07T00:00:00.000Z');
     expect(await Period.count()).toBe(2);
   });

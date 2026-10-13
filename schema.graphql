@@ -299,12 +299,10 @@ input CreateExpenseInput {
   concept: String!
   total: Float!
   payBefore: Date!
-  # Optional only for goalRole SPENDING (resolved from payBefore); required otherwise
   periodId: String
   comment: String
   categoryId: String!
   subCategoryId: String!
-  # goalId and goalRole must be sent together
   goalId: ID
   goalRole: GoalRole
 }
@@ -319,7 +317,6 @@ input CreateFixedExpenseInput {
   subCategoryId: String!
   numberOfRepetitions: Int!
   frequency: FixedExpenseFrequency!
-  # goalId and goalRole must be sent together; every copy gets the same link
   goalId: ID
   goalRole: GoalRole
 }
