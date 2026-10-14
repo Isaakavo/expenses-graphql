@@ -1,6 +1,8 @@
 export { cardById } from './card/card-by-id.js';
 export { cardList } from './card/card-list.js';
 export { userSettings } from './settings/user-settings.js';
+export { latestExchangeRate } from './exchange-rate/latest-exchange-rate.js';
+export { exchangeRates } from './exchange-rate/exchange-rates.js';
 export { allExpenses } from './expense/all-expenses.js';
 export { expensesByCategory } from './expense/expenses-by-category.js';
 export { expenseById } from './expense/expense-by-id.js';

@@ -174,7 +174,7 @@ src/
 │   └── sync-database.ts        # Table sync on startup
 ├── models/                     # Sequelize model definitions
 │   ├── associations.ts         # All model relationships
-│   ├── expense.ts, income.ts, card.ts, category.ts, sub-category.ts, user-settings.ts, ...
+│   ├── expense.ts, income.ts, card.ts, category.ts, sub-category.ts, user-settings.ts, exchange-rate.ts, ...
 │   └── index.ts                # Re-exports
 ├── dto/                        # TypeScript types for data transfer
 │   ├── expense-dto.ts          # ExpenseDTO, GroupedExpensesDTO, etc.
@@ -182,14 +182,17 @@ src/
 ├── adapters/                   # Data transformation functions
 │   ├── expense-adapter.ts      # Raw → DTO, DTO → GraphQL
 │   ├── income-adapter.ts       # Also contains adaptExpensesDTOInput, formatCurrency
+│   ├── exchange-rate-adapter.ts # ExchangeRateResult → GraphQL ExchangeRate
 │   └── ...
 ├── repository/                 # Data access layer
 │   ├── expense-repository.ts   # All expense queries
 │   ├── user-settings-repository.ts # user_settings get/upsert by userId
+│   ├── exchange-rate-repository.ts # exchange_rates reads and idempotent bulk upsert (global table)
 │   └── ...
 ├── service/                    # Business logic
 │   ├── expenses-service.ts     # Expense CRUD + grouped queries
 │   ├── user-settings-service.ts # Default currency (USD when no row)
+│   ├── exchange-rate-service.ts # Banxico FIX cache: lazy gap fill, stale fallback, throttle, backfill
 │   └── ...
 ├── resolvers/
 │   ├── queries.ts              # All query resolver registrations
@@ -203,6 +206,7 @@ src/
 │   │   ├── investment/         # all-investment-records, investment-details, udi-value
 │   │   ├── period/             # periods-list, period
 │   │   ├── settings/           # user-settings
+│   │   ├── exchange-rate/      # latest-exchange-rate, exchange-rates
 │   │   └── login/              # login resolver
 │   └── mutation/               # One file per mutation, organized by feature
 ├── mcp/                        # Model Context Protocol server
@@ -213,10 +217,15 @@ src/
 │   │   ├── income-tools.ts
 │   │   ├── category-tools.ts
 │   │   ├── card-tools.ts
-│   │   └── period-tools.ts
+│   │   ├── period-tools.ts
+│   │   └── exchange-rate-tools.ts # get-exchange-rate
 │   └── utils.ts                # textResponse, errorResponse helpers
 ├── clients/
-│   └── banxico/udi-client.ts   # External API for UDI investment values
+│   └── banxico/
+│       ├── udi-client.ts       # External API for UDI investment values
+│       └── fx-client.ts        # Banxico FIX series SF43718 (MXN per USD), parsing and range chunking
+├── scripts/
+│   └── backfill-exchange-rates.ts # pnpm rates:backfill --from YYYY-MM-DD [--to YYYY-MM-DD]
 └── utils/
     ├── resolver-wrapper.ts     # withErrorHandling HOF for resolvers
     ├── date-utils.ts           # Fortnight calculation, date helpers
