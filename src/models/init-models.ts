@@ -9,6 +9,7 @@ import {
   initIncomeCategoryAllocationModel
 } from './income-category-allocation.js';
 import { initGoalModel } from './goal.js';
+import { initUserSettingsModel } from './user-settings.js';
 import { initIncomeModel } from './income.js';
 import { initPeriodsModel } from './periods.js';
 import { initSubCategoryModel } from './sub-category.js';
@@ -27,4 +28,5 @@ export const initModels = (sequelize: Sequelize) => {
   initInvestmentRecordModel(sequelize);
   initInvestmentFeeRecordModel(sequelize);
   initGoalModel(sequelize);
+  initUserSettingsModel(sequelize);
 };

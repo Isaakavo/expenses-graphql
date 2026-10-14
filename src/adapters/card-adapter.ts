@@ -8,5 +8,6 @@ export const adaptCardDTO = (card): CardDTO => {
     alias: card.alias,
     isDebit: card.isDebit,
     isDigital: card.isDigital,
+    currency: card.currency ?? null,
   };
 };

@@ -7,6 +7,7 @@ export { createIncome } from './income/create-income.js';
 export { deleteIncomeById } from './income/delete-income.js';
 export { updateIncome } from './income/update-income.js';
 export { updateCard } from './card/update-card.js';
+export { updateUserSettings } from './settings/update-user-settings.js';
 export { deleteCard } from './card/delete-card.js';
 export { createGoal } from './goal/create-goal.js';
 export { updateGoal } from './goal/update-goal.js';

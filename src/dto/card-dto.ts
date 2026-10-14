@@ -1,3 +1,5 @@
+import { CurrencyCode } from '../generated/graphql.js';
+
 export type CardDTO = {
   id: string;
   bank: string;
@@ -5,4 +7,5 @@ export type CardDTO = {
   alias: string;
   isDebit: boolean;
   isDigital: boolean;
+  currency: CurrencyCode | null;
 }

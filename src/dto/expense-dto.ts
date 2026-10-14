@@ -1,5 +1,5 @@
 import { Card, Category, Expense, SubCategory } from '../models/index.js';
-import { GoalRole } from '../generated/graphql.js';
+import { CurrencyCode, GoalRole } from '../generated/graphql.js';
 import { CardDTO } from './card-dto';
 import { CategoryDTO } from './category-dto';
 
@@ -14,6 +14,7 @@ export type ExpenseDTO = {
   goalRole?: GoalRole | null;
   concept: string;
   total: number;
+  currency: CurrencyCode;
   comments?: string | null;
   payBefore: Date;
   createdAt: Date;

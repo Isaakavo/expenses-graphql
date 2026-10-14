@@ -1,6 +1,7 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
 import { IncomeCategoryAllocation } from './income-category-allocation.js';
 import { Period } from './periods.js';
+import { CurrencyCode } from '../generated/graphql.js';
 
 export type IncomeWithPeriod = Income & {
   period_id: string;
@@ -9,6 +10,7 @@ export type IncomeWithPeriod = Income & {
 export class Income extends Model {
   public id!: string;
   public total!: number;
+  public currency!: CurrencyCode;
   public paymentDate!: Date;
   public comment!: string;
   public userId!: string;
@@ -37,6 +39,11 @@ export const initIncomeModel = (sequelize: Sequelize) => {
       total: {
         type: DataTypes.FLOAT,
         allowNull: false,
+      },
+      currency: {
+        type: DataTypes.CHAR(3),
+        allowNull: false,
+        defaultValue: CurrencyCode.USD,
       },
       comment: {
         type: DataTypes.STRING,

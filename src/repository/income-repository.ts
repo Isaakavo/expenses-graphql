@@ -9,7 +9,8 @@ import {
 import { logger } from '../logger.js';
 import { CategorySettings } from '../models/category-settings.js';
 import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
-import { Category, Income } from '../models/index.js';
+import { Category, Expense, Income } from '../models/index.js';
+import { CurrencyCode } from '../generated/graphql.js';
 import { Period } from '../models/periods.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
 import { PeriodRepository } from './period-repository.js';
@@ -131,7 +132,35 @@ export class IncomeRepository {
     return result.map((row) => adaptIncomeCategoryAllocationDTO(row));
   }
 
-  async createIncome(incomeData: Partial<Income>) {
+  async getCurrencyByPeriod(
+    periodId: string,
+    options: { transaction?: Transaction } = {}
+  ): Promise<CurrencyCode | null> {
+    const income = await Income.findOne({
+      where: { userId: this.userId, periodId },
+      order: [['createdAt', 'ASC']],
+      transaction: options.transaction,
+    });
+    return (income?.currency as CurrencyCode) ?? null;
+  }
+
+  private async relabelPeriod(
+    periodId: string,
+    currency: CurrencyCode,
+    transaction: Transaction
+  ) {
+    const where = { userId: this.userId, periodId };
+    await Income.update({ currency }, { where, transaction });
+    await Expense.update({ currency }, { where, transaction });
+    logger.info(
+      `Relabeled period ${periodId} to ${currency} for user ${this.userId}`
+    );
+  }
+
+  async createIncome(
+    incomeData: Partial<Income>,
+    options: { relabelCurrency?: boolean } = {}
+  ) {
     return await this.sequelize.transaction(async (t) => {
       const period: Period = await this.periodRepository.createPeriod(
         incomeData.paymentDate,
@@ -143,12 +172,27 @@ export class IncomeRepository {
           userId: this.userId,
           periodId: period.id,
         },
+        transaction: t,
       });
+
+      if (
+        income &&
+        options.relabelCurrency &&
+        income.currency !== incomeData.currency
+      ) {
+        await this.relabelPeriod(period.id, incomeData.currency, t);
+        await income.reload({ transaction: t });
+      }
 
       if (!income) {
         income = await Income.create(
           { ...incomeData, periodId: period.id },
           { transaction: t }
+        );
+        // Expenses created before the first income carry the fallback default
+        await Expense.update(
+          { currency: incomeData.currency },
+          { where: { userId: this.userId, periodId: period.id }, transaction: t }
         );
         logger.info(
           `Created new income for user ${this.userId} on date ${incomeData.paymentDate}`
@@ -227,6 +271,11 @@ export class IncomeRepository {
   ) {
     const { id, ...updateData } = input;
 
+    const current = await Income.findOne({
+      where: { id, userId: this.userId },
+      transaction: options.transaction,
+    });
+
     const [affectedCount, updatedElements] = await Income.update(updateData, {
       where: {
         id,
@@ -239,6 +288,13 @@ export class IncomeRepository {
 
     if (affectedCount === 0) {
       throw new Error(`Income with id ${id} not found for user ${this.userId}`);
+    }
+
+    // The returned instance exposes the period as `PeriodId` (extra hasMany key), so it is not read
+    const periodId = updateData.periodId ?? current.periodId;
+    const currency = (updateData.currency ?? current.currency) as CurrencyCode;
+    if (current.periodId !== periodId || current.currency !== currency) {
+      await this.relabelPeriod(periodId, currency, options.transaction);
     }
 
     logger.info(`Updated income with id ${id} for user ${this.userId}`);
