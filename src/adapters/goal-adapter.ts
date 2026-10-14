@@ -9,6 +9,7 @@ export const adaptGoalDTO = (goal): GoalDTO => {
     userId: goal.userId,
     name: goal.name,
     targetAmount: Number(goal.targetAmount),
+    currency: goal.currency,
     startDate: goal.startDate,
     endDate: goal.endDate ?? null,
   };
@@ -20,6 +21,7 @@ export const adaptGoal = (goal: GoalDTO): Goal => {
     id: goal.id,
     name: goal.name,
     targetAmount: formatCurrency(goal.targetAmount),
+    currency: goal.currency,
     startDate: goal.startDate,
     endDate: goal.endDate,
     expenses: [],

@@ -159,6 +159,7 @@ export type CreateFixedExpenseInput = {
 };
 
 export type CreateGoalInput = {
+  currency?: InputMaybe<CurrencyCode>;
   endDate?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   startDate: Scalars['String']['input'];
@@ -196,6 +197,7 @@ export type Expense = {
   createdAt?: Maybe<Scalars['String']['output']>;
   currency: CurrencyCode;
   foreignAmount?: Maybe<ForeignAmount>;
+  goalAmount?: Maybe<Scalars['String']['output']>;
   goalId?: Maybe<Scalars['ID']['output']>;
   goalRole?: Maybe<GoalRole>;
   id: Scalars['ID']['output'];
@@ -271,6 +273,7 @@ export enum Fortnight {
 
 export type Goal = {
   __typename?: 'Goal';
+  currency: CurrencyCode;
   endDate?: Maybe<Scalars['String']['output']>;
   expenses: Array<Expense>;
   id: Scalars['ID']['output'];
@@ -672,6 +675,7 @@ export type UpdateExpenseInput = {
 };
 
 export type UpdateGoalInput = {
+  currency?: InputMaybe<CurrencyCode>;
   endDate?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
   name: Scalars['String']['input'];
@@ -997,6 +1001,7 @@ export type ExpenseResolvers<ContextType = Context, ParentType extends Resolvers
   createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   currency?: Resolver<ResolversTypes['CurrencyCode'], ParentType, ContextType>;
   foreignAmount?: Resolver<Maybe<ResolversTypes['ForeignAmount']>, ParentType, ContextType>;
+  goalAmount?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   goalId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   goalRole?: Resolver<Maybe<ResolversTypes['GoalRole']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -1046,6 +1051,7 @@ export type ForeignAmountResolvers<ContextType = Context, ParentType extends Res
 }>;
 
 export type GoalResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Goal'] = ResolversParentTypes['Goal']> = ResolversObject<{
+  currency?: Resolver<ResolversTypes['CurrencyCode'], ParentType, ContextType>;
   endDate?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   expenses?: Resolver<Array<ResolversTypes['Expense']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;

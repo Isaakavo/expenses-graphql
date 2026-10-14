@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Sequelize } from 'sequelize';
 import { GoalService } from '../../../src/service/goal-service.js';
 import { ExpenseDTO } from '../../../src/dto/expense-dto.js';
+import { CurrencyCode } from '../../../src/generated/graphql.js';
 import { GoalRepository } from '../../../src/repository/goal-repository.js';
 
 const userId = 'test-user';
@@ -13,6 +14,7 @@ const goalDto = {
   userId,
   name: 'Trip',
   targetAmount: 1000,
+  currency: CurrencyCode.USD,
   startDate: '2026-01-01',
   endDate: null,
 };
@@ -49,6 +51,9 @@ beforeEach(() => {
     new Sequelize('sqlite::memory:', { logging: false })
   );
   service.goalRepository = mockRepo;
+  Object.assign(service, {
+    userSettingsService: { getDefaultCurrency: vi.fn().mockResolvedValue(CurrencyCode.USD) },
+  });
 });
 
 describe('GoalService', () => {
@@ -127,6 +132,7 @@ describe('GoalService', () => {
         targetAmount: 9999999999.99,
         startDate: '2026-01-01',
         endDate: '2026-06-01',
+        currency: CurrencyCode.USD,
       });
       expect(result).toEqual(goalDto);
     });
