@@ -2,9 +2,11 @@ import { addDays, addMonths } from 'date-fns';
 import { FindOptions, Sequelize, Transaction } from 'sequelize';
 import { ExpenseDTO } from '../dto';
 import { GraphQLError } from 'graphql';
-import { FixedExpenseFrequency, GoalRole } from '../generated/graphql.js';
+import { CurrencyCode, FixedExpenseFrequency, GoalRole } from '../generated/graphql.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 import { GoalService } from './goal-service.js';
+import { IncomeRepository } from '../repository/income-repository.js';
+import { UserSettingsService } from './user-settings-service.js';
 import { logger } from '../logger.js';
 import {
   FORTNIGHTLY_NUMBER_OF_DAYS,
@@ -14,6 +16,7 @@ import {
 export type ExpenseInput = {
   concept: string;
   total: number;
+  currency?: CurrencyCode;
   cardId?: string;
   periodId?: string;
   payBefore?: Date;
@@ -49,6 +52,8 @@ export class ExpensesService {
   private expenseRepository: ExpenseRepository;
   private periodRepository: PeriodRepository;
   private goalService: GoalService;
+  private incomeRepository: IncomeRepository;
+  private userSettingsService: UserSettingsService;
   userId: string;
   sequelize: Sequelize;
 
@@ -56,6 +61,8 @@ export class ExpensesService {
     this.expenseRepository = new ExpenseRepository(userId, sequelize);
     this.periodRepository = new PeriodRepository(userId, sequelize);
     this.goalService = new GoalService(userId, sequelize);
+    this.incomeRepository = new IncomeRepository(userId, sequelize);
+    this.userSettingsService = new UserSettingsService(userId, sequelize);
     this.userId = userId;
     this.sequelize = sequelize;
   }
@@ -82,6 +89,16 @@ export class ExpensesService {
     }
     const created = await this.periodRepository.createPeriod(date, options);
     return created.id;
+  }
+
+  private async resolveCurrency(
+    periodId: string,
+    options: { transaction?: Transaction } = {}
+  ): Promise<CurrencyCode> {
+    return (
+      (await this.incomeRepository.getCurrencyByPeriod(periodId, options)) ??
+      (await this.userSettingsService.getDefaultCurrency())
+    );
   }
 
   async createExpense(input: ExpenseInput) {
@@ -114,7 +131,10 @@ export class ExpensesService {
     }
 
     if (!needsPeriod) {
-      return await this.expenseRepository.createExpense(input);
+      return await this.expenseRepository.createExpense({
+        ...input,
+        currency: await this.resolveCurrency(input.periodId),
+      });
     }
 
     // Resolved last so a rejected create leaves no orphan period
@@ -124,7 +144,11 @@ export class ExpensesService {
         transaction,
       });
       const created = await this.expenseRepository.createExpense(
-        { ...input, periodId },
+        {
+          ...input,
+          periodId,
+          currency: await this.resolveCurrency(periodId, { transaction }),
+        },
         { transaction }
       );
       await transaction.commit();
@@ -158,11 +182,20 @@ export class ExpensesService {
         transaction,
       });
 
+      const currentPeriodId = await this.expenseRepository.getPeriodId(id, {
+        transaction,
+      });
+      const currency =
+        currentPeriodId && currentPeriodId !== periodId
+          ? await this.resolveCurrency(periodId, { transaction })
+          : undefined;
+
       const updated = await this.expenseRepository.updateExpense(
         id,
         {
           ...input,
           periodId,
+          ...(currency && { currency }),
         },
         {
           transaction,
@@ -288,6 +321,7 @@ export class ExpensesService {
           {
             concept: input.concept,
             total: input.total,
+            currency: await this.resolveCurrency(period.id, { transaction }),
             cardId: input.cardId,
             periodId: period.id,
             categoryId: input.categoryId,

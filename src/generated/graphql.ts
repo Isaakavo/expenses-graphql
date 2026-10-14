@@ -33,6 +33,7 @@ export type Card = {
   __typename?: 'Card';
   alias?: Maybe<Scalars['String']['output']>;
   bank: Scalars['String']['output'];
+  currency?: Maybe<CurrencyCode>;
   id: Scalars['ID']['output'];
   isDebit?: Maybe<Scalars['Boolean']['output']>;
   isDigital?: Maybe<Scalars['Boolean']['output']>;
@@ -164,9 +165,15 @@ export type CreateGoalInput = {
 
 export type CreateIncomeInput = {
   comment?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<CurrencyCode>;
   paymentDate: Scalars['Date']['input'];
   total: Scalars['Float']['input'];
 };
+
+export enum CurrencyCode {
+  MXN = 'MXN',
+  USD = 'USD'
+}
 
 export type Expense = {
   __typename?: 'Expense';
@@ -175,6 +182,7 @@ export type Expense = {
   comment?: Maybe<Scalars['String']['output']>;
   concept: Scalars['String']['output'];
   createdAt?: Maybe<Scalars['String']['output']>;
+  currency: CurrencyCode;
   goalId?: Maybe<Scalars['ID']['output']>;
   goalRole?: Maybe<GoalRole>;
   id: Scalars['ID']['output'];
@@ -258,6 +266,7 @@ export type Income = {
   __typename?: 'Income';
   comment?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['Date']['output']>;
+  currency: CurrencyCode;
   id: Scalars['ID']['output'];
   paymentDate: PaymentDate;
   period?: Maybe<Period>;
@@ -345,6 +354,7 @@ export type Mutation = {
   updateExpense: Expense;
   updateGoal: Goal;
   updateIncome?: Maybe<Income>;
+  updateUserSettings: UserSettings;
 };
 
 
@@ -442,6 +452,11 @@ export type MutationUpdateIncomeArgs = {
   input?: InputMaybe<UpdateIncomeInput>;
 };
 
+
+export type MutationUpdateUserSettingsArgs = {
+  input: UpdateUserSettingsInput;
+};
+
 export type PayBeforeInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
   payBefore?: InputMaybe<Scalars['Date']['input']>;
@@ -487,6 +502,7 @@ export type Query = {
   period?: Maybe<Period>;
   periodsList?: Maybe<Array<Period>>;
   udiValue: UdiValue;
+  userSettings: UserSettings;
 };
 
 
@@ -580,6 +596,7 @@ export type UdiValue = {
 export type UpdateCardInput = {
   alias?: InputMaybe<Scalars['String']['input']>;
   bank: Scalars['String']['input'];
+  currency?: InputMaybe<CurrencyCode>;
   id: Scalars['ID']['input'];
   isDebit?: InputMaybe<Scalars['Boolean']['input']>;
   isDigital?: InputMaybe<Scalars['Boolean']['input']>;
@@ -618,9 +635,19 @@ export type UpdateGoalInput = {
 
 export type UpdateIncomeInput = {
   comment?: InputMaybe<Scalars['String']['input']>;
+  currency?: InputMaybe<CurrencyCode>;
   incomeId: Scalars['ID']['input'];
   paymentDate: Scalars['Date']['input'];
   total: Scalars['Float']['input'];
+};
+
+export type UpdateUserSettingsInput = {
+  defaultCurrency: CurrencyCode;
+};
+
+export type UserSettings = {
+  __typename?: 'UserSettings';
+  defaultCurrency: CurrencyCode;
 };
 
 export type EndDate = {
@@ -730,6 +757,7 @@ export type ResolversTypes = ResolversObject<{
   CreateFixedExpenseInput: CreateFixedExpenseInput;
   CreateGoalInput: CreateGoalInput;
   CreateIncomeInput: CreateIncomeInput;
+  CurrencyCode: CurrencyCode;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   Expense: ResolverTypeWrapper<Expense>;
   ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
@@ -771,6 +799,8 @@ export type ResolversTypes = ResolversObject<{
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateGoalInput: UpdateGoalInput;
   UpdateIncomeInput: UpdateIncomeInput;
+  UpdateUserSettingsInput: UpdateUserSettingsInput;
+  UserSettings: ResolverTypeWrapper<UserSettings>;
   endDate: EndDate;
   initialDate: InitialDate;
 }>;
@@ -832,6 +862,8 @@ export type ResolversParentTypes = ResolversObject<{
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateGoalInput: UpdateGoalInput;
   UpdateIncomeInput: UpdateIncomeInput;
+  UpdateUserSettingsInput: UpdateUserSettingsInput;
+  UserSettings: UserSettings;
   endDate: EndDate;
   initialDate: InitialDate;
 }>;
@@ -839,6 +871,7 @@ export type ResolversParentTypes = ResolversObject<{
 export type CardResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Card'] = ResolversParentTypes['Card']> = ResolversObject<{
   alias?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   bank?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  currency?: Resolver<Maybe<ResolversTypes['CurrencyCode']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   isDebit?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
   isDigital?: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType>;
@@ -900,6 +933,7 @@ export type ExpenseResolvers<ContextType = Context, ParentType extends Resolvers
   comment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  currency?: Resolver<ResolversTypes['CurrencyCode'], ParentType, ContextType>;
   goalId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   goalRole?: Resolver<Maybe<ResolversTypes['GoalRole']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -958,6 +992,7 @@ export type GroupedExpensesResolvers<ContextType = Context, ParentType extends R
 export type IncomeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Income'] = ResolversParentTypes['Income']> = ResolversObject<{
   comment?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   createdAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
+  currency?: Resolver<ResolversTypes['CurrencyCode'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   paymentDate?: Resolver<ResolversTypes['PaymentDate'], ParentType, ContextType>;
   period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType>;
@@ -1039,6 +1074,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   updateExpense?: Resolver<ResolversTypes['Expense'], ParentType, ContextType, RequireFields<MutationUpdateExpenseArgs, 'input'>>;
   updateGoal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<MutationUpdateGoalArgs, 'input'>>;
   updateIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, Partial<MutationUpdateIncomeArgs>>;
+  updateUserSettings?: Resolver<ResolversTypes['UserSettings'], ParentType, ContextType, RequireFields<MutationUpdateUserSettingsArgs, 'input'>>;
 }>;
 
 export type PaymentDateResolvers<ContextType = Context, ParentType extends ResolversParentTypes['PaymentDate'] = ResolversParentTypes['PaymentDate']> = ResolversObject<{
@@ -1079,6 +1115,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType, RequireFields<QueryPeriodArgs, 'input'>>;
   periodsList?: Resolver<Maybe<Array<ResolversTypes['Period']>>, ParentType, ContextType>;
   udiValue?: Resolver<ResolversTypes['UdiValue'], ParentType, ContextType>;
+  userSettings?: Resolver<ResolversTypes['UserSettings'], ParentType, ContextType>;
 }>;
 
 export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
@@ -1125,6 +1162,11 @@ export type UdiValueResolvers<ContextType = Context, ParentType extends Resolver
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type UserSettingsResolvers<ContextType = Context, ParentType extends ResolversParentTypes['UserSettings'] = ResolversParentTypes['UserSettings']> = ResolversObject<{
+  defaultCurrency?: Resolver<ResolversTypes['CurrencyCode'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type Resolvers<ContextType = Context> = ResolversObject<{
   Card?: CardResolvers<ContextType>;
   Categories?: CategoriesResolvers<ContextType>;
@@ -1158,5 +1200,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   TotalByFortnight?: TotalByFortnightResolvers<ContextType>;
   TotalByMonth?: TotalByMonthResolvers<ContextType>;
   UdiValue?: UdiValueResolvers<ContextType>;
+  UserSettings?: UserSettingsResolvers<ContextType>;
 }>;
 

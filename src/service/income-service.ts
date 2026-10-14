@@ -5,6 +5,7 @@ import {
 } from '../adapters/income-adapter.js';
 import {
   CreateIncomeInput,
+  CurrencyCode,
   MutationDeleteIncomeByIdArgs,
 } from '../generated/graphql.js';
 import { logger } from '../logger.js';
@@ -12,10 +13,12 @@ import { Income } from '../models';
 import { IncomeRepository } from '../repository/income-repository.js';
 import { PeriodRepository } from '../repository/period-repository.js';
 import { Date as CustomDate } from '../scalars/date.js';
+import { UserSettingsService } from './user-settings-service.js';
 
 export type IncomeInput = {
   id: string;
   total: number;
+  currency?: CurrencyCode;
   comment?: string;
   periodId?: string;
   paymentDate: Date;
@@ -24,6 +27,7 @@ export type IncomeInput = {
 export class IncomeService {
   private incomeRepository: IncomeRepository;
   private periodRepository: PeriodRepository;
+  private userSettingsService: UserSettingsService;
   userId: string;
   sequelize: Sequelize;
 
@@ -32,6 +36,7 @@ export class IncomeService {
     this.sequelize = sequelize;
     this.incomeRepository = new IncomeRepository(userId, sequelize);
     this.periodRepository = new PeriodRepository(userId, sequelize);
+    this.userSettingsService = new UserSettingsService(userId, sequelize);
   }
 
   async getAllIncomes() {
@@ -72,17 +77,24 @@ export class IncomeService {
 
   async createIncome(input: CreateIncomeInput) {
     const { total, paymentDate, comment } = input;
+    const currency =
+      input.currency ?? (await this.userSettingsService.getDefaultCurrency());
     const parsedPaymentDay = CustomDate.parseValue(paymentDate);
     const parsedCreatedAt = CustomDate.parseValue(new Date().toISOString());
     const incomeData = {
       userId: this.userId,
       total,
+      currency,
       comment: comment?.trim() ?? '',
       paymentDate: parsedPaymentDay,
       createdAt: parsedCreatedAt,
     };
 
-    return adaptIncomeDTO(await this.incomeRepository.createIncome(incomeData));
+    return adaptIncomeDTO(
+      await this.incomeRepository.createIncome(incomeData, {
+        relabelCurrency: input.currency != null,
+      })
+    );
   }
 
   async deleteIncome(input: MutationDeleteIncomeByIdArgs) {
@@ -91,7 +103,7 @@ export class IncomeService {
   }
 
   async updateIncome(input: IncomeInput) {
-    const { id, total, comment, paymentDate } = input;
+    const { id, total, currency, comment, paymentDate } = input;
     const transaction = await this.sequelize.transaction();
 
     try {
@@ -108,6 +120,7 @@ export class IncomeService {
         {
           id,
           total,
+          ...(currency && { currency }),
           comment,
           paymentDate,
           periodId: period.id

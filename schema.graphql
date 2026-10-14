@@ -29,6 +29,11 @@ enum Category {
   FIXED_EXPENSE
 }
 
+enum CurrencyCode {
+  MXN
+  USD
+}
+
 enum FixedExpenseFrequency {
   Biweekly
   Monthly
@@ -98,6 +103,7 @@ type Income {
   id: ID!
   userId: String!
   total: String!
+  currency: CurrencyCode!
   period: Period
   createdAt: Date
   updatedAt: Date
@@ -144,6 +150,7 @@ type Card {
   bank: String!
   isDigital: Boolean
   isDebit: Boolean
+  currency: CurrencyCode
 }
 
 type TotalByCardId {
@@ -157,6 +164,7 @@ type Expense {
   periodId:String
   concept: String!
   total: String!
+  currency: CurrencyCode!
   payBefore: String!
   createdAt: String
   updatedAt: Date
@@ -283,6 +291,8 @@ type UdiValue {
 
 input CreateIncomeInput {
   total: Float!
+  # Omitted => the user's default currency. Setting it on a period that already has an income relabels that period's incomes and expenses (no conversion)
+  currency: CurrencyCode
   comment: String
   paymentDate: Date!
 }
@@ -290,6 +300,8 @@ input CreateIncomeInput {
 input UpdateIncomeInput {
   incomeId: ID!
   total: Float!
+  # Omitted => unchanged. A change relabels the period's expenses (no conversion)
+  currency: CurrencyCode
   comment: String
   paymentDate: Date!
 }
@@ -347,6 +359,16 @@ input UpdateCardInput {
   bank: String!
   isDigital: Boolean
   isDebit: Boolean
+  # Omitted or null => unchanged
+  currency: CurrencyCode
+}
+
+type UserSettings {
+  defaultCurrency: CurrencyCode!
+}
+
+input UpdateUserSettingsInput {
+  defaultCurrency: CurrencyCode!
 }
 
 input PayBeforeInput {
@@ -430,6 +452,7 @@ type Query {
   categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
   cardById(cardId: ID!): Card
+  userSettings: UserSettings!
   periodsList: [Period!]
   period(input: FilterInput!): Period
   allInvestmentRecords:[InvestmentRecord!]
@@ -448,6 +471,7 @@ type Mutation {
   deleteExpense(id: ID!): Boolean!
   createCard(input: CreateCardInput): Card
   updateCard(input: UpdateCardInput): Card!
+  updateUserSettings(input: UpdateUserSettingsInput!): UserSettings!
   deleteCard(id: ID!): Boolean!
   createGoal(input: CreateGoalInput!): Goal!
   updateGoal(input: UpdateGoalInput!): Goal!

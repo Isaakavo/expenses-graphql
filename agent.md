@@ -174,7 +174,7 @@ src/
 │   └── sync-database.ts        # Table sync on startup
 ├── models/                     # Sequelize model definitions
 │   ├── associations.ts         # All model relationships
-│   ├── expense.ts, income.ts, card.ts, category.ts, sub-category.ts, ...
+│   ├── expense.ts, income.ts, card.ts, category.ts, sub-category.ts, user-settings.ts, ...
 │   └── index.ts                # Re-exports
 ├── dto/                        # TypeScript types for data transfer
 │   ├── expense-dto.ts          # ExpenseDTO, GroupedExpensesDTO, etc.
@@ -185,9 +185,11 @@ src/
 │   └── ...
 ├── repository/                 # Data access layer
 │   ├── expense-repository.ts   # All expense queries
+│   ├── user-settings-repository.ts # user_settings get/upsert by userId
 │   └── ...
 ├── service/                    # Business logic
 │   ├── expenses-service.ts     # Expense CRUD + grouped queries
+│   ├── user-settings-service.ts # Default currency (USD when no row)
 │   └── ...
 ├── resolvers/
 │   ├── queries.ts              # All query resolver registrations
@@ -200,6 +202,7 @@ src/
 │   │   ├── composites/         # incomes-with-expenses
 │   │   ├── investment/         # all-investment-records, investment-details, udi-value
 │   │   ├── period/             # periods-list, period
+│   │   ├── settings/           # user-settings
 │   │   └── login/              # login resolver
 │   └── mutation/               # One file per mutation, organized by feature
 ├── mcp/                        # Model Context Protocol server

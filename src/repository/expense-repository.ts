@@ -315,6 +315,18 @@ export class ExpenseRepository {
     return adaptRawListExpense(expenses);
   }
 
+  async getPeriodId(
+    id: string,
+    options: { transaction?: Transaction } = {}
+  ): Promise<string | null> {
+    const expense = await Expense.findOne({
+      attributes: ['periodId'],
+      where: { id, userId: this.userId },
+      transaction: options.transaction,
+    });
+    return expense?.periodId ?? null;
+  }
+
   async getExpenseByPK(
     id: string,
     options: { transaction?: Transaction } = {}

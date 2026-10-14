@@ -18,6 +18,7 @@ export function adaptSingleIncome(x: IncomeDTO): GraphqlIncome {
     id: x.id,
     userId: x.userId,
     total: formatCurrency(x.total),
+    currency: x.currency,
     comment: x.comment,
     period: adaptPeriod(x.period),
     paymentDate: {
@@ -42,6 +43,7 @@ export function adaptIncome(
     id: income?.id,
     userId: income?.userId,
     total: formatCurrency(income?.total),
+    currency: income?.currency,
     comment: income?.comment,
     period: adaptedPeriod,
     paymentDate: {
@@ -68,6 +70,7 @@ export function adaptExpensesWithCard(x: Expense, card?: Card) {
       concept: x.concept,
       payBefore: formatInTimeZone(x.payBefore, 'UTC', 'dd MMM yyyy'),
       total: formatCurrency(x.total),
+      currency: x.currency,
       userId: x.userId,
       comment: x.comments,
       createdAt: formatInTimeZone(x.createdAt, 'UTC', 'dd MMMM'),
@@ -97,6 +100,7 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
       concept: x.concept,
       payBefore: formatInTimeZone(x.payBefore, 'UTC', 'dd MMM yyyy'),
       total: formatCurrency(x.total),
+      currency: x.currency,
       userId: x.userId,
       periodId: x.periodId,
       goalId: x.goalId ?? null,
@@ -130,6 +134,7 @@ export function adaptExpensesDTOInput(x: ExpenseDTO): GraphqlExpense {
       concept: x?.concept,
       payBefore: formatInTimeZone(x?.payBefore, 'UTC', 'dd MMM yyyy'),
       total: formatCurrency(x.total),
+      currency: x.currency,
       userId: x?.userId,
       periodId: x?.periodId,
       goalId: x?.goalId ?? null,
@@ -155,6 +160,7 @@ export function adaptCard(card: Card) {
       bank: card.bank,
       isDigital: card.isDigital,
       isDebit: card.isDebit,
+      currency: card.currency ?? null,
     };
   } catch (error) {
     logger.error(error);
@@ -175,6 +181,7 @@ export const adaptIncomeDTO = (income): IncomeDTO => {
     id: income?.id,
     userId: income?.userId,
     total: income?.total,
+    currency: income?.currency,
     paymentDate: income?.paymentDate,
     comment: income?.comment,
     period: income?.period ? adaptPeriodDTO(income.period) : null,

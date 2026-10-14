@@ -1,3 +1,4 @@
+import { CurrencyCode } from '../generated/graphql.js';
 import { CategoryDTO } from './category-dto.js';
 import { PeriodDTO } from './period-dto.js';
 
@@ -5,6 +6,7 @@ export type IncomeDTO = {
   id: string;
   userId: string;
   total: number;
+  currency: CurrencyCode;
   paymentDate: Date;
   comment?: string | null;
   period?: PeriodDTO | null;

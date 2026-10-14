@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Sequelize } from 'sequelize';
 import { ExpensesService } from '../../../src/service/expenses-service.js';
-import { FixedExpenseFrequency, GoalRole } from '../../../src/generated/graphql.js';
+import { CurrencyCode, FixedExpenseFrequency, GoalRole } from '../../../src/generated/graphql.js';
 
 const userId = 'test-user';
 let service: ExpensesService;
@@ -35,6 +35,12 @@ const baseFixedInput = {
 beforeEach(() => {
   vi.clearAllMocks();
   service = new ExpensesService(userId, mockSequelize);
+  Object.assign(service, {
+    userSettingsService: {
+      getDefaultCurrency: vi.fn().mockResolvedValue(CurrencyCode.USD),
+    },
+    incomeRepository: { getCurrencyByPeriod: vi.fn().mockResolvedValue(null) },
+  });
 });
 
 describe('createFixedExpenses', () => {
@@ -249,6 +255,7 @@ describe('goal link on expenses', () => {
     internals.expenseRepository = {
       createExpense: mockCreateExpense,
       updateExpense: mockUpdateExpense,
+      getPeriodId: vi.fn().mockResolvedValue(null),
     };
     internals.periodRepository = {
       getPeriodBy: mockGetPeriodBy,

@@ -3,6 +3,7 @@ import { Card } from './card.js';
 import { SubCategory } from './sub-category.js';
 import { Category } from './category.js';
 import { Period } from './periods.js';
+import { CurrencyCode } from '../generated/graphql.js';
 
 export type GoalRole = 'CONTRIBUTION' | 'SPENDING';
 
@@ -23,6 +24,7 @@ export class Expense extends Model {
   public goalRole!: GoalRole | null;
   public concept!: string;
   public total!: number;
+  public currency!: CurrencyCode;
   public comments!: string;
   public payBefore!: Date;
   public createdAt!: Date;
@@ -93,6 +95,11 @@ export function initExpenseModel(sequelize: Sequelize) {
       total: {
         type: DataTypes.DECIMAL(12, 2),
         allowNull: false,
+      },
+      currency: {
+        type: DataTypes.CHAR(3),
+        allowNull: false,
+        defaultValue: CurrencyCode.USD,
       },
       comments: {
         type: DataTypes.STRING,

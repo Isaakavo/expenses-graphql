@@ -18,6 +18,7 @@ export const updateIncome: MutationResolvers['updateIncome'] = async (
   const updatedIncome = await incomeService.updateIncome({
     id: input.incomeId,
     total: input.total,
+    currency: input.currency ?? undefined,
     comment: input.comment,
     paymentDate: input.paymentDate,
   });  

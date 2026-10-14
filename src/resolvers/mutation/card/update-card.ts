@@ -11,13 +11,14 @@ export const updateCard: MutationResolvers['updateCard'] = async (
   const {
     user: { userId },
   } = context;
-  const { bank, id, alias, isDebit, isDigital } = input;
+  const { bank, id, alias, isDebit, isDigital, currency } = input;
 
   const updatedCard = await updateElement(Card, userId, id, {
     bank,
     alias,
     isDebit,
     isDigital,
+    ...(currency && { currency }),
   });
 
   return adaptCard(updatedCard[0] as Card);

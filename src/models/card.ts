@@ -1,4 +1,5 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
+import { CurrencyCode } from '../generated/graphql.js';
 
 export class Card extends Model {
   public id!: string;
@@ -7,6 +8,7 @@ export class Card extends Model {
   public alias!: string;
   public isDebit!: boolean;
   public isDigital!: boolean;
+  public currency!: CurrencyCode | null;
 }
 
 export const initCardModel = (sequelize: Sequelize) => {
@@ -35,6 +37,10 @@ export const initCardModel = (sequelize: Sequelize) => {
       },
       isDebit: {
         type: DataTypes.BOOLEAN,
+      },
+      currency: {
+        type: DataTypes.CHAR(3),
+        allowNull: true,
       },
     },
     { sequelize }
