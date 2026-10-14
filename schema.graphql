@@ -363,6 +363,15 @@ input UpdateCardInput {
   currency: CurrencyCode
 }
 
+type ExchangeRate {
+  base: CurrencyCode!
+  quote: CurrencyCode!
+  rate: Float!
+  rateDate: Date!
+  source: String!
+  stale: Boolean!
+}
+
 type UserSettings {
   defaultCurrency: CurrencyCode!
 }
@@ -453,6 +462,8 @@ type Query {
   cardList: [Card]
   cardById(cardId: ID!): Card
   userSettings: UserSettings!
+  latestExchangeRate(base: CurrencyCode!, quote: CurrencyCode!): ExchangeRate!
+  exchangeRates(base: CurrencyCode!, quote: CurrencyCode!, startDate: Date!, endDate: Date!): [ExchangeRate!]!
   periodsList: [Period!]
   period(input: FilterInput!): Period
   allInvestmentRecords:[InvestmentRecord!]

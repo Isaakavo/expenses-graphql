@@ -4,6 +4,7 @@ export {
   Expense,
   ExpenseWithCategory
 } from './expense.js'
+export { ExchangeRate } from './exchange-rate.js'
 export { Goal } from './goal.js'
 export { Income } from './income.js'
 export { SubCategory } from './sub-category.js'

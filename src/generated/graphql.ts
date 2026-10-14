@@ -175,6 +175,16 @@ export enum CurrencyCode {
   USD = 'USD'
 }
 
+export type ExchangeRate = {
+  __typename?: 'ExchangeRate';
+  base: CurrencyCode;
+  quote: CurrencyCode;
+  rate: Scalars['Float']['output'];
+  rateDate: Scalars['Date']['output'];
+  source: Scalars['String']['output'];
+  stale: Scalars['Boolean']['output'];
+};
+
 export type Expense = {
   __typename?: 'Expense';
   card?: Maybe<Card>;
@@ -488,6 +498,7 @@ export type Query = {
   categoryAllocation?: Maybe<CategoryAllocation>;
   categoryList?: Maybe<Array<Categories>>;
   categorySettings?: Maybe<CategorySettings>;
+  exchangeRates: Array<ExchangeRate>;
   expenseById?: Maybe<Expense>;
   expensesByCategory: Array<ExpensesByCategory>;
   financialBalanceByFortnight?: Maybe<FinancialBalance>;
@@ -498,6 +509,7 @@ export type Query = {
   incomesList?: Maybe<IncomesList>;
   incomesWithExpenses: IncomesListAndExpenses;
   investmentDetails: InvestmentDetail;
+  latestExchangeRate: ExchangeRate;
   login: LoginResponse;
   period?: Maybe<Period>;
   periodsList?: Maybe<Array<Period>>;
@@ -513,6 +525,14 @@ export type QueryCardByIdArgs = {
 
 export type QueryCategoryAllocationArgs = {
   input: CategoryAllocationInput;
+};
+
+
+export type QueryExchangeRatesArgs = {
+  base: CurrencyCode;
+  endDate: Scalars['Date']['input'];
+  quote: CurrencyCode;
+  startDate: Scalars['Date']['input'];
 };
 
 
@@ -543,6 +563,12 @@ export type QueryIncomeByIdArgs = {
 
 export type QueryIncomesWithExpensesArgs = {
   input: FilterInput;
+};
+
+
+export type QueryLatestExchangeRateArgs = {
+  base: CurrencyCode;
+  quote: CurrencyCode;
 };
 
 
@@ -759,6 +785,7 @@ export type ResolversTypes = ResolversObject<{
   CreateIncomeInput: CreateIncomeInput;
   CurrencyCode: CurrencyCode;
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
+  ExchangeRate: ResolverTypeWrapper<ExchangeRate>;
   Expense: ResolverTypeWrapper<Expense>;
   ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
   ExpensesByCategory: ResolverTypeWrapper<ExpensesByCategory>;
@@ -825,6 +852,7 @@ export type ResolversParentTypes = ResolversObject<{
   CreateGoalInput: CreateGoalInput;
   CreateIncomeInput: CreateIncomeInput;
   Date: Scalars['Date']['output'];
+  ExchangeRate: ExchangeRate;
   Expense: Expense;
   ExpensesBy: ExpensesBy;
   ExpensesByCategory: ExpensesByCategory;
@@ -926,6 +954,16 @@ export type CategoryTypeResolvers<ContextType = Context, ParentType extends Reso
 export interface DateScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['Date'], any> {
   name: 'Date';
 }
+
+export type ExchangeRateResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ExchangeRate'] = ResolversParentTypes['ExchangeRate']> = ResolversObject<{
+  base?: Resolver<ResolversTypes['CurrencyCode'], ParentType, ContextType>;
+  quote?: Resolver<ResolversTypes['CurrencyCode'], ParentType, ContextType>;
+  rate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  rateDate?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  source?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  stale?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
 
 export type ExpenseResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Expense'] = ResolversParentTypes['Expense']> = ResolversObject<{
   card?: Resolver<Maybe<ResolversTypes['Card']>, ParentType, ContextType>;
@@ -1101,6 +1139,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   categoryAllocation?: Resolver<Maybe<ResolversTypes['CategoryAllocation']>, ParentType, ContextType, RequireFields<QueryCategoryAllocationArgs, 'input'>>;
   categoryList?: Resolver<Maybe<Array<ResolversTypes['Categories']>>, ParentType, ContextType>;
   categorySettings?: Resolver<Maybe<ResolversTypes['CategorySettings']>, ParentType, ContextType>;
+  exchangeRates?: Resolver<Array<ResolversTypes['ExchangeRate']>, ParentType, ContextType, RequireFields<QueryExchangeRatesArgs, 'base' | 'endDate' | 'quote' | 'startDate'>>;
   expenseById?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<QueryExpenseByIdArgs, 'id'>>;
   expensesByCategory?: Resolver<Array<ResolversTypes['ExpensesByCategory']>, ParentType, ContextType, RequireFields<QueryExpensesByCategoryArgs, 'input'>>;
   financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'input'>>;
@@ -1111,6 +1150,7 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   incomesList?: Resolver<Maybe<ResolversTypes['IncomesList']>, ParentType, ContextType>;
   incomesWithExpenses?: Resolver<ResolversTypes['IncomesListAndExpenses'], ParentType, ContextType, RequireFields<QueryIncomesWithExpensesArgs, 'input'>>;
   investmentDetails?: Resolver<ResolversTypes['InvestmentDetail'], ParentType, ContextType>;
+  latestExchangeRate?: Resolver<ResolversTypes['ExchangeRate'], ParentType, ContextType, RequireFields<QueryLatestExchangeRateArgs, 'base' | 'quote'>>;
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
   period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType, RequireFields<QueryPeriodArgs, 'input'>>;
   periodsList?: Resolver<Maybe<Array<ResolversTypes['Period']>>, ParentType, ContextType>;
@@ -1176,6 +1216,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   CategorySum?: CategorySumResolvers<ContextType>;
   CategoryType?: CategoryTypeResolvers<ContextType>;
   Date?: GraphQLScalarType;
+  ExchangeRate?: ExchangeRateResolvers<ContextType>;
   Expense?: ExpenseResolvers<ContextType>;
   ExpensesBy?: ExpensesByResolvers<ContextType>;
   ExpensesByCategory?: ExpensesByCategoryResolvers<ContextType>;

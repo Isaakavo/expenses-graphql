@@ -4,6 +4,7 @@ import { registerIncomeTools } from './tools/income-tools.js';
 import { registerCategoryTools } from './tools/category-tools.js';
 import { registerCardTools } from './tools/card-tools.js';
 import { registerPeriodTools } from './tools/period-tools.js';
+import { registerExchangeRateTools } from './tools/exchange-rate-tools.js';
 
 export function createMcpServer(userId: string): McpServer {
   const server = new McpServer({
@@ -16,6 +17,7 @@ export function createMcpServer(userId: string): McpServer {
   registerCategoryTools(server, userId);
   registerCardTools(server, userId);
   registerPeriodTools(server, userId);
+  registerExchangeRateTools(server);
 
   return server;
 }
