@@ -40,11 +40,11 @@ beforeEach(async () => {
   await sequelize.sync({ force: true });
   nowMs = NOON_MEXICO.getTime();
   fetchRates = vi.fn<(start: string, end: string) => Promise<FixRate[]>>().mockResolvedValue([]);
-  service = new ExchangeRateService(
-    new ExchangeRateRepository(),
+  service = new ExchangeRateService({
+    repository: new ExchangeRateRepository(),
     fetchRates,
-    () => new Date(nowMs)
-  );
+    now: () => new Date(nowMs),
+  });
 });
 
 describe('getRate', () => {
@@ -232,11 +232,11 @@ describe('ensureRates', () => {
     fetchRates.mockResolvedValue(fixed({ '2026-10-12': 18.5, '2026-10-13': 18.6 }));
     await service.ensureRates('2026-10-09', '2026-10-13', false);
 
-    const secondRun = new ExchangeRateService(
-      new ExchangeRateRepository(),
+    const secondRun = new ExchangeRateService({
+      repository: new ExchangeRateRepository(),
       fetchRates,
-      () => new Date(nowMs)
-    );
+      now: () => new Date(nowMs),
+    });
     await cache({ '2026-10-12': 18.5 });
     const result = await secondRun.ensureRates('2026-10-09', '2026-10-13', false);
 
@@ -338,5 +338,65 @@ describe('backfill', () => {
     expect(total).toBe(2);
     expect(await ExchangeRate.count()).toBe(2);
     expect(Number((await ExchangeRate.findOne({ where: { rateDate: '2025-01-02' } })).rate)).toBe(18);
+  });
+});
+
+describe('getConversionRate', () => {
+  it('returns the stored rate as a 10-decimal string with the date of the cached row', async () => {
+    await cache({ '2026-10-09': 18.4 });
+
+    expect(await service.getConversionRate(USD, MXN, '2026-10-11')).toEqual({
+      rate: '18.4000000000',
+      rateDate: '2026-10-09',
+    });
+  });
+
+  it('inverts the stored rate half-up at 10 decimals', async () => {
+    await cache({ '2026-10-13': 16.384 });
+
+    expect((await service.getConversionRate(MXN, USD, '2026-10-13')).rate).toBe('0.0610351563');
+  });
+
+  it('throws EXCHANGE_RATE_UNAVAILABLE when nothing is cached', async () => {
+    fetchRates.mockRejectedValue(new Error('down'));
+
+    await expect(service.getConversionRate(USD, MXN, '2026-10-13')).rejects.toMatchObject({
+      extensions: { code: EXCHANGE_RATE_UNAVAILABLE },
+    });
+  });
+});
+
+describe('onRatesCached', () => {
+  it('runs once with the newly cached dates and not when nothing new was cached', async () => {
+    const onRatesCached = vi.fn().mockResolvedValue(undefined);
+    service = new ExchangeRateService({
+      repository: new ExchangeRateRepository(),
+      fetchRates,
+      now: () => new Date(nowMs),
+      onRatesCached,
+    });
+    await cache({ '2026-10-09': 18.4 });
+    fetchRates.mockResolvedValue(fixed({ '2026-10-12': 18.5, '2026-10-13': 18.6 }));
+
+    await service.ensureRates('2026-10-09', '2026-10-13', false);
+    nowMs += REFETCH_THROTTLE_MS;
+    await service.ensureRates('2026-10-09', '2026-10-13', false);
+
+    expect(onRatesCached).toHaveBeenCalledTimes(1);
+    expect(onRatesCached).toHaveBeenCalledWith(['2026-10-12', '2026-10-13']);
+  });
+
+  it('does not fail the lookup when the hook throws', async () => {
+    service = new ExchangeRateService({
+      repository: new ExchangeRateRepository(),
+      fetchRates,
+      now: () => new Date(nowMs),
+      onRatesCached: vi.fn().mockRejectedValue(new Error('boom')),
+    });
+    fetchRates.mockResolvedValue(fixed({ '2026-10-13': 18.6 }));
+
+    expect(await service.getConversionRate(USD, MXN, '2026-10-13')).toMatchObject({
+      rate: '18.6000000000',
+    });
   });
 });

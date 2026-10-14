@@ -2,12 +2,27 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { ExpensesByCategory, GoalRole, GroupedExpenses } from 'generated/graphql.js';
 import {
   ExpenseDTO,
+  ForeignAmountDTO,
   ExpenseWithCategoryAllocationDTO,
   GroupedExpensesDTO,
 } from '../dto';
 import { adaptCardDTO } from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';
 import { adaptExpensesDTOInput, formatCurrency } from './income-adapter.js';
+
+export const adaptForeignAmountDTO = (exp): ForeignAmountDTO | null => {
+  if (exp.originalTotal == null || exp.originalCurrency == null) {
+    return null;
+  }
+  return {
+    amount: Number(exp.originalTotal),
+    currency: exp.originalCurrency,
+    rate: Number(exp.exchangeRate),
+    rateDate: String(exp.rateDate),
+    rateSource: exp.rateSource,
+    fixedRate: exp.fixedRate ?? false,
+  };
+};
 
 export const adaptSingleRawExpenseDTO = (exp): ExpenseDTO => {
   return {
@@ -25,6 +40,7 @@ export const adaptSingleRawExpenseDTO = (exp): ExpenseDTO => {
     concept: exp.concept,
     total: exp.total,
     currency: exp.currency,
+    foreignAmount: adaptForeignAmountDTO(exp),
     comments: exp.comments,
     payBefore: exp.payBefore,
     createdAt: exp.createdAt,
@@ -76,6 +92,7 @@ export const adaptExpenseDTO = (expense): ExpenseDTO => {
     concept: expense.expense.concept,
     total: expense.expense.total,
     currency: expense.expense.currency,
+    foreignAmount: adaptForeignAmountDTO(expense.expense),
     comments: expense.expense.comments,
     payBefore: expense.expense.payBefore,
     createdAt: expense.expense.createdAt,

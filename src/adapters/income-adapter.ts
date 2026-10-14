@@ -2,6 +2,7 @@ import { formatInTimeZone } from 'date-fns-tz';
 import { Card } from 'models/card.js';
 import {
   Expense as GraphqlExpense,
+  ForeignAmount,
   GoalRole,
   Income as GraphqlIncome,
 } from '../generated/graphql.js';
@@ -11,7 +12,7 @@ import { calculateFortnight } from '../utils/date-utils.js';
 import { adaptCardDTO } from './card-adapter.js';
 import { adaptCategoryDTO } from './category-adapter.js';
 import { adaptPeriod, adaptPeriodDTO } from './period-adapter.js';
-import { ExpenseDTO, IncomeDTO, IncomeWithCategoryAllocationDTO, PeriodDTO } from '../dto';
+import { ExpenseDTO, ForeignAmountDTO, IncomeDTO, IncomeWithCategoryAllocationDTO, PeriodDTO } from '../dto';
 
 export function adaptSingleIncome(x: IncomeDTO): GraphqlIncome {
   return {
@@ -127,6 +128,18 @@ export function adaptExpenses(x: Expense): GraphqlExpense {
   }
 }
 
+const adaptForeignAmount = (
+  foreignAmount: ForeignAmountDTO | null
+): ForeignAmount | null =>
+  foreignAmount && {
+    amount: formatCurrency(foreignAmount.amount),
+    currency: foreignAmount.currency,
+    rate: foreignAmount.rate,
+    rateDate: new Date(`${foreignAmount.rateDate}T00:00:00Z`),
+    rateSource: foreignAmount.rateSource,
+    fixedRate: foreignAmount.fixedRate,
+  };
+
 export function adaptExpensesDTOInput(x: ExpenseDTO): GraphqlExpense {
   try {
     return {
@@ -135,6 +148,7 @@ export function adaptExpensesDTOInput(x: ExpenseDTO): GraphqlExpense {
       payBefore: formatInTimeZone(x?.payBefore, 'UTC', 'dd MMM yyyy'),
       total: formatCurrency(x.total),
       currency: x.currency,
+      foreignAmount: adaptForeignAmount(x.foreignAmount),
       userId: x?.userId,
       periodId: x?.periodId,
       goalId: x?.goalId ?? null,

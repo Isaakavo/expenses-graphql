@@ -174,6 +174,18 @@ type Expense {
   subCategory: SubCategory!
   goalId: ID
   goalRole: GoalRole
+  # Null => domestic expense. total is already converted to the period currency
+  foreignAmount: ForeignAmount
+}
+
+type ForeignAmount {
+  amount: String!
+  currency: CurrencyCode!
+  # Period-currency units per 1 unit of currency
+  rate: Float!
+  rateDate: Date!
+  rateSource: String!
+  fixedRate: Boolean!
 }
 
 enum GoalRole {
@@ -306,6 +318,13 @@ input UpdateIncomeInput {
   paymentDate: Date!
 }
 
+input ForeignAmountInput {
+  amount: Float!
+  currency: CurrencyCode!
+  # true => total is the amount actually charged and the rate is derived from it
+  fixedRate: Boolean!
+}
+
 input CreateExpenseInput {
   cardId: ID
   concept: String!
@@ -317,6 +336,8 @@ input CreateExpenseInput {
   subCategoryId: String!
   goalId: ID
   goalRole: GoalRole
+  # Unless fixedRate, the backend recomputes total from the amount and the rate of payBefore
+  foreignAmount: ForeignAmountInput
 }
 
 input CreateFixedExpenseInput {
@@ -331,6 +352,7 @@ input CreateFixedExpenseInput {
   frequency: FixedExpenseFrequency!
   goalId: ID
   goalRole: GoalRole
+  foreignAmount: ForeignAmountInput
 }
 
 input UpdateExpenseInput {
@@ -344,6 +366,8 @@ input UpdateExpenseInput {
   # Omitted => link untouched. Both null => unlink. Both set => relink.
   goalId: ID
   goalRole: GoalRole
+  # Omitted => untouched. Null => becomes a domestic expense (total from this input)
+  foreignAmount: ForeignAmountInput
 }
 
 input CreateCardInput {

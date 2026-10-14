@@ -23,6 +23,7 @@ export const updateExpense: MutationResolvers['updateExpense'] = async (
     // Omitted keeps the link, null unlinks
     ...('goalId' in input && { goalId: input.goalId }),
     ...('goalRole' in input && { goalRole: input.goalRole }),
+    ...('foreignAmount' in input && { foreignAmount: input.foreignAmount }),
   });
 
   return adaptExpensesDTOInput(updatedExpense);

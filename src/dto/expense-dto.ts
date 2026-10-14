@@ -3,6 +3,24 @@ import { CurrencyCode, GoalRole } from '../generated/graphql.js';
 import { CardDTO } from './card-dto';
 import { CategoryDTO } from './category-dto';
 
+export type ForeignAmountDTO = {
+  amount: number;
+  currency: CurrencyCode;
+  rate: number;
+  rateDate: string;
+  rateSource: string;
+  fixedRate: boolean;
+};
+
+export type ForeignColumns = {
+  originalTotal: string | null;
+  originalCurrency: CurrencyCode | null;
+  exchangeRate: string | null;
+  rateDate: string | null;
+  rateSource: string | null;
+  fixedRate: boolean;
+};
+
 export type ExpenseDTO = {
   id: string;
   userId?: string;
@@ -15,6 +33,7 @@ export type ExpenseDTO = {
   concept: string;
   total: number;
   currency: CurrencyCode;
+  foreignAmount: ForeignAmountDTO | null;
   comments?: string | null;
   payBefore: Date;
   createdAt: Date;

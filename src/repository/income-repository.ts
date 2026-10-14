@@ -15,6 +15,7 @@ import { Period } from '../models/periods.js';
 import { toCamelCaseDeep } from '../utils/case-converter.js';
 import { PeriodRepository } from './period-repository.js';
 import { IncomeInput } from 'service/income-service.js';
+import { validationError } from '../utils/validation-error.js';
 
 export class IncomeRepository {
   private periodRepository: PeriodRepository;
@@ -144,6 +145,28 @@ export class IncomeRepository {
     return (income?.currency as CurrencyCode) ?? null;
   }
 
+  private async assertNoForeignExpenses(
+    periodId: string,
+    currency: CurrencyCode,
+    argumentName: 'currency' | 'paymentDate',
+    transaction: Transaction
+  ) {
+    const foreign = await Expense.findOne({
+      where: {
+        userId: this.userId,
+        periodId,
+        originalCurrency: { [Op.ne]: null },
+      },
+      transaction,
+    });
+    if (foreign && foreign.currency !== currency) {
+      throw validationError(
+        `The period has foreign-currency expenses, so its currency cannot change to ${currency}`,
+        argumentName
+      );
+    }
+  }
+
   private async relabelPeriod(
     periodId: string,
     currency: CurrencyCode,
@@ -180,11 +203,23 @@ export class IncomeRepository {
         options.relabelCurrency &&
         income.currency !== incomeData.currency
       ) {
+        await this.assertNoForeignExpenses(
+          period.id,
+          incomeData.currency,
+          'currency',
+          t
+        );
         await this.relabelPeriod(period.id, incomeData.currency, t);
         await income.reload({ transaction: t });
       }
 
       if (!income) {
+        await this.assertNoForeignExpenses(
+          period.id,
+          incomeData.currency,
+          'currency',
+          t
+        );
         income = await Income.create(
           { ...incomeData, periodId: period.id },
           { transaction: t }
@@ -294,6 +329,12 @@ export class IncomeRepository {
     const periodId = updateData.periodId ?? current.periodId;
     const currency = (updateData.currency ?? current.currency) as CurrencyCode;
     if (current.periodId !== periodId || current.currency !== currency) {
+      await this.assertNoForeignExpenses(
+        periodId,
+        currency,
+        current.currency !== currency ? 'currency' : 'paymentDate',
+        options.transaction
+      );
       await this.relabelPeriod(periodId, currency, options.transaction);
     }
 

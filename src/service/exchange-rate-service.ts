@@ -5,6 +5,13 @@ import { fetchFixRates, FixRate } from '../clients/banxico/fx-client.js';
 import { CurrencyCode } from '../generated/graphql.js';
 import { logger } from '../logger.js';
 import {
+  formatDecimal,
+  invertRate,
+  parseDecimal,
+  RATE_SCALE,
+} from '../utils/decimal.js';
+import { repriceForeignExpenses } from '../repository/foreign-expense-reprice.js';
+import {
   ExchangeRateRepository,
   ExchangeRateRow,
 } from '../repository/exchange-rate-repository.js';
@@ -16,7 +23,7 @@ export const RATES_FLOOR = '2022-08-01';
 
 const STORED_BASE = CurrencyCode.USD;
 const STORED_QUOTE = CurrencyCode.MXN;
-const BANXICO_FIX_SOURCE = 'BANXICO_FIX';
+export const BANXICO_FIX_SOURCE = 'BANXICO_FIX';
 const SAME_CURRENCY_SOURCE = 'IDENTITY';
 const NO_CACHE_LOOKBACK_DAYS = 10;
 const BACKFILL_CHUNK_DAYS = 365;
@@ -36,6 +43,15 @@ export type EnsureRatesResult = {
   failed: boolean;
 };
 
+export type ConversionRate = { rate: string; rateDate: string };
+
+type ExchangeRateServiceOptions = {
+  repository?: ExchangeRateRepository;
+  fetchRates?: RateFetcher;
+  now?: () => Date;
+  onRatesCached?: (dates: string[]) => Promise<unknown>;
+};
+
 type RateFetcher = (start: string, end: string) => Promise<FixRate[]>;
 type Attempt = { at: number; failed: boolean };
 
@@ -51,17 +67,20 @@ export class ExchangeRateService {
   private repository: ExchangeRateRepository;
   private fetchRates: RateFetcher;
   private now: () => Date;
+  private onRatesCached: (dates: string[]) => Promise<unknown>;
   private attempts = new Map<string, Attempt>();
   private inFlight = new Map<string, Promise<EnsureRatesResult>>();
 
-  constructor(
-    repository: ExchangeRateRepository = new ExchangeRateRepository(),
-    fetchRates: RateFetcher = fetchFixRates,
-    now: () => Date = () => new Date()
-  ) {
+  constructor({
+    repository = new ExchangeRateRepository(),
+    fetchRates = fetchFixRates,
+    now = () => new Date(),
+    onRatesCached = async () => undefined,
+  }: ExchangeRateServiceOptions = {}) {
     this.repository = repository;
     this.fetchRates = fetchRates;
     this.now = now;
+    this.onRatesCached = onRatesCached;
   }
 
   today(): string {
@@ -88,6 +107,26 @@ export class ExchangeRateService {
       });
     }
     return this.orient(row, base, quote, failed);
+  }
+
+  async getConversionRate(
+    base: CurrencyCode,
+    quote: CurrencyCode,
+    date: string
+  ): Promise<ConversionRate> {
+    if (base === quote) {
+      return { rate: '1.0000000000', rateDate: date };
+    }
+    await this.ensureRates(shiftDays(date, -NO_CACHE_LOOKBACK_DAYS), date, false);
+    const row = await this.repository.findLatestOnOrBefore(STORED_BASE, STORED_QUOTE, date);
+    if (!row) {
+      throw new GraphQLError('Exchange rate unavailable', {
+        extensions: { code: EXCHANGE_RATE_UNAVAILABLE },
+      });
+    }
+    const stored = parseDecimal(row.rate, RATE_SCALE);
+    const oriented = base === STORED_BASE ? stored : invertRate(stored);
+    return { rate: formatDecimal(oriented, RATE_SCALE), rateDate: row.rateDate };
   }
 
   async getRates(
@@ -133,7 +172,7 @@ export class ExchangeRateService {
         : []),
     ];
 
-    return windows.reduce<Promise<EnsureRatesResult>>(
+    const result = await windows.reduce<Promise<EnsureRatesResult>>(
       async (previous, [windowStart, windowEnd]) => {
         const result = await previous;
         const window = await this.fillWindow(windowStart, windowEnd);
@@ -144,6 +183,12 @@ export class ExchangeRateService {
       },
       Promise.resolve({ cachedDates: [], failed: false })
     );
+    if (result.cachedDates.length > 0) {
+      await this.onRatesCached(result.cachedDates).catch((error) =>
+        logger.warn(`Re-pricing after caching rates failed: ${error.message}`)
+      );
+    }
+    return result;
   }
 
   async backfill(from: string, to: string): Promise<number> {
@@ -236,4 +281,6 @@ export class ExchangeRateService {
   }
 }
 
-export const exchangeRateService = new ExchangeRateService();
+export const exchangeRateService = new ExchangeRateService({
+  onRatesCached: () => repriceForeignExpenses(),
+});

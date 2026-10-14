@@ -17,6 +17,7 @@ export const createFixedExpense: MutationResolvers['createFixedExpense'] =
       subCategoryId: input.subCategoryId,
       goalId: input.goalId,
       goalRole: input.goalRole,
+      foreignAmount: input.foreignAmount,
       numberOfRepetitions: input.numberOfRepetitions,
       frequency: input.frequency,
     });

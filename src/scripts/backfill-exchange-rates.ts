@@ -3,6 +3,7 @@ import { parseArgs } from 'node:util';
 import { sequelizeClient } from '../database/client.js';
 import { syncTables } from '../database/sync-database.js';
 import { logger } from '../logger.js';
+import { repriceForeignExpenses } from '../repository/foreign-expense-reprice.js';
 import { ExchangeRateService } from '../service/exchange-rate-service.js';
 
 const { values } = parseArgs({
@@ -20,6 +21,7 @@ const run = async () => {
   }
   await syncTables(sequelizeClient);
   const total = await service.backfill(values.from, to);
+  await repriceForeignExpenses(sequelizeClient);
   logger.info(`Backfill finished: ${total} rates cached from ${values.from} to ${to}`);
 };
 

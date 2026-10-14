@@ -4,7 +4,16 @@ import { sequelizeClient } from '../../database/client.js';
 import { ExpensesService } from '../../service/expenses-service.js';
 import { adaptExpensesDTOInput } from '../../adapters/income-adapter.js';
 import { adaptExpensesByCategoryDTO } from '../../adapters/expense-adapter.js';
+import { CurrencyCode } from '../../generated/graphql.js';
 import { textResponse, errorResponse } from '../utils.js';
+
+const foreignAmountSchema = z.object({
+  amount: z.number().positive().describe('Amount in the foreign currency'),
+  currency: z.nativeEnum(CurrencyCode).describe('Foreign currency code'),
+  fixedRate: z
+    .boolean()
+    .describe('true: total is the amount actually charged and the rate is derived from it'),
+});
 
 export function registerExpenseTools(server: McpServer, userId: string) {
   server.registerTool(
@@ -45,13 +54,18 @@ export function registerExpenseTools(server: McpServer, userId: string) {
       description: 'Create a new expense',
       inputSchema: {
         concept: z.string().describe('Description of the expense'),
-        total: z.number().positive().describe('Amount of the expense'),
+        total: z.number().positive().describe('Amount of the expense, ignored when foreignAmount.fixedRate is false'),
         payBefore: z.string().describe('Due date (ISO format)'),
         periodId: z.string().describe('Period ID this expense belongs to'),
         categoryId: z.string().describe('Category ID'),
         subCategoryId: z.string().describe('Sub-category ID'),
         cardId: z.string().optional().describe('Card ID used for payment'),
         comment: z.string().optional().describe('Optional comment'),
+        foreignAmount: foreignAmountSchema
+          .optional()
+          .describe(
+            'Expense paid in a currency other than the period currency. Without fixedRate, total is recomputed from the exchange rate of payBefore'
+          ),
       },
     },
     async (input) => {
@@ -65,6 +79,8 @@ export function registerExpenseTools(server: McpServer, userId: string) {
           subCategoryId: input.subCategoryId,
           cardId: input.cardId,
           comments: input.comment,
+          payBefore: new Date(input.payBefore),
+          foreignAmount: input.foreignAmount,
         });
         return textResponse(adaptExpensesDTOInput(expense));
       } catch (error) {
@@ -85,6 +101,10 @@ export function registerExpenseTools(server: McpServer, userId: string) {
         subCategoryId: z.string().describe('Updated sub-category ID'),
         cardId: z.string().optional().describe('Updated card ID'),
         comment: z.string().optional().describe('Updated comment'),
+        foreignAmount: foreignAmountSchema
+          .nullable()
+          .optional()
+          .describe('Omitted keeps the foreign amount, null makes the expense domestic'),
       },
     },
     async (input) => {
@@ -97,6 +117,7 @@ export function registerExpenseTools(server: McpServer, userId: string) {
           subCategoryId: input.subCategoryId,
           cardId: input.cardId,
           comments: input.comment,
+          foreignAmount: input.foreignAmount,
         });
         return textResponse(adaptExpensesDTOInput(expense));
       } catch (error) {

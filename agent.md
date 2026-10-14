@@ -188,6 +188,7 @@ src/
 │   ├── expense-repository.ts   # All expense queries
 │   ├── user-settings-repository.ts # user_settings get/upsert by userId
 │   ├── exchange-rate-repository.ts # exchange_rates reads and idempotent bulk upsert (global table)
+│   ├── foreign-expense-reprice.ts # One UPDATE re-pricing unfixed foreign expenses of all users when newer rates are cached
 │   └── ...
 ├── service/                    # Business logic
 │   ├── expenses-service.ts     # Expense CRUD + grouped queries
@@ -229,6 +230,8 @@ src/
 └── utils/
     ├── resolver-wrapper.ts     # withErrorHandling HOF for resolvers
     ├── date-utils.ts           # Fortnight calculation, date helpers
+    ├── decimal.ts              # BigInt fixed-point parse/round-half-up/convert for foreign amounts and rates
+    ├── validation-error.ts     # validationError(message, argumentName) -> VALIDATION_ERROR GraphQLError
     ├── calculate-total.ts      # Sum utilities
     ├── case-converter.ts       # Snake_case ↔ camelCase (for raw SQL results)
     ├── expenses-utils.ts       # Expense-specific helpers

@@ -255,7 +255,7 @@ describe('goal link on expenses', () => {
     internals.expenseRepository = {
       createExpense: mockCreateExpense,
       updateExpense: mockUpdateExpense,
-      getPeriodId: vi.fn().mockResolvedValue(null),
+      getExpenseState: vi.fn().mockResolvedValue({ periodId: null, originalCurrency: null }),
     };
     internals.periodRepository = {
       getPeriodBy: mockGetPeriodBy,

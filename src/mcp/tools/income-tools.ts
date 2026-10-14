@@ -5,7 +5,13 @@ import { IncomeService } from '../../service/income-service.js';
 import { ExpensesService } from '../../service/expenses-service.js';
 import { adaptSingleIncome, formatCurrency } from '../../adapters/income-adapter.js';
 import { adaptGroupedExpenses } from '../../adapters/expense-adapter.js';
+import { totalsByCurrency } from '../../utils/calculate-total.js';
 import { textResponse, errorResponse } from '../utils.js';
+
+const formatTotals = (totals: Record<string, number>) =>
+  Object.fromEntries(
+    Object.entries(totals).map(([currency, amount]) => [currency, formatCurrency(amount)])
+  );
 
 export function registerIncomeTools(server: McpServer, userId: string) {
   server.registerTool(
@@ -19,6 +25,12 @@ export function registerIncomeTools(server: McpServer, userId: string) {
         return textResponse({
           incomes: allIncomes.map((income) => adaptSingleIncome(income)),
           total: formatCurrency(total),
+          totalByCurrency: formatTotals(
+            totalsByCurrency(allIncomes, (income) => ({
+              currency: income.currency,
+              amount: income.total,
+            }))
+          ),
           count: allIncomes.length,
         });
       } catch (error) {
@@ -45,7 +57,7 @@ export function registerIncomeTools(server: McpServer, userId: string) {
         const parsedStart = startDate ? new Date(startDate) as unknown as Date : undefined;
         const parsedEnd = endDate ? new Date(endDate) as unknown as Date : undefined;
 
-        const { incomes, incomesTotal } = await incomeService.getIncomeByPeriod(
+        const { incomes, incomesTotal, incomesTotalByCurrency } = await incomeService.getIncomeByPeriod(
           periodId, parsedStart, parsedEnd
         );
         const { expenses, expensesTotal } =
@@ -57,6 +69,16 @@ export function registerIncomeTools(server: McpServer, userId: string) {
           incomesTotal: formatCurrency(incomesTotal),
           expensesTotal: formatCurrency(expensesTotal),
           remaining: formatCurrency(incomesTotal - expensesTotal),
+          incomesTotalByCurrency: formatTotals(incomesTotalByCurrency),
+          expensesByOriginalCurrency: formatTotals(
+            totalsByCurrency(
+              expenses.flatMap((group) => group.expenses),
+              (expense) => ({
+                currency: expense.foreignAmount?.currency ?? expense.currency,
+                amount: expense.foreignAmount?.amount ?? expense.total,
+              })
+            )
+          ),
         });
       } catch (error) {
         return errorResponse(error.message);

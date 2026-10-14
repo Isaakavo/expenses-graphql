@@ -25,6 +25,13 @@ export class Expense extends Model {
   public concept!: string;
   public total!: number;
   public currency!: CurrencyCode;
+  // DECIMAL columns are returned as strings, DATEONLY as 'yyyy-MM-dd'
+  public originalTotal!: string | null;
+  public originalCurrency!: CurrencyCode | null;
+  public exchangeRate!: string | null;
+  public rateDate!: string | null;
+  public rateSource!: string | null;
+  public fixedRate!: boolean;
   public comments!: string;
   public payBefore!: Date;
   public createdAt!: Date;
@@ -100,6 +107,37 @@ export function initExpenseModel(sequelize: Sequelize) {
         type: DataTypes.CHAR(3),
         allowNull: false,
         defaultValue: CurrencyCode.USD,
+      },
+      originalTotal: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: true,
+        field: 'original_total',
+      },
+      originalCurrency: {
+        type: DataTypes.CHAR(3),
+        allowNull: true,
+        field: 'original_currency',
+      },
+      exchangeRate: {
+        type: DataTypes.DECIMAL(18, 10),
+        allowNull: true,
+        field: 'exchange_rate',
+      },
+      rateDate: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+        field: 'rate_date',
+      },
+      rateSource: {
+        type: DataTypes.STRING(20),
+        allowNull: true,
+        field: 'rate_source',
+      },
+      fixedRate: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: 'fixed_rate',
       },
       comments: {
         type: DataTypes.STRING,
