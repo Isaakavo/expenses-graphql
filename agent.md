@@ -1,6 +1,15 @@
 # Agent Context — expenses-graphql
 
-This file provides deep context for AI agents working with the expenses-graphql backend. For high-level project overview and commands, see the root `CLAUDE.md`.
+Guide for agents working in `expenses-graphql` (`CLAUDE.md` imports this file). Use the file map to open files directly instead of searching the tree.
+
+## Checks
+
+```bash
+pnpm codegen && pnpm build && TZ=UTC pnpm vitest run   # checks before a PR
+npx eslint <changed files>                             # pnpm lint has ~31 pre-existing errors
+pnpm dev                                               # port 4000, needs .env and the docker DB
+pnpm migrate                                           # local DB only
+```
 
 ## Quick Start
 
@@ -157,72 +166,67 @@ Adapters transform data between layers. Key conventions:
 
 The category adapter attaches subcategories as `category.subCategories[]`, so to access a subcategory from an `ExpenseDTO`, use `expense.category.subCategories[0]`.
 
-## File Organization
+## File map
+
+Update it when a PR adds, moves or removes files.
 
 ```
+schema.graphql            GraphQL schema (source of truth)
+codegen.ts                codegen config; contextType = src/index.ts#Context
+config/config.cjs         sequelize-cli config (production uses DATABASE_URL)
+migrations/               category-settings, expense-subcategory-required, periods, add-goals
+seeders/                  default categories and category settings
+fly.toml                  Fly app, primary_region dfw, release_command runs migrations
+.github/workflows/        ci.yml (build + test on PR), fly-deploy.yml (manual deploy)
+docs/specs/               backend-hardening.md
+
 src/
-├── index.ts                    # Apollo Server setup, Context interface
-├── schema.graphql              # GraphQL schema (source of truth)
-├── logger.ts                   # Winston logger instance
-├── generated/graphql.ts        # Auto-generated — DO NOT EDIT
-├── scalars/date.ts             # Custom Date scalar
-├── auth/
-│   ├── resolve-user.ts         # JWT → User from request headers
-│   └── verify-jwt.ts           # JWKS verification
-├── database/
-│   ├── client.ts               # Sequelize instance
-│   └── sync-database.ts        # Table sync on startup
-├── models/                     # Sequelize model definitions
-│   ├── associations.ts         # All model relationships
-│   ├── expense.ts, income.ts, card.ts, category.ts, sub-category.ts, ...
-│   └── index.ts                # Re-exports
-├── dto/                        # TypeScript types for data transfer
-│   ├── expense-dto.ts          # ExpenseDTO, GroupedExpensesDTO, etc.
-│   └── ...
-├── adapters/                   # Data transformation functions
-│   ├── expense-adapter.ts      # Raw → DTO, DTO → GraphQL
-│   ├── income-adapter.ts       # Also contains adaptExpensesDTOInput, formatCurrency
-│   └── ...
-├── repository/                 # Data access layer
-│   ├── expense-repository.ts   # All expense queries
-│   └── ...
-├── service/                    # Business logic
-│   ├── expenses-service.ts     # Expense CRUD + grouped queries
-│   └── ...
-├── resolvers/
-│   ├── queries.ts              # All query resolver registrations
-│   ├── mutation.ts             # All mutation resolver registrations
-│   ├── query/                  # One file per query, organized by feature
-│   │   ├── expense/            # all-expenses, expense-by-id, expenses-by-category, ...
-│   │   ├── income/             # incomes-list, income-by-id, incomes-grouped
-│   │   ├── card/               # card-list, card-by-id
-│   │   ├── category/           # category-list, category-settings, category-allocation
-│   │   ├── composites/         # incomes-with-expenses
-│   │   ├── investment/         # all-investment-records, investment-details, udi-value
-│   │   ├── period/             # periods-list, period
-│   │   └── login/              # login resolver
-│   └── mutation/               # One file per mutation, organized by feature
-├── mcp/                        # Model Context Protocol server
-│   ├── index.ts                # Entry point (requires MCP_USER_ID)
-│   ├── server.ts               # Tool registration orchestrator
-│   ├── tools/                  # Tool definitions by domain
-│   │   ├── expense-tools.ts    # CRUD + expenses-by-category
-│   │   ├── income-tools.ts
-│   │   ├── category-tools.ts
-│   │   ├── card-tools.ts
-│   │   └── period-tools.ts
-│   └── utils.ts                # textResponse, errorResponse helpers
-├── clients/
-│   └── banxico/udi-client.ts   # External API for UDI investment values
-└── utils/
-    ├── resolver-wrapper.ts     # withErrorHandling HOF for resolvers
-    ├── date-utils.ts           # Fortnight calculation, date helpers
-    ├── calculate-total.ts      # Sum utilities
-    ├── case-converter.ts       # Snake_case ↔ camelCase (for raw SQL results)
-    ├── expenses-utils.ts       # Expense-specific helpers
-    ├── where-fortnight.ts      # Fortnight date range builder
-    └── sequilize-utils.ts      # Sequelize query helpers
+  index.ts                Apollo server, Context interface, per-request context
+  logger.ts               Winston logger
+  scalars/date.ts         Date scalar
+  generated/graphql.ts    codegen output, do not edit
+  auth/                   resolve-user (JWT from x-session-key), verify-jwt (JWKS), axios-instance, client
+  clients/banxico/        udi-client (UDI values for investments)
+  database/               client (Sequelize instance), sync-database (sync only outside production)
+  loaders/                createLoaders: per-request DataLoaders (goalExpenses for Goal.expenses)
+  models/                 card, category, sub-category, category-settings, expense, goal, income,
+                          income-category-allocation, investment-record, investment-fee-record, periods;
+                          associations.ts (relations), init-models.ts
+  dto/                    card, category, expense, goal, income, investment, period
+  adapters/               card, category, expense, goal, income (adaptExpensesDTOInput, formatCurrency),
+                          investment, period
+  repository/             card, category, category-settings, category-allocation, expense, goal,
+                          income, investment, period (createPeriod overlap rules)
+  service/                category, category-setting, category-allocation, expenses (create/update/fixed,
+                          goal link checks), goal, income, investment, period
+  resolvers/
+    queries.ts            registers every query (withErrorHandling)
+    mutation.ts           registers every mutation
+    types/goal-types.ts   Goal.expenses field resolver
+    query/<feature>/      card, category, composites (incomes-with-expenses), expense, goal, income,
+                          investment, login, period: one file per query
+    mutation/<feature>/   card, category, expenses, goal, income, investment: one file per mutation
+  mcp/                    server.ts (registers tools), utils.ts, tools/{card,category,expense,income,period}-tools.ts
+  utils/                  expenses-utils (excludeGoalSpending), date-utils, where-fortnight,
+                          calculate-total, case-converter, resolver-wrapper, sequilize-utils
+
+test/src/                 mirrors src/
+  repository/             expense (+ -sql), goal, income, period specs
+  service/                expenses, goal, category-setting specs
+  database/               sync-database spec
+  loaders/                loaders spec
 ```
+
+## Rules
+
+- Schema first: edit `schema.graphql`, run `pnpm codegen`, never edit `src/generated/`.
+- Request flow: resolver (thin), then service (validation, transactions), then repository (Sequelize, `userId` scoped), then adapter (DTO to GraphQL).
+- Errors: `GraphQLError` with `VALIDATION_ERROR` (+ `argumentName`) or a specific code (e.g. `GOAL_NOT_FOUND`).
+- Validate before `sequelize.transaction()`; a failed write must leave no orphan rows.
+- Resolvers that build a service pass `sequelizeClient` from the context.
+- Goal SPENDING expenses are excluded from every non-goal read: `excludeGoalSpending` in `src/utils/expenses-utils.ts`, or `goal_role IS DISTINCT FROM 'SPENDING'` in raw SQL.
+- New migrations go in `migrations/` as `.cjs` with a working `down`. They run on Fly deploy (`release_command` in `fly.toml`).
+- **No slop comments (hard rule).** Add a comment only when the code cannot say it: a non-obvious why (a quirk, a workaround, an ordering constraint, an external limit), in one line. Never write a comment that restates the code or a name, narrates steps, describes the change or its history ("now", "fixed", "added"), explains test data defined nearby, or a KDoc/JSDoc that repeats the signature. When in doubt, delete it. Reviewers report every slop comment as blocking.
 
 ## Code Style Rules
 
@@ -237,14 +241,9 @@ src/
 
 ## Testing
 
-```bash
-pnpm test              # Watch mode
-pnpm test -- --run     # Single run
-```
-
-- Vitest with global imports (`describe`, `it`, `expect` available without import)
-- Path alias `@/` maps to `src/`
-- Test files: `*.test.ts` (currently no test files exist in `src/`)
+- Vitest with global imports; specs live in `test/src/` and mirror `src/` (`*.spec.ts`).
+- Run with `TZ=UTC pnpm vitest run`.
+- Tests use mocks or in-memory sqlite. Never point tests at the dev DB.
 
 ## Deployment
 
