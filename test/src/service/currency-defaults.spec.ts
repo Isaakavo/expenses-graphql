@@ -105,7 +105,9 @@ describe('expense currency', () => {
       const getCurrencyByPeriod = vi.fn().mockResolvedValue(targetCurrency);
       Object.assign(expenses, {
         expenseRepository: {
-          getPeriodId: vi.fn().mockResolvedValue(currentPeriodId),
+          getExpenseState: vi
+            .fn()
+            .mockResolvedValue({ periodId: currentPeriodId, originalCurrency: null }),
           updateExpense,
         },
         incomeRepository: { getCurrencyByPeriod },
@@ -167,6 +169,7 @@ describe('income currency', () => {
       sent: { currency?: CurrencyCode; periodId: string }
     ) => {
       vi.spyOn(Income, 'findOne').mockResolvedValue({ id: 'i-1', ...stored } as never);
+      vi.spyOn(Expense, 'findOne').mockResolvedValue(null);
       const incomeUpdate = vi
         .spyOn(Income, 'update')
         .mockResolvedValue([1, [{ id: 'i-1' }]] as never);

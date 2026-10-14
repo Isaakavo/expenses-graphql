@@ -1,4 +1,4 @@
-import {ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, GroupedExpensesDTO,} from '../dto';
+import {ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, ForeignColumns, GroupedExpensesDTO,} from '../dto';
 import {FindOptions, Op, QueryTypes, Sequelize, Transaction} from 'sequelize';
 import {
   adaptExpenseWithCategoryAllocationDTO,
@@ -12,6 +12,9 @@ import {toCamelCaseDeep} from '../utils/case-converter.js';
 import {logger} from '../logger.js';
 import {excludeGoalSpending} from '../utils/expenses-utils.js';
 
+export type ExpenseWrite = Omit<ExpenseInput, 'foreignAmount'> &
+  Partial<ForeignColumns>;
+
 export class ExpenseRepository {
   userId: string;
   sequelizeClient: Sequelize;
@@ -22,7 +25,7 @@ export class ExpenseRepository {
   }
 
   async createExpense(
-    input: ExpenseInput,
+    input: ExpenseWrite,
     options: { transaction?: Transaction } = {}
   ) {
     const expense = await Expense.create(
@@ -38,7 +41,7 @@ export class ExpenseRepository {
 
   async updateExpense(
     id: string,
-    input: Partial<ExpenseInput>,
+    input: Partial<ExpenseWrite>,
     options: { transaction?: Transaction } = {}
   ) {
     const updatedExpense = await Expense.update(
@@ -315,16 +318,14 @@ export class ExpenseRepository {
     return adaptRawListExpense(expenses);
   }
 
-  async getPeriodId(
+  async getExpenseState(
     id: string,
     options: { transaction?: Transaction } = {}
-  ): Promise<string | null> {
-    const expense = await Expense.findOne({
-      attributes: ['periodId'],
+  ): Promise<Expense | null> {
+    return Expense.findOne({
       where: { id, userId: this.userId },
       transaction: options.transaction,
     });
-    return expense?.periodId ?? null;
   }
 
   async getExpenseByPK(

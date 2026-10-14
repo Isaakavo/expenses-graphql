@@ -82,3 +82,15 @@ const calculateTotals = <T extends ElementFields, O>(
 
   return result.flat(2).reverse() as Array<O>;
 };
+
+export const totalsByCurrency = <T>(
+  items: T[],
+  pick: (item: T) => { currency: string; amount: number }
+): Record<string, number> => {
+  const totals: Record<string, number> = {};
+  items.forEach((item) => {
+    const { currency, amount } = pick(item);
+    totals[currency] = (totals[currency] ?? 0) + amount;
+  });
+  return totals;
+};

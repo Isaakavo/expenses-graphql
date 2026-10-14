@@ -13,6 +13,7 @@ import { Income } from '../models';
 import { IncomeRepository } from '../repository/income-repository.js';
 import { PeriodRepository } from '../repository/period-repository.js';
 import { Date as CustomDate } from '../scalars/date.js';
+import { totalsByCurrency } from '../utils/calculate-total.js';
 import { UserSettingsService } from './user-settings-service.js';
 
 export type IncomeInput = {
@@ -67,6 +68,10 @@ export class IncomeService {
     return Promise.resolve({
       incomes: adaptedIncome,
       incomesTotal,
+      incomesTotalByCurrency: totalsByCurrency(incomes, (income) => ({
+        currency: income.currency,
+        amount: income.total,
+      })),
     });
   }
 

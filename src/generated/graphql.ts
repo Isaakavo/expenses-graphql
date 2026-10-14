@@ -134,6 +134,7 @@ export type CreateExpenseInput = {
   categoryId: Scalars['String']['input'];
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
+  foreignAmount?: InputMaybe<ForeignAmountInput>;
   goalId?: InputMaybe<Scalars['ID']['input']>;
   goalRole?: InputMaybe<GoalRole>;
   payBefore: Scalars['Date']['input'];
@@ -147,6 +148,7 @@ export type CreateFixedExpenseInput = {
   categoryId: Scalars['String']['input'];
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
+  foreignAmount?: InputMaybe<ForeignAmountInput>;
   frequency: FixedExpenseFrequency;
   goalId?: InputMaybe<Scalars['ID']['input']>;
   goalRole?: InputMaybe<GoalRole>;
@@ -193,6 +195,7 @@ export type Expense = {
   concept: Scalars['String']['output'];
   createdAt?: Maybe<Scalars['String']['output']>;
   currency: CurrencyCode;
+  foreignAmount?: Maybe<ForeignAmount>;
   goalId?: Maybe<Scalars['ID']['output']>;
   goalRole?: Maybe<GoalRole>;
   id: Scalars['ID']['output'];
@@ -244,6 +247,22 @@ export enum FixedExpenseFrequency {
   BIWEEKLY = 'Biweekly',
   MONTHLY = 'Monthly'
 }
+
+export type ForeignAmount = {
+  __typename?: 'ForeignAmount';
+  amount: Scalars['String']['output'];
+  currency: CurrencyCode;
+  fixedRate: Scalars['Boolean']['output'];
+  rate: Scalars['Float']['output'];
+  rateDate: Scalars['Date']['output'];
+  rateSource: Scalars['String']['output'];
+};
+
+export type ForeignAmountInput = {
+  amount: Scalars['Float']['input'];
+  currency: CurrencyCode;
+  fixedRate: Scalars['Boolean']['input'];
+};
 
 export enum Fortnight {
   FIRST = 'FIRST',
@@ -643,6 +662,7 @@ export type UpdateExpenseInput = {
   cardId?: InputMaybe<Scalars['ID']['input']>;
   comment?: InputMaybe<Scalars['String']['input']>;
   concept: Scalars['String']['input'];
+  foreignAmount?: InputMaybe<ForeignAmountInput>;
   goalId?: InputMaybe<Scalars['ID']['input']>;
   goalRole?: InputMaybe<GoalRole>;
   id: Scalars['ID']['input'];
@@ -794,6 +814,8 @@ export type ResolversTypes = ResolversObject<{
   FinancialBalance: ResolverTypeWrapper<FinancialBalance>;
   FixedExpenseFrequency: FixedExpenseFrequency;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
+  ForeignAmount: ResolverTypeWrapper<ForeignAmount>;
+  ForeignAmountInput: ForeignAmountInput;
   Fortnight: Fortnight;
   Goal: ResolverTypeWrapper<Goal>;
   GoalRole: GoalRole;
@@ -860,6 +882,8 @@ export type ResolversParentTypes = ResolversObject<{
   FilterInput: FilterInput;
   FinancialBalance: FinancialBalance;
   Float: Scalars['Float']['output'];
+  ForeignAmount: ForeignAmount;
+  ForeignAmountInput: ForeignAmountInput;
   Goal: Goal;
   GroupedExpenses: GroupedExpenses;
   ID: Scalars['ID']['output'];
@@ -972,6 +996,7 @@ export type ExpenseResolvers<ContextType = Context, ParentType extends Resolvers
   concept?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   currency?: Resolver<ResolversTypes['CurrencyCode'], ParentType, ContextType>;
+  foreignAmount?: Resolver<Maybe<ResolversTypes['ForeignAmount']>, ParentType, ContextType>;
   goalId?: Resolver<Maybe<ResolversTypes['ID']>, ParentType, ContextType>;
   goalRole?: Resolver<Maybe<ResolversTypes['GoalRole']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -1007,6 +1032,16 @@ export type ExpensesBySubCategoryResolvers<ContextType = Context, ParentType ext
 export type FinancialBalanceResolvers<ContextType = Context, ParentType extends ResolversParentTypes['FinancialBalance'] = ResolversParentTypes['FinancialBalance']> = ResolversObject<{
   debts?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   remaining?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type ForeignAmountResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ForeignAmount'] = ResolversParentTypes['ForeignAmount']> = ResolversObject<{
+  amount?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  currency?: Resolver<ResolversTypes['CurrencyCode'], ParentType, ContextType>;
+  fixedRate?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  rate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
+  rateDate?: Resolver<ResolversTypes['Date'], ParentType, ContextType>;
+  rateSource?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -1222,6 +1257,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   ExpensesByCategory?: ExpensesByCategoryResolvers<ContextType>;
   ExpensesBySubCategory?: ExpensesBySubCategoryResolvers<ContextType>;
   FinancialBalance?: FinancialBalanceResolvers<ContextType>;
+  ForeignAmount?: ForeignAmountResolvers<ContextType>;
   Goal?: GoalResolvers<ContextType>;
   GroupedExpenses?: GroupedExpensesResolvers<ContextType>;
   Income?: IncomeResolvers<ContextType>;
