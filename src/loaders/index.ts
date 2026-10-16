@@ -5,6 +5,7 @@ import { GoalService } from '../service/goal-service.js';
 
 export interface Loaders {
   goalExpenses: DataLoader<string, ExpenseDTO[]>;
+  goalAmounts: DataLoader<string, string | null>;
 }
 
 export const createLoaders = (
@@ -17,6 +18,9 @@ export const createLoaders = (
     goalExpenses: new DataLoader<string, ExpenseDTO[]>(
       (goalIds) => goalService.getExpensesGroupedByGoalIds(goalIds),
       { cache: false }
+    ),
+    goalAmounts: new DataLoader<string, string | null>((expenseIds) =>
+      goalService.getGoalAmountsByExpenseIds(expenseIds)
     ),
   };
 };

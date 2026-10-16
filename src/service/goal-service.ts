@@ -1,9 +1,28 @@
 import { Sequelize } from 'sequelize';
 import { GraphQLError } from 'graphql';
 import { isValid, parseISO } from 'date-fns';
-import { GoalInput, GoalRepository } from '../repository/goal-repository.js';
+import {
+  GoalInput,
+  GoalLinkedExpenseRow,
+  GoalRepository,
+} from '../repository/goal-repository.js';
 import { GoalDTO } from '../dto/goal-dto.js';
 import { ExpenseDTO } from '../dto/expense-dto.js';
+import { CurrencyCode } from '../generated/graphql.js';
+import { logger } from '../logger.js';
+import {
+  AMOUNT_SCALE,
+  convertAmount,
+  formatDecimal,
+  parseDecimal,
+  RATE_SCALE,
+} from '../utils/decimal.js';
+import { formatCurrency } from '../adapters/income-adapter.js';
+import {
+  ExchangeRateService,
+  exchangeRateService,
+} from './exchange-rate-service.js';
+import { UserSettingsService } from './user-settings-service.js';
 
 const MAX_NAME_LENGTH = 100;
 const MAX_TARGET_AMOUNT = 9999999999.99;
@@ -14,6 +33,7 @@ export type GoalServiceInput = {
   targetAmount: number;
   startDate: string;
   endDate?: string | null;
+  currency?: CurrencyCode | null;
 };
 
 const validationError = (message: string, argumentName: string) =>
@@ -45,10 +65,13 @@ const assertIsoDate = (value: unknown, argumentName: string): string => {
 
 export class GoalService {
   goalRepository: GoalRepository;
+  userSettingsService: UserSettingsService;
+  exchangeRates: ExchangeRateService = exchangeRateService;
   userId: string;
 
   constructor(userId: string, sequelize: Sequelize) {
     this.userId = userId;
+    this.userSettingsService = new UserSettingsService(userId, sequelize);
     this.goalRepository = new GoalRepository(userId, sequelize);
   }
 
@@ -87,7 +110,72 @@ export class GoalService {
       input.endDate == null ? null : assertIsoDate(input.endDate, 'endDate');
     this.validateEndDate(startDate, endDate);
 
-    return { name, targetAmount, startDate, endDate };
+    return {
+      name,
+      targetAmount,
+      startDate,
+      endDate,
+      ...(input.currency ? { currency: input.currency } : {}),
+    };
+  }
+
+  async getGoalAmountsByExpenseIds(
+    expenseIds: readonly string[]
+  ): Promise<(string | null)[]> {
+    const rows = await this.goalRepository.getGoalLinkedExpenseRows(expenseIds);
+    const dayOf = (row: GoalLinkedExpenseRow) =>
+      row.payBefore.toISOString().slice(0, 10);
+    const needsRate = (row: GoalLinkedExpenseRow) =>
+      row.currency !== row.goalCurrency &&
+      row.originalCurrency !== row.goalCurrency;
+    const rateKey = (row: GoalLinkedExpenseRow) =>
+      `${row.currency}:${row.goalCurrency}:${dayOf(row)}`;
+
+    const distinct = new Map(
+      rows.filter(needsRate).map((row) => [rateKey(row), row])
+    );
+    const rates = new Map(
+      await Promise.all(
+        [...distinct].map(async ([key, row]) => {
+          try {
+            const { rate } = await this.exchangeRates.getConversionRate(
+              row.currency,
+              row.goalCurrency,
+              dayOf(row)
+            );
+            return [key, parseDecimal(rate, RATE_SCALE)] as const;
+          } catch (error) {
+            logger.warn(
+              `Goal amount rate unavailable for ${key}: ${error.message}`
+            );
+            return [key, null] as const;
+          }
+        })
+      )
+    );
+
+    const amountOf = (row: GoalLinkedExpenseRow): string | null => {
+      if (row.currency === row.goalCurrency) {
+        return formatCurrency(Number(row.total));
+      }
+      if (row.originalCurrency === row.goalCurrency) {
+        return formatCurrency(Number(row.originalTotal));
+      }
+      const rate = rates.get(rateKey(row));
+      return rate == null
+        ? null
+        : formatCurrency(
+          Number(
+            formatDecimal(
+              convertAmount(parseDecimal(row.total, AMOUNT_SCALE), rate),
+              AMOUNT_SCALE
+            )
+          )
+        );
+    };
+
+    const byId = new Map(rows.map((row) => [row.id, amountOf(row)]));
+    return expenseIds.map((id) => byId.get(id) ?? null);
   }
 
   async getGoals(): Promise<GoalDTO[]> {
@@ -113,7 +201,13 @@ export class GoalService {
   }
 
   async createGoal(input: GoalServiceInput): Promise<GoalDTO> {
-    return this.goalRepository.createGoal(this.validateAndNormalize(input));
+    const data = this.validateAndNormalize(input);
+
+    return this.goalRepository.createGoal({
+      ...data,
+      currency:
+        data.currency ?? (await this.userSettingsService.getDefaultCurrency()),
+    });
   }
 
   async updateGoal(

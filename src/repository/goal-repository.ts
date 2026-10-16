@@ -4,6 +4,7 @@ import { logger } from '../logger.js';
 import { adaptGoalDTO } from '../adapters/goal-adapter.js';
 import { adaptRawListExpense } from '../adapters/expense-adapter.js';
 import { ExpenseDTO, ExpenseWithCategoryRaw, GoalDTO } from '../dto/index.js';
+import { CurrencyCode } from '../generated/graphql.js';
 import { Card, Category, Expense, Goal, SubCategory } from '../models/index.js';
 
 const goalNotFound = () =>
@@ -16,6 +17,17 @@ export type GoalInput = {
   targetAmount: number;
   startDate: string;
   endDate?: string | null;
+  currency?: CurrencyCode;
+};
+
+export type GoalLinkedExpenseRow = {
+  id: string;
+  total: string;
+  currency: CurrencyCode;
+  originalTotal: string | null;
+  originalCurrency: CurrencyCode | null;
+  payBefore: Date;
+  goalCurrency: CurrencyCode;
 };
 
 export class GoalRepository {
@@ -126,5 +138,28 @@ export class GoalRepository {
     })) as ExpenseWithCategoryRaw[];
 
     return adaptRawListExpense(expenses);
+  }
+
+  async getGoalLinkedExpenseRows(
+    expenseIds: readonly string[]
+  ): Promise<GoalLinkedExpenseRow[]> {
+    const expenses = await Expense.findAll({
+      where: {
+        id: { [Op.in]: [...expenseIds] },
+        userId: this.userId,
+        goalId: { [Op.ne]: null },
+      },
+      include: [{ model: Goal, as: 'goal', required: true }],
+    });
+
+    return expenses.map((expense) => ({
+      id: String(expense.id),
+      total: String(expense.total),
+      currency: expense.currency,
+      originalTotal: expense.originalTotal ?? null,
+      originalCurrency: expense.originalCurrency ?? null,
+      payBefore: expense.payBefore,
+      goalCurrency: (expense as unknown as { goal: Goal }).goal.currency,
+    }));
   }
 }
