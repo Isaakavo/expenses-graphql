@@ -249,6 +249,7 @@ src/
 - **Prefer Sequelize typed queries** over raw SQL for new code
 - **Adapters handle transformation** — repositories return raw/DTO data, adapters convert
 - **Thin resolvers** — extract context, delegate to service, return adapted result
+- **No slop comments (hard rule)** — the code must speak for itself: clear names and small functions instead of comments. Add a comment only when strictly necessary, when the code cannot say it: a non-obvious why (a quirk, a workaround, an ordering constraint, an external limit), in one line. Never write a comment that restates the code or a name, narrates steps, describes the change or its history ("now", "fixed", "added"), explains test data defined nearby, or a JSDoc that repeats the signature. When in doubt, delete it. Reviewers report every slop comment as blocking.
 
 ## Testing
 
