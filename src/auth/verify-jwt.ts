@@ -18,15 +18,13 @@ export async function verifyJwt(token: string): Promise<User> {
       header: JwtHeader,
       callback: (err: Error, key: string) => void
     ) => {
-      jwksClientInstance.getSigningKey(kid, (err, key) => {
-        if (err) {
-          callback(err, '');
+      jwksClientInstance.getSigningKey(kid).then(
+        (key) => callback(null, key.getPublicKey()),
+        (err: Error) => {
           logger.error(`Error getting sign in key ${err.message}`);
-          return;
+          callback(err, '');
         }
-        const signingKey = key?.getPublicKey();
-        callback(null, signingKey);
-      });
+      );
     };
 
     const decodedToken = await new Promise<jwt.JwtPayload>(
