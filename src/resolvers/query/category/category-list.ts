@@ -21,6 +21,6 @@ export const categoryList: QueryResolvers['categoryList'] = async (
       updatedAt: sub.updatedAt,
     })),
     createdAt: category.createdAt,
-    updatedAt: category.createdAt,
+    updatedAt: category.updatedAt,
   }));
 };
