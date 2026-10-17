@@ -1,7 +1,9 @@
+/* eslint-env node */
+/* eslint-disable no-console */
 'use strict';
 
 module.exports = {
-  up: async (queryInterface, Sequelize) => {
+  up: async (queryInterface) => {
     // Use dynamic import for the ESM 'uuid' package inside the async function.
     const { v4: uuidv4 } = await import('uuid');
 
@@ -98,7 +100,7 @@ module.exports = {
     }
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
     await queryInterface.bulkDelete('income_category_allocation', null, {});
     await queryInterface.bulkDelete('category_settings', null, {});
   }
