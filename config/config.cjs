@@ -5,7 +5,7 @@
 // connection string comes from DATABASE_URL (the same variable used by
 // src/database/client.ts), while development/test mirror the DB_* variables
 // used by the app's non-production Sequelize client.
-require('dotenv').config();
+require('dotenv').config({ quiet: true });
 
 const nonProduction = {
   username: process.env.DB_USER || 'root',
