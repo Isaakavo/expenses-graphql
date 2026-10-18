@@ -38,7 +38,7 @@ export const adaptSingleRawExpenseDTO = (exp): ExpenseDTO => {
     goalId: exp.goalId ?? null,
     goalRole: (exp.goalRole as GoalRole) ?? null,
     concept: exp.concept,
-    total: exp.total,
+    total: Number(exp.total),
     currency: exp.currency,
     foreignAmount: adaptForeignAmountDTO(exp),
     comments: exp.comments,
@@ -157,6 +157,6 @@ export const adaptGroupedExpensesDTO = (groupedExpense): GroupedExpensesDTO => {
 
       return adaptExpenseDTO(expenseObj);
     }),
-    total: groupedExpense.total,
+    total: Number(groupedExpense.total),
   };
 };
