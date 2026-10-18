@@ -36,8 +36,9 @@
     "sqlite3": "^6.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.0",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.14"
+    "vite": "^8.3.4",
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^5.0.5"
   },
   "keywords": [],
   "license": "ISC",
