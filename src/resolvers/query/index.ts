@@ -6,7 +6,6 @@ export { exchangeRates } from './exchange-rate/exchange-rates.js';
 export { allExpenses } from './expense/all-expenses.js';
 export { expensesByCategory } from './expense/expenses-by-category.js';
 export { expenseById } from './expense/expense-by-id.js';
-export { financialBalanceByFortnight } from './expense/financial-balance-by-fortnight.js';
 export { incomeById } from './income/income-by-id.js';
 export { incomesList } from './income/incomes-list.js';
 export { login } from './login/login.js';

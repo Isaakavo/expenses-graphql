@@ -235,7 +235,6 @@ src/
     ├── calculate-total.ts      # Sum utilities
     ├── case-converter.ts       # Snake_case ↔ camelCase (for raw SQL results)
     ├── expenses-utils.ts       # Expense-specific helpers
-    ├── where-fortnight.ts      # Fortnight date range builder
     └── sequilize-utils.ts      # Sequelize query helpers
 ```
 
@@ -250,6 +249,8 @@ src/
 - **Adapters handle transformation** — repositories return raw/DTO data, adapters convert
 - **Thin resolvers** — extract context, delegate to service, return adapted result
 - **No slop comments (hard rule)** — the code must speak for itself: clear names and small functions instead of comments. Add a comment only when strictly necessary, when the code cannot say it: a non-obvious why (a quirk, a workaround, an ordering constraint, an external limit), in one line. Never write a comment that restates the code or a name, narrates steps, describes the change or its history ("now", "fixed", "added"), explains test data defined nearby, or a JSDoc that repeats the signature. When in doubt, delete it. Reviewers report every slop comment as blocking.
+- **No `any` (hard rule)** — not in `src/` and not in tests. Use real types, `unknown` plus narrowing, generics, `Pick`/`Partial` of existing DTOs, or `vi.mocked(...)` for mocks. No `eslint-disable` to get around it. Reviewers report every `any` as blocking.
+- **Lint must pass (hard rule)** — run `pnpm lint` before asking for review; it must report 0 problems. CI runs it on every PR.
 
 ## Testing
 
@@ -286,7 +287,6 @@ pnpm test -- --run     # Single run
 - `expensesByCategory(input: FilterInput!)` — Expenses grouped by category/subcategory
 - `incomesWithExpenses(input: FilterInput!)` — Income + grouped expenses for a period
 - `categoryAllocation(input: CategoryAllocationInput!)` — Budget allocation vs actual spending
-- `financialBalanceByFortnight(input: PayBeforeInput!)` — Remaining balance per fortnight
 
 ### Key Mutations
 - `createExpense/updateExpense/deleteExpense` — Expense CRUD

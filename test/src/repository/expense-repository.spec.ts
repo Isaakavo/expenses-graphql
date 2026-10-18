@@ -1,7 +1,6 @@
 import { Sequelize } from 'sequelize';
 import { ExpenseRepository } from '../../../src/repository/expense-repository.js';
 import { GoalRepository } from '../../../src/repository/goal-repository.js';
-import { findAllExpensesWithCards } from '../../../src/utils/expenses-utils.js';
 import { initModels } from '../../../src/models/init-models.js';
 import { associateModels } from '../../../src/models/associations.js';
 import { Category, Expense, SubCategory } from '../../../src/models/index.js';
@@ -100,14 +99,6 @@ describe('ExpenseRepository goal spending exclusion', () => {
     expect(sums).toHaveLength(1);
     expect(sums[0].category.id).toBe(categoryId);
     expect(Number(sums[0].totalSpent)).toBe(20);
-  });
-
-  it('findAllExpensesWithCards (fortnight balance) leaves SPENDING out', async () => {
-    const result = await findAllExpensesWithCards({ userId: userA });
-    expect(concepts(result as { concept: string }[])).toEqual([
-      'contribution',
-      'plain',
-    ]);
   });
 
   it('getExpenseByPK still returns a SPENDING row (needed by create and update)', async () => {

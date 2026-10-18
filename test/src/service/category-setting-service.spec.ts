@@ -8,6 +8,11 @@ let sequelize: Sequelize;
 let service: CategorySettingsService;
 let mockRepo: CategorySettingsRepository;
 
+type SettingRow = Awaited<ReturnType<CategorySettingsRepository['getCategorySettings']>>[number];
+const settingRow = (row: object) => row as SettingRow;
+type CreatedRow = Awaited<ReturnType<CategorySettingsRepository['createCategorySetting']>>;
+const createdRow = (row: object) => row as unknown as CreatedRow;
+
 beforeEach(() => {
   sequelize = new Sequelize('sqlite::memory:', { logging: false });
   mockRepo = {
@@ -20,14 +25,14 @@ beforeEach(() => {
 
 describe('CategorySettingsService', () => {
   it('returns category settings from repository', async () => {
-    (mockRepo.getCategorySettings as any).mockResolvedValue([
-      {
+    vi.mocked(mockRepo.getCategorySettings).mockResolvedValue([
+      settingRow({
         id: '1',
         userId,
         categoryId: 'cat1',
         percentage: 0.5,
         category: { name: 'Cat 1' },
-      },
+      }),
     ]);
     const result = await service.getCategorySettings();
     expect(result).toHaveLength(1);
@@ -35,14 +40,14 @@ describe('CategorySettingsService', () => {
   });
 
   it('throws error if total percentage exceeds 100%', async () => {
-    (mockRepo.getCategorySettings as any).mockResolvedValue([
-      {
+    vi.mocked(mockRepo.getCategorySettings).mockResolvedValue([
+      settingRow({
         id: '1',
         userId,
         categoryId: 'cat1',
         percentage: 0.7,
         category: { name: 'Cat 1' },
-      },
+      }),
     ]);
     await expect(
       service.createCategorySetting({ categoryId: 'cat2', percentage: 0.4 })
@@ -50,22 +55,22 @@ describe('CategorySettingsService', () => {
   });
 
   it('calls repository to create category setting if valid', async () => {
-    (mockRepo.getCategorySettings as any).mockResolvedValue([
-      {
+    vi.mocked(mockRepo.getCategorySettings).mockResolvedValue([
+      settingRow({
         id: '1',
         userId,
         categoryId: 'cat1',
         percentage: 0.5,
         category: { name: 'Cat 1' },
-      },
+      }),
     ]);
-    (mockRepo.createCategorySetting as any).mockResolvedValue({
+    vi.mocked(mockRepo.createCategorySetting).mockResolvedValue(createdRow({
       id: '2',
       userId,
       categoryId: 'cat2',
       percentage: 0.4,
       category: { name: 'Cat 2' },
-    });
+    }));
     const result = await service.createCategorySetting({
       categoryId: 'cat2',
       percentage: 0.4,
@@ -79,8 +84,8 @@ describe('CategorySettingsService', () => {
   });
 
   it('propagates repository errors', async () => {
-    (mockRepo.getCategorySettings as any).mockResolvedValue([]);
-    (mockRepo.createCategorySetting as any).mockRejectedValue(
+    vi.mocked(mockRepo.getCategorySettings).mockResolvedValue([]);
+    vi.mocked(mockRepo.createCategorySetting).mockRejectedValue(
       new Error('Duplicate key')
     );
     await expect(

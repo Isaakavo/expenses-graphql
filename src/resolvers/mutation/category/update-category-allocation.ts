@@ -1,7 +1,6 @@
 import {MutationResolvers} from '../../../generated/graphql';
 import {logger} from '../../../logger.js';
 import {CategoryAllocationService} from '../../../service/category-allocation-service.js';
-import {formatCurrency} from '../../../adapters/income-adapter.js';
 
 
 export const updateCategoryAllocation: MutationResolvers['updateCategoryAllocation'] = async (
@@ -16,7 +15,7 @@ export const updateCategoryAllocation: MutationResolvers['updateCategoryAllocati
       .updateCategoryAllocation(incomeId, id, percentage)
 
     return {
-      id: '',
+      id: updated.id,
       message: ''
     }
   } catch (e) {

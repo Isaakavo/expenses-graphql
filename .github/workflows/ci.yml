@@ -26,5 +26,8 @@ jobs:
       - name: Build (codegen + tsc)
         run: pnpm build
 
+      - name: Lint
+        run: pnpm lint
+
       - name: Unit tests
         run: pnpm vitest run

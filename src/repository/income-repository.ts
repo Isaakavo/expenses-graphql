@@ -6,6 +6,7 @@ import {
   adaptIncomeDTO,
   formatCurrency,
 } from '../adapters/income-adapter.js';
+import { IncomeAndPeriodDTO } from '../dto';
 import { logger } from '../logger.js';
 import { CategorySettings } from '../models/category-settings.js';
 import { IncomeCategoryAllocation } from '../models/income-category-allocation.js';
@@ -16,6 +17,12 @@ import { toCamelCaseDeep } from '../utils/case-converter.js';
 import { PeriodRepository } from './period-repository.js';
 import { IncomeInput } from 'service/income-service.js';
 import { validationError } from '../utils/validation-error.js';
+
+interface IncomesByMonthRow {
+  month: string;
+  total: number;
+  incomes: IncomeAndPeriodDTO[];
+}
 
 export class IncomeRepository {
   private periodRepository: PeriodRepository;
@@ -101,7 +108,7 @@ export class IncomeRepository {
 
     logger.info(`returning ${results.length} incomes`);
 
-    return toCamelCaseDeep(results).map((r) => {
+    return toCamelCaseDeep<IncomesByMonthRow[]>(results).map((r) => {
       return {
         month: formatInTimeZone(new Date(r.month), 'UTC', 'MMMM'),
         year: formatInTimeZone(new Date(r.month), 'UTC', 'yyyy'),

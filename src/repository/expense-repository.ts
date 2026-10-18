@@ -178,7 +178,7 @@ export class ExpenseRepository {
     endDate?: Date,
     limit?: number
   ): Promise<GroupedExpensesDTO[]> {
-    const replacements: any = { userId: this.userId };
+    const replacements: Record<string, unknown> = { userId: this.userId };
     // Keep in sync with GoalRole.SPENDING in generated/graphql.ts
     let where =
       'WHERE e.user_id = :userId AND e.goal_role IS DISTINCT FROM \'SPENDING\'';
@@ -227,7 +227,7 @@ export class ExpenseRepository {
       raw: true,
     });
 
-    return toCamelCaseDeep(rows).map((row) => adaptGroupedExpensesDTO(row));
+    return toCamelCaseDeep<unknown[]>(rows).map((row) => adaptGroupedExpensesDTO(row));
   }
 
   async getExpensesSumByCategory(

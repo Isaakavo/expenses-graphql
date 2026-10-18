@@ -1,7 +1,6 @@
 import {CategorySettingsRepository} from '../repository/category-settings-repository.js';
 import {Sequelize} from 'sequelize';
 import {GraphQLError} from 'graphql';
-import {extensions} from 'sequelize/lib/utils/validator-extras';
 
 export class CategorySettingsService {
   categorySettingsRepository: CategorySettingsRepository;
