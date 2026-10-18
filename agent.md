@@ -27,7 +27,7 @@ open http://localhost:4000/graphql
 
 | Layer           | Technology                                    |
 |-----------------|-----------------------------------------------|
-| Runtime         | Node 22.4.0 (ESM, `.js` extensions required)  |
+| Runtime         | Node 24.22.0 (ESM, `.js` extensions required) |
 | Language        | TypeScript 5.3+                               |
 | API             | Apollo Server 4, GraphQL 16                   |
 | ORM             | Sequelize 6 (PostgreSQL 16)                   |
@@ -266,7 +266,7 @@ pnpm test -- --run     # Single run
 
 - **Production**: Fly.io via `pnpm deploy:prod` (builds, then `fly deploy`)
 - **Docker dev**: `docker compose up` spins up both PostgreSQL and the API
-- **Dockerfile.dev**: Node 22.4.0-slim, pnpm 10.23.0, exposes port 4000
+- **Dockerfile.dev**: Node 24.22.0-slim, pnpm 10.23.0, exposes port 4000
 
 ## Common Gotchas
 
