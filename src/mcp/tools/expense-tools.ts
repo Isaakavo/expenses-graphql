@@ -9,7 +9,7 @@ import { textResponse, errorResponse } from '../utils.js';
 
 const foreignAmountSchema = z.object({
   amount: z.number().positive().describe('Amount in the foreign currency'),
-  currency: z.nativeEnum(CurrencyCode).describe('Foreign currency code'),
+  currency: z.enum(CurrencyCode).describe('Foreign currency code'),
   fixedRate: z
     .boolean()
     .describe('true: total is the amount actually charged and the rate is derived from it'),
