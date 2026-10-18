@@ -287,7 +287,6 @@ pnpm test -- --run     # Single run
 - `expensesByCategory(input: FilterInput!)` — Expenses grouped by category/subcategory
 - `incomesWithExpenses(input: FilterInput!)` — Income + grouped expenses for a period
 - `categoryAllocation(input: CategoryAllocationInput!)` — Budget allocation vs actual spending
-- `financialBalanceByFortnight(input: PayBeforeInput!)` — Remaining balance per fortnight
 
 ### Key Mutations
 - `createExpense/updateExpense/deleteExpense` — Expense CRUD

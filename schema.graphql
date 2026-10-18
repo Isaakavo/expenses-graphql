@@ -236,11 +236,6 @@ type GroupedExpenses {
   total: String!
 }
 
-type FinancialBalance {
-  remaining: Float!
-  debts: Float!
-}
-
 # Type used to display the income for a given fortnight and all the related expenses
 # it also return the total of all the expenses and the remaining between income and expenses
 type IncomesListAndExpenses {
@@ -411,12 +406,6 @@ input UpdateUserSettingsInput {
   defaultCurrency: CurrencyCode!
 }
 
-input PayBeforeInput {
-  payBefore: Date
-  periodId: String
-  cardId: ID
-}
-
 input FilterInput {
   cardId: ID
   periodId: ID
@@ -483,8 +472,6 @@ type Query {
   incomesWithExpenses(input: FilterInput!): IncomesListAndExpenses!
   allExpenses: [Expense]
   expensesByCategory(input: FilterInput!): [ExpensesByCategory!]!
-  # TODO refine this query
-  financialBalanceByFortnight(input: PayBeforeInput!): FinancialBalance
   categoryList: [Categories!]
   goals: [Goal!]!
   goal(id: ID!): Goal

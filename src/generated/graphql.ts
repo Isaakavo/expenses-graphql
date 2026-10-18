@@ -234,12 +234,6 @@ export type FilterInput = {
   year?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type FinancialBalance = {
-  __typename?: 'FinancialBalance';
-  debts: Scalars['Float']['output'];
-  remaining: Scalars['Float']['output'];
-};
-
 export enum FixedExpenseFrequency {
   BIWEEKLY = 'Biweekly',
   MONTHLY = 'Monthly'
@@ -484,12 +478,6 @@ export type MutationUpdateUserSettingsArgs = {
   input: UpdateUserSettingsInput;
 };
 
-export type PayBeforeInput = {
-  cardId?: InputMaybe<Scalars['ID']['input']>;
-  payBefore?: InputMaybe<Scalars['Date']['input']>;
-  periodId?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type PaymentDate = {
   __typename?: 'PaymentDate';
   date: Scalars['String']['output'];
@@ -518,7 +506,6 @@ export type Query = {
   exchangeRates: Array<ExchangeRate>;
   expenseById?: Maybe<Expense>;
   expensesByCategory: Array<ExpensesByCategory>;
-  financialBalanceByFortnight?: Maybe<FinancialBalance>;
   goal?: Maybe<Goal>;
   goals: Array<Goal>;
   incomeById?: Maybe<Income>;
@@ -560,11 +547,6 @@ export type QueryExpenseByIdArgs = {
 
 export type QueryExpensesByCategoryArgs = {
   input: FilterInput;
-};
-
-
-export type QueryFinancialBalanceByFortnightArgs = {
-  input: PayBeforeInput;
 };
 
 
@@ -815,7 +797,6 @@ export type ResolversTypes = ResolversObject<{
   ExpensesByCategory: ResolverTypeWrapper<ExpensesByCategory>;
   ExpensesBySubCategory: ResolverTypeWrapper<ExpensesBySubCategory>;
   FilterInput: FilterInput;
-  FinancialBalance: ResolverTypeWrapper<FinancialBalance>;
   FixedExpenseFrequency: FixedExpenseFrequency;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
   ForeignAmount: ResolverTypeWrapper<ForeignAmount>;
@@ -835,7 +816,6 @@ export type ResolversTypes = ResolversObject<{
   InvestmentRecordInput: InvestmentRecordInput;
   LoginResponse: ResolverTypeWrapper<LoginResponse>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
-  PayBeforeInput: PayBeforeInput;
   PaymentDate: ResolverTypeWrapper<PaymentDate>;
   Period: ResolverTypeWrapper<Period>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
@@ -884,7 +864,6 @@ export type ResolversParentTypes = ResolversObject<{
   ExpensesByCategory: ExpensesByCategory;
   ExpensesBySubCategory: ExpensesBySubCategory;
   FilterInput: FilterInput;
-  FinancialBalance: FinancialBalance;
   Float: Scalars['Float']['output'];
   ForeignAmount: ForeignAmount;
   ForeignAmountInput: ForeignAmountInput;
@@ -901,7 +880,6 @@ export type ResolversParentTypes = ResolversObject<{
   InvestmentRecordInput: InvestmentRecordInput;
   LoginResponse: LoginResponse;
   Mutation: Record<PropertyKey, never>;
-  PayBeforeInput: PayBeforeInput;
   PaymentDate: PaymentDate;
   Period: Period;
   Query: Record<PropertyKey, never>;
@@ -1020,11 +998,6 @@ export type ExpensesBySubCategoryResolvers<ContextType = Context, ParentType ext
   expenses?: Resolver<Array<ResolversTypes['Expense']>, ParentType, ContextType>;
   subCategory?: Resolver<ResolversTypes['SubCategory'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-}>;
-
-export type FinancialBalanceResolvers<ContextType = Context, ParentType extends ResolversParentTypes['FinancialBalance'] = ResolversParentTypes['FinancialBalance']> = ResolversObject<{
-  debts?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
-  remaining?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
 }>;
 
 export type ForeignAmountResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ForeignAmount'] = ResolversParentTypes['ForeignAmount']> = ResolversObject<{
@@ -1158,7 +1131,6 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   exchangeRates?: Resolver<Array<ResolversTypes['ExchangeRate']>, ParentType, ContextType, RequireFields<QueryExchangeRatesArgs, 'base' | 'endDate' | 'quote' | 'startDate'>>;
   expenseById?: Resolver<Maybe<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<QueryExpenseByIdArgs, 'id'>>;
   expensesByCategory?: Resolver<Array<ResolversTypes['ExpensesByCategory']>, ParentType, ContextType, RequireFields<QueryExpensesByCategoryArgs, 'input'>>;
-  financialBalanceByFortnight?: Resolver<Maybe<ResolversTypes['FinancialBalance']>, ParentType, ContextType, RequireFields<QueryFinancialBalanceByFortnightArgs, 'input'>>;
   goal?: Resolver<Maybe<ResolversTypes['Goal']>, ParentType, ContextType, RequireFields<QueryGoalArgs, 'id'>>;
   goals?: Resolver<Array<ResolversTypes['Goal']>, ParentType, ContextType>;
   incomeById?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, RequireFields<QueryIncomeByIdArgs, 'incomeId'>>;
@@ -1229,7 +1201,6 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   ExpensesBy?: ExpensesByResolvers<ContextType>;
   ExpensesByCategory?: ExpensesByCategoryResolvers<ContextType>;
   ExpensesBySubCategory?: ExpensesBySubCategoryResolvers<ContextType>;
-  FinancialBalance?: FinancialBalanceResolvers<ContextType>;
   ForeignAmount?: ForeignAmountResolvers<ContextType>;
   Goal?: GoalResolvers<ContextType>;
   GroupedExpenses?: GroupedExpensesResolvers<ContextType>;
