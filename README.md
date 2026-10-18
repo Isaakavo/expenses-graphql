@@ -4,7 +4,7 @@ A GraphQL API for personal finance management built with TypeScript, Apollo Serv
 
 ## Prerequisites
 
-- Node.js 22.4.0 (see `.nvmrc`)
+- Node.js 24.22.0 (see `.nvmrc`)
 - pnpm 10.x
 - PostgreSQL (local for dev, Fly.io managed for production)
 
