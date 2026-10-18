@@ -7,7 +7,8 @@ export class CategoryRepository {
   sequelize: Sequelize;
 
   constructor(userId: string, sequelize: Sequelize) {
-    (this.userId = userId), (this.sequelize = sequelize);
+    this.userId = userId;
+    this.sequelize = sequelize;
   }
 
   async getCategoryList() {

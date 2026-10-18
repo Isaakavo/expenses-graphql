@@ -1,7 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Sequelize } from 'sequelize';
+import { PeriodRepository } from '../../../src/repository/period-repository.js';
+import { ExpenseRepository } from '../../../src/repository/expense-repository.js';
 import { ExpensesService } from '../../../src/service/expenses-service.js';
 import { CurrencyCode, FixedExpenseFrequency, GoalRole } from '../../../src/generated/graphql.js';
+
+type ServiceInternals = {
+  periodRepository: Pick<PeriodRepository, 'getPeriodBy' | 'createPeriod'>;
+  expenseRepository: Pick<ExpenseRepository, 'createExpense'>;
+};
+
+const internals = (service: ExpensesService) => service as unknown as ServiceInternals;
 
 const userId = 'test-user';
 let service: ExpensesService;
@@ -56,11 +65,11 @@ describe('createFixedExpenses', () => {
       updatedAt: new Date(),
     }));
 
-    (service as any).periodRepository = {
+    internals(service).periodRepository = {
       getPeriodBy: mockGetPeriodBy,
       createPeriod: vi.fn(),
     };
-    (service as any).expenseRepository = {
+    internals(service).expenseRepository = {
       createExpense: mockCreateExpense,
     };
 
@@ -84,11 +93,11 @@ describe('createFixedExpenses', () => {
       updatedAt: new Date(),
     }));
 
-    (service as any).periodRepository = {
+    internals(service).periodRepository = {
       getPeriodBy: mockGetPeriodBy,
       createPeriod: vi.fn(),
     };
-    (service as any).expenseRepository = {
+    internals(service).expenseRepository = {
       createExpense: mockCreateExpense,
     };
 
@@ -117,11 +126,11 @@ describe('createFixedExpenses', () => {
       updatedAt: new Date(),
     }));
 
-    (service as any).periodRepository = {
+    internals(service).periodRepository = {
       getPeriodBy: mockGetPeriodBy,
       createPeriod: vi.fn(),
     };
-    (service as any).expenseRepository = {
+    internals(service).expenseRepository = {
       createExpense: mockCreateExpense,
     };
 
@@ -148,11 +157,11 @@ describe('createFixedExpenses', () => {
       updatedAt: new Date(),
     }));
 
-    (service as any).periodRepository = {
+    internals(service).periodRepository = {
       getPeriodBy: mockGetPeriodBy,
       createPeriod: mockCreatePeriod,
     };
-    (service as any).expenseRepository = {
+    internals(service).expenseRepository = {
       createExpense: mockCreateExpense,
     };
 
@@ -176,11 +185,11 @@ describe('createFixedExpenses', () => {
       .fn()
       .mockRejectedValue(new Error('DB error'));
 
-    (service as any).periodRepository = {
+    internals(service).periodRepository = {
       getPeriodBy: mockGetPeriodBy,
       createPeriod: vi.fn(),
     };
-    (service as any).expenseRepository = {
+    internals(service).expenseRepository = {
       createExpense: mockCreateExpense,
     };
 
@@ -204,11 +213,11 @@ describe('createFixedExpenses', () => {
       updatedAt: new Date(),
     }));
 
-    (service as any).periodRepository = {
+    internals(service).periodRepository = {
       getPeriodBy: mockGetPeriodBy,
       createPeriod: vi.fn(),
     };
-    (service as any).expenseRepository = {
+    internals(service).expenseRepository = {
       createExpense: mockCreateExpense,
     };
 

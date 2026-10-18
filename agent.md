@@ -235,7 +235,6 @@ src/
     ├── calculate-total.ts      # Sum utilities
     ├── case-converter.ts       # Snake_case ↔ camelCase (for raw SQL results)
     ├── expenses-utils.ts       # Expense-specific helpers
-    ├── where-fortnight.ts      # Fortnight date range builder
     └── sequilize-utils.ts      # Sequelize query helpers
 ```
 

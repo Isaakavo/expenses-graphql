@@ -63,36 +63,6 @@ export const adaptIncomeAndPeriodDTO = (input): GraphqlIncome => {
   return adaptIncome(income, period);
 };
 
-// TODO refactor this to avoid code duplication
-export function adaptExpensesWithCard(x: Expense, card?: Card) {
-  try {
-    return {
-      id: x.id.toString(),
-      concept: x.concept,
-      payBefore: formatInTimeZone(x.payBefore, 'UTC', 'dd MMM yyyy'),
-      total: formatCurrency(x.total),
-      currency: x.currency,
-      userId: x.userId,
-      comment: x.comments,
-      createdAt: formatInTimeZone(x.createdAt, 'UTC', 'dd MMMM'),
-      updatedAt: x.updatedAt,
-      card: card ? adaptCard(card) : null,
-      category: {
-        id: '',
-        name: '',
-        userId: '',
-      },
-      subCategory: {
-        id: '',
-        name: '',
-        userId: '',
-      },
-    };
-  } catch (error) {
-    logger.error(error);
-  }
-}
-
 export function adaptExpenses(x: Expense): GraphqlExpense {
   try {
     const expenseWithCategory = x as ExpenseWithCategory;

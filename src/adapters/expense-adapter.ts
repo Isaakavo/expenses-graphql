@@ -100,6 +100,18 @@ export const adaptExpenseDTO = (expense): ExpenseDTO => {
   };
 };
 
+interface SubCategoryGroup {
+  subCategory: { id: string; userId: string; name: string };
+  expenses: ExpenseDTO[];
+  total: number;
+}
+
+interface CategoryGroup {
+  category: { id: string; userId: string; name: string };
+  subCategories: Record<string, SubCategoryGroup>;
+  total: number;
+}
+
 export const adaptExpensesByCategoryDTO = (
   expenses: ExpenseDTO[]
 ): ExpensesByCategory[] => {
@@ -131,11 +143,11 @@ export const adaptExpensesByCategoryDTO = (
     }
 
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, CategoryGroup>);
 
-  return Object.values(grouped).map((catGroup: any) => ({
+  return Object.values(grouped).map((catGroup) => ({
     category: catGroup.category,
-    subCategories: Object.values(catGroup.subCategories).map((subGroup: any) => ({
+    subCategories: Object.values(catGroup.subCategories).map((subGroup) => ({
       subCategory: subGroup.subCategory,
       expenses: subGroup.expenses.map((exp) => adaptExpensesDTOInput(exp)),
       total: formatCurrency(subGroup.total),

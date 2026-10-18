@@ -1,7 +1,7 @@
 import { addDays, addMonths } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
 import { FindOptions, Sequelize, Transaction } from 'sequelize';
-import { ExpenseDTO, ForeignColumns } from '../dto';
+import { ExpenseDTO, ForeignColumns, PeriodDTO } from '../dto';
 import { CurrencyCode, FixedExpenseFrequency, GoalRole } from '../generated/graphql.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 import { GoalService } from './goal-service.js';
@@ -586,17 +586,18 @@ export class ExpensesService {
       for (let i = 0; i < input.numberOfRepetitions; i++) {
         const targetDate = targetDates[i];
 
-        let period = await this.periodRepository.getPeriodBy(
-          { date: targetDate },
-          { transaction }
-        );
+        let period: Pick<PeriodDTO, 'id'> | null =
+          await this.periodRepository.getPeriodBy(
+            { date: targetDate },
+            { transaction }
+          );
 
         if (!period) {
           const created = await this.periodRepository.createPeriod(
             targetDate,
             { transaction }
           );
-          period = { id: created.id } as any;
+          period = { id: created.id };
         }
 
         const expense = await this.expenseRepository.createExpense(

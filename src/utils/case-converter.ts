@@ -1,15 +1,15 @@
 import pkg from 'lodash';
-const { camelCase, isArray, isObject } = pkg;
+const { camelCase, isObject } = pkg;
 
-export function toCamelCaseDeep(input: any): any {
+export function toCamelCaseDeep<T = unknown>(input: unknown): T {
 
   if (input instanceof Date) {
-    return input; // ✅ NO modificar los objetos Date
+    return input as T;
   }
 
 
-  if (isArray(input)) {
-    return input.map(toCamelCaseDeep);
+  if (Array.isArray(input)) {
+    return input.map((item) => toCamelCaseDeep(item)) as T;
   }
 
   if (isObject(input) && input !== null) {
@@ -17,8 +17,8 @@ export function toCamelCaseDeep(input: any): any {
       const camelKey = camelCase(key);
       acc[camelKey] = toCamelCaseDeep(value);
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, unknown>) as T;
   }
 
-  return input;
+  return input as T;
 }
