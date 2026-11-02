@@ -39,6 +39,26 @@ enum FixedExpenseFrequency {
   Monthly
 }
 
+enum RecurrenceScope {
+  THIS
+  FOLLOWING
+  ALL
+}
+
+type ExpenseRecurrence {
+  id: ID!
+  frequency: FixedExpenseFrequency!
+  # 1-based position among the expenses left in the series
+  position: Int!
+  count: Int!
+}
+
+type RecurringSeries {
+  id: ID!
+  frequency: FixedExpenseFrequency!
+  expenses: [Expense!]!
+}
+
 type CategoryType {
   id: ID!
   userId: ID
@@ -178,6 +198,7 @@ type Expense {
   goalAmount: String
   # Null => domestic expense. total is already converted to the period currency
   foreignAmount: ForeignAmount
+  recurrence: ExpenseRecurrence
 }
 
 type ForeignAmount {
@@ -372,6 +393,12 @@ input UpdateExpenseInput {
   foreignAmount: ForeignAmountInput
 }
 
+input UpdateRecurrenceInput {
+  id: ID!
+  frequency: FixedExpenseFrequency
+  count: Int
+}
+
 input CreateCardInput {
   alias: String
   bank: String!
@@ -484,6 +511,7 @@ type Query {
   exchangeRates(base: CurrencyCode!, quote: CurrencyCode!, startDate: Date!, endDate: Date!): [ExchangeRate!]!
   periodsList: [Period!]
   period(input: FilterInput!): Period
+  recurringSeries(id: ID!): RecurringSeries
   allInvestmentRecords:[InvestmentRecord!]
   investmentDetails: InvestmentDetail!
   #TODO add input for query dates
@@ -498,6 +526,9 @@ type Mutation {
   createFixedExpense(input: CreateFixedExpenseInput): [Expense]
   updateExpense(input: UpdateExpenseInput!): Expense!
   deleteExpense(id: ID!): Boolean!
+  updateRecurringExpense(input: UpdateExpenseInput!, scope: RecurrenceScope!): [Expense!]!
+  deleteRecurringExpense(id: ID!, scope: RecurrenceScope!): Int!
+  updateRecurrence(input: UpdateRecurrenceInput!): RecurringSeries!
   createCard(input: CreateCardInput): Card
   updateCard(input: UpdateCardInput): Card!
   updateUserSettings(input: UpdateUserSettingsInput!): UserSettings!

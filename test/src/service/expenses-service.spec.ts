@@ -49,6 +49,7 @@ beforeEach(() => {
       getDefaultCurrency: vi.fn().mockResolvedValue(CurrencyCode.USD),
     },
     incomeRepository: { getCurrencyByPeriod: vi.fn().mockResolvedValue(null) },
+    recurrenceRepository: { create: vi.fn().mockResolvedValue({ id: 'recurrence-1' }) },
   });
 });
 
@@ -77,6 +78,13 @@ describe('createFixedExpenses', () => {
 
     expect(result).toHaveLength(3);
     expect(mockCreateExpense).toHaveBeenCalledTimes(3);
+    expect(
+      mockCreateExpense.mock.calls.map(([input]) => [input.recurrenceId, input.recurrenceIndex])
+    ).toEqual([
+      ['recurrence-1', 0],
+      ['recurrence-1', 1],
+      ['recurrence-1', 2],
+    ]);
     expect(mockTransaction.commit).toHaveBeenCalled();
     expect(mockTransaction.rollback).not.toHaveBeenCalled();
   });

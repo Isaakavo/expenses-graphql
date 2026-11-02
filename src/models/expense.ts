@@ -22,6 +22,8 @@ export class Expense extends Model {
   public subCategoryId!: ForeignKey<string>;
   public goalId!: ForeignKey<string> | null;
   public goalRole!: GoalRole | null;
+  public recurrenceId!: ForeignKey<string> | null;
+  public recurrenceIndex!: number | null;
   public concept!: string;
   public total!: number;
   public currency!: CurrencyCode;
@@ -94,6 +96,21 @@ export function initExpenseModel(sequelize: Sequelize) {
         type: DataTypes.ENUM('CONTRIBUTION', 'SPENDING'),
         allowNull: true,
         field: 'goal_role',
+      },
+      recurrenceId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'recurrence_id',
+        references: {
+          model: 'expense_recurrences',
+          key: 'id',
+        },
+        onDelete: 'RESTRICT',
+      },
+      recurrenceIndex: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        field: 'recurrence_index',
       },
       concept: {
         type: DataTypes.STRING,
