@@ -16,6 +16,7 @@ const seriesOf = (dates: string[]) =>
     recurrenceId: 'r1',
     recurrenceIndex,
     payBefore: day(date),
+    updatedAt: new Date(1),
     concept: 'Rent',
     total: '100.00',
     subCategoryId: 'sub-1',
@@ -31,11 +32,8 @@ const seriesOf = (dates: string[]) =>
 const monthly = seriesOf(['2026-04-15', '2026-05-15', '2026-06-15', '2026-07-15', '2026-08-15']);
 
 const setup = (series = monthly, frequency = FixedExpenseFrequency.MONTHLY) => {
-  const service = new RecurrenceService(
-    'user-1',
-    { transaction: vi.fn((work) => work(transaction)) } as unknown as Sequelize,
-    () => today
-  );
+  const sequelize = { transaction: vi.fn((work) => work(transaction)) };
+  const service = new RecurrenceService('user-1', sequelize as unknown as Sequelize, () => today);
   const expenseRepository = {
     getExpenseState: vi.fn((id: string) => series.find((expense) => expense.id === id) ?? null),
     getSeriesStates: vi.fn().mockResolvedValue(series),
@@ -44,7 +42,6 @@ const setup = (series = monthly, frequency = FixedExpenseFrequency.MONTHLY) => {
   };
   const recurrenceRepository = {
     findById: vi.fn().mockResolvedValue({ id: 'r1', frequency }),
-    lock: vi.fn(),
     updateFrequency: vi.fn(),
     delete: vi.fn(),
   };
@@ -57,7 +54,7 @@ const setup = (series = monthly, frequency = FixedExpenseFrequency.MONTHLY) => {
     createSeriesExpenses: vi.fn().mockResolvedValue([]),
   };
   Object.assign(service, { expenseRepository, recurrenceRepository, expensesService });
-  return { service, expenseRepository, recurrenceRepository, expensesService };
+  return { service, sequelize, expenseRepository, recurrenceRepository, expensesService };
 };
 
 const updatedDates = (planUpdate: ReturnType<typeof vi.fn<PlanCall>>) =>
@@ -208,36 +205,55 @@ describe('RecurrenceService concurrency', () => {
 
     await service.deleteExpense('e3', RecurrenceScope.FOLLOWING);
 
-    expect(recurrenceRepository.lock).toHaveBeenCalledWith('r1', transaction);
+    expect(recurrenceRepository.findById).toHaveBeenCalledWith('r1', { transaction, lock: true });
     expect(expenseRepository.getSeriesStates).toHaveBeenCalledWith('r1', { transaction });
   });
 
-  it('rejects a scoped edit when the series changed after it was planned', async () => {
+  const conflict = { extensions: { code: 'CONFLICT' } };
+
+  it('rejects a scoped edit when an expense of the series changed after it was planned', async () => {
     const { service, expenseRepository, expensesService } = setup();
     expenseRepository.getSeriesStates
       .mockResolvedValueOnce(monthly)
-      .mockResolvedValueOnce(monthly.slice(0, 4));
+      .mockResolvedValueOnce(monthly.map((expense) =>
+        expense.id === 'e3' ? { ...expense, updatedAt: new Date(2) } : expense
+      ));
 
     await expect(
       service.updateExpense('e2', { payBefore: day('2026-06-17') }, RecurrenceScope.FOLLOWING)
-    ).rejects.toThrow('The series changed, try again');
+    ).rejects.toMatchObject(conflict);
     expect(expensesService.applyUpdate).not.toHaveBeenCalled();
   });
 
-  it('plans conversions before opening the transaction', async () => {
-    const { service, expensesService } = setup();
-    const order: string[] = [];
+  it('rejects a series update when the frequency changed after it was planned', async () => {
+    const { service, recurrenceRepository, expenseRepository, expensesService } = setup();
+    recurrenceRepository.findById
+      .mockResolvedValueOnce({ id: 'r1', frequency: FixedExpenseFrequency.MONTHLY })
+      .mockResolvedValueOnce({ id: 'r1', frequency: FixedExpenseFrequency.BIWEEKLY });
+
+    await expect(service.updateRecurrence({ id: 'r1', count: 7 })).rejects.toMatchObject(conflict);
+    expect(expenseRepository.deleteExpenses).not.toHaveBeenCalled();
+    expect(expensesService.createSeriesExpenses).not.toHaveBeenCalled();
+  });
+
+  it('rejects a delete when the series no longer exists', async () => {
+    const { service, recurrenceRepository, expenseRepository } = setup();
+    recurrenceRepository.findById.mockResolvedValueOnce(null);
+
+    await expect(service.deleteExpense('e3', RecurrenceScope.FOLLOWING)).rejects.toMatchObject(conflict);
+    expect(expenseRepository.deleteExpenses).not.toHaveBeenCalled();
+  });
+
+  it('plans every update before opening the transaction', async () => {
+    const { service, sequelize, expensesService } = setup();
     expensesService.planUpdate.mockImplementation((id, input) => {
-      order.push('plan');
+      expect(sequelize.transaction).not.toHaveBeenCalled();
       return { id, payBefore: input.payBefore, fields: input };
-    });
-    expensesService.applyUpdate.mockImplementation((plan) => {
-      order.push('apply');
-      return plan;
     });
 
     await service.updateExpense('e2', { payBefore: day('2026-06-17') }, RecurrenceScope.FOLLOWING);
 
-    expect(order).toEqual(['plan', 'plan', 'plan', 'apply', 'apply', 'apply']);
+    expect(expensesService.planUpdate).toHaveBeenCalledTimes(3);
+    expect(sequelize.transaction).toHaveBeenCalledTimes(1);
   });
 });

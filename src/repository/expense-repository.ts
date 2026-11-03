@@ -323,11 +323,12 @@ export class ExpenseRepository {
 
   async getExpenseState(
     id: string,
-    options: { transaction?: Transaction } = {}
+    options: { transaction?: Transaction; lock?: boolean } = {}
   ): Promise<Expense | null> {
     return Expense.findOne({
       where: { id, userId: this.userId },
       transaction: options.transaction,
+      lock: options.lock ? Transaction.LOCK.UPDATE : undefined,
     });
   }
 

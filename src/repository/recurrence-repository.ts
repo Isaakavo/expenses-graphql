@@ -4,6 +4,8 @@ import { ExpenseRecurrence } from '../models/index.js';
 
 type TransactionOptions = { transaction?: Transaction };
 
+type LockOptions = TransactionOptions & { lock?: boolean };
+
 export class RecurrenceRepository {
   userId: string;
   sequelizeClient: Sequelize;
@@ -20,18 +22,11 @@ export class RecurrenceRepository {
     );
   }
 
-  async findById(id: string, options: TransactionOptions = {}) {
+  async findById(id: string, options: LockOptions = {}) {
     return ExpenseRecurrence.findOne({
       where: { id, userId: this.userId },
       transaction: options.transaction,
-    });
-  }
-
-  async lock(id: string, transaction: Transaction) {
-    return ExpenseRecurrence.findOne({
-      where: { id, userId: this.userId },
-      transaction,
-      lock: transaction.LOCK.UPDATE,
+      lock: options.lock ? Transaction.LOCK.UPDATE : undefined,
     });
   }
 

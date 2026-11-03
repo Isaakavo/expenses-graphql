@@ -17,6 +17,7 @@ import {
   parseDecimal,
   RATE_SCALE,
 } from '../utils/decimal.js';
+import { conflictError } from '../utils/conflict-error.js';
 import { validationError } from '../utils/validation-error.js';
 import {
   BANXICO_FIX_SOURCE,
@@ -490,6 +491,10 @@ export class ExpensesService {
     { id, current, fields, payBefore, foreignPatch }: UpdatePlan,
     transaction: Transaction
   ): Promise<ExpenseDTO> {
+    const locked = await this.expenseRepository.getExpenseState(id, { transaction, lock: true });
+    if (!locked || locked.updatedAt?.getTime() !== current.updatedAt?.getTime()) {
+      throw conflictError('The expense changed, try again');
+    }
     const periodId = await this.resolvePeriodId(payBefore, {
       transaction,
     });

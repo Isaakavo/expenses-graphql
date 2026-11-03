@@ -1,4 +1,3 @@
-import { GraphQLError } from 'graphql';
 import { Sequelize, Transaction } from 'sequelize';
 import { ExpenseDTO, RecurringSeriesDTO } from '../dto';
 import {
@@ -7,7 +6,7 @@ import {
   GoalRole,
   RecurrenceScope,
 } from '../generated/graphql.js';
-import { Expense } from '../models/index.js';
+import { Expense, ExpenseRecurrence } from '../models/index.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 import { RecurrenceRepository } from '../repository/recurrence-repository.js';
 import {
@@ -18,6 +17,7 @@ import {
   seriesDate,
   seriesDates,
 } from '../utils/recurrence-utils.js';
+import { conflictError } from '../utils/conflict-error.js';
 import { validationError } from '../utils/validation-error.js';
 import {
   ExpenseInput,
@@ -34,10 +34,11 @@ export type RecurrenceUpdate = {
   count?: number | null;
 };
 
-const versionOf = (series: Expense[]) =>
-  series
-    .map((expense) => `${expense.id}:${expense.recurrenceIndex}:${expense.updatedAt?.getTime()}`)
-    .join(',');
+const versionOf = ({ recurrence, series }: { recurrence: ExpenseRecurrence; series: Expense[] }) =>
+  [
+    recurrence.frequency,
+    ...series.map((expense) => `${expense.id}:${expense.recurrenceIndex}:${expense.updatedAt?.getTime()}`),
+  ].join(',');
 
 const templateOf = (expense: Expense): SeriesTemplate => ({
   concept: expense.concept,
@@ -131,7 +132,7 @@ export class RecurrenceService {
     );
 
     return this.sequelize.transaction(async (transaction) => {
-      await this.lockUnchanged(selected.recurrenceId, series, transaction);
+      await this.lockUnchanged({ recurrence, series }, transaction);
       return sequential(plans, (plan) => this.expensesService.applyUpdate(plan, transaction));
     });
   }
@@ -144,7 +145,7 @@ export class RecurrenceService {
     }
 
     return this.sequelize.transaction(async (transaction) => {
-      const series = await this.lockSeries(selected.recurrenceId, transaction);
+      const { series } = await this.lockSeries(selected.recurrenceId, transaction);
       const targets = inScope(series, selected, scope);
       const deleted = await this.expenseRepository.deleteExpenses(
         targets.map((target) => target.id),
@@ -192,7 +193,7 @@ export class RecurrenceService {
     );
 
     await this.sequelize.transaction(async (transaction) => {
-      await this.lockUnchanged(id, series, transaction);
+      await this.lockUnchanged({ recurrence, series }, transaction);
       if (frequencyChanged) {
         await this.recurrenceRepository.updateFrequency(id, nextFrequency, { transaction });
         await sequential(moves, (plan) => this.expensesService.applyUpdate(plan, transaction));
@@ -226,16 +227,26 @@ export class RecurrenceService {
   }
 
   private async lockSeries(recurrenceId: string, transaction: Transaction) {
-    await this.recurrenceRepository.lock(recurrenceId, transaction);
-    return this.expenseRepository.getSeriesStates(recurrenceId, { transaction });
+    const recurrence = await this.recurrenceRepository.findById(recurrenceId, {
+      transaction,
+      lock: true,
+    });
+    if (!recurrence) {
+      throw conflictError('The series changed, try again');
+    }
+    return {
+      recurrence,
+      series: await this.expenseRepository.getSeriesStates(recurrenceId, { transaction }),
+    };
   }
 
-  private async lockUnchanged(recurrenceId: string, read: Expense[], transaction: Transaction) {
-    const locked = await this.lockSeries(recurrenceId, transaction);
+  private async lockUnchanged(
+    read: { recurrence: ExpenseRecurrence; series: Expense[] },
+    transaction: Transaction
+  ) {
+    const locked = await this.lockSeries(read.recurrence.id, transaction);
     if (versionOf(locked) !== versionOf(read)) {
-      throw new GraphQLError('The series changed, try again', {
-        extensions: { code: 'CONFLICT', http: { status: 409 } },
-      });
+      throw conflictError('The series changed, try again');
     }
   }
 
