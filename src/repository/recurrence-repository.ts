@@ -27,6 +27,14 @@ export class RecurrenceRepository {
     });
   }
 
+  async lock(id: string, transaction: Transaction) {
+    return ExpenseRecurrence.findOne({
+      where: { id, userId: this.userId },
+      transaction,
+      lock: transaction.LOCK.UPDATE,
+    });
+  }
+
   async updateFrequency(
     id: string,
     frequency: FixedExpenseFrequency,

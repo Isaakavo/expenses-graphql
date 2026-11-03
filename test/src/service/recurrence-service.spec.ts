@@ -2,7 +2,8 @@ import { Sequelize } from 'sequelize';
 import { FixedExpenseFrequency, RecurrenceScope } from '../../../src/generated/graphql.js';
 import { ExpenseUpdate, RecurrenceService } from '../../../src/service/recurrence-service.js';
 
-type UpdateCall = (id: string, input: Partial<ExpenseUpdate>, options?: { transaction?: unknown }) => unknown;
+type PlanCall = (id: string, input: Partial<ExpenseUpdate>) => unknown;
+type ApplyCall = (plan: { id: string; payBefore: Date }, transaction: unknown) => unknown;
 
 const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
 const iso = (date: Date) => date.toISOString().slice(0, 10);
@@ -43,11 +44,14 @@ const setup = (series = monthly, frequency = FixedExpenseFrequency.MONTHLY) => {
   };
   const recurrenceRepository = {
     findById: vi.fn().mockResolvedValue({ id: 'r1', frequency }),
+    lock: vi.fn(),
     updateFrequency: vi.fn(),
     delete: vi.fn(),
   };
   const expensesService = {
-    updateExpense: vi.fn<UpdateCall>((id, input) => ({ id, payBefore: input.payBefore })),
+    updateExpense: vi.fn((id: string, input: Partial<ExpenseUpdate>) => ({ id, payBefore: input.payBefore })),
+    planUpdate: vi.fn<PlanCall>((id, input) => ({ id, payBefore: input.payBefore, fields: input })),
+    applyUpdate: vi.fn<ApplyCall>((plan) => ({ id: plan.id, payBefore: plan.payBefore })),
     deleteExpense: vi.fn().mockResolvedValue(true),
     planSeries: vi.fn((_, dates: Date[]) => dates.map((payBefore) => ({ payBefore }))),
     createSeriesExpenses: vi.fn().mockResolvedValue([]),
@@ -56,8 +60,8 @@ const setup = (series = monthly, frequency = FixedExpenseFrequency.MONTHLY) => {
   return { service, expenseRepository, recurrenceRepository, expensesService };
 };
 
-const updatedDates = (updateExpense: ReturnType<typeof vi.fn<UpdateCall>>) =>
-  Object.fromEntries(updateExpense.mock.calls.map(([id, input]) => [id, iso(input.payBefore)]));
+const updatedDates = (planUpdate: ReturnType<typeof vi.fn<PlanCall>>) =>
+  Object.fromEntries(planUpdate.mock.calls.map(([id, input]) => [id, iso(input.payBefore)]));
 
 describe('RecurrenceService.updateExpense', () => {
   const edit = { concept: 'New rent', total: 120, subCategoryId: 'sub-1', payBefore: day('2026-06-17') };
@@ -76,13 +80,14 @@ describe('RecurrenceService.updateExpense', () => {
 
     await service.updateExpense('e2', edit, RecurrenceScope.FOLLOWING);
 
-    expect(updatedDates(expensesService.updateExpense)).toEqual({
+    expect(updatedDates(expensesService.planUpdate)).toEqual({
       e2: '2026-06-17',
       e3: '2026-07-17',
       e4: '2026-08-17',
     });
-    expect(expensesService.updateExpense.mock.calls.every(([, input]) => input.concept === 'New rent')).toBe(true);
-    expect(expensesService.updateExpense.mock.calls.every(([, , options]) => options?.transaction === transaction)).toBe(true);
+    expect(expensesService.planUpdate.mock.calls.every(([, input]) => input.concept === 'New rent')).toBe(true);
+    expect(expensesService.applyUpdate).toHaveBeenCalledTimes(3);
+    expect(expensesService.applyUpdate.mock.calls.every(([, tx]) => tx === transaction)).toBe(true);
   });
 
   it('applies fields to the whole series for ALL but keeps past dates', async () => {
@@ -90,7 +95,7 @@ describe('RecurrenceService.updateExpense', () => {
 
     await service.updateExpense('e2', edit, RecurrenceScope.ALL);
 
-    expect(updatedDates(expensesService.updateExpense)).toEqual({
+    expect(updatedDates(expensesService.planUpdate)).toEqual({
       e0: '2026-04-15',
       e1: '2026-05-15',
       e2: '2026-06-17',
@@ -106,7 +111,7 @@ describe('RecurrenceService.updateExpense', () => {
 
     await service.updateExpense('e0', { ...edit, payBefore: day('2026-06-15') }, RecurrenceScope.ALL);
 
-    expect(updatedDates(expensesService.updateExpense)).toEqual({
+    expect(updatedDates(expensesService.planUpdate)).toEqual({
       e0: '2026-06-15',
       e1: '2026-07-20',
       e2: '2026-08-15',
@@ -170,9 +175,69 @@ describe('RecurrenceService.updateRecurrence', () => {
     await service.updateRecurrence({ id: 'r1', frequency: FixedExpenseFrequency.BIWEEKLY });
 
     expect(recurrenceRepository.updateFrequency).toHaveBeenCalledWith('r1', FixedExpenseFrequency.BIWEEKLY, { transaction });
-    expect(updatedDates(expensesService.updateExpense)).toEqual({
+    expect(updatedDates(expensesService.planUpdate)).toEqual({
       e3: '2026-06-28',
       e4: '2026-07-11',
     });
+  });
+
+  it('keeps a past expense that is not at the start of the series when shortened', async () => {
+    const { service, expenseRepository } = setup(
+      seriesOf(['2026-04-15', '2026-05-15', '2026-06-15', '2026-06-05', '2026-08-15'])
+    );
+
+    await service.updateRecurrence({ id: 'r1', count: 3 });
+
+    expect(expenseRepository.deleteExpenses).toHaveBeenCalledWith(['e2', 'e4'], { transaction });
+  });
+
+  it('never re-dates a past expense when the frequency changes', async () => {
+    const { service, expensesService } = setup(
+      seriesOf(['2026-04-15', '2026-05-15', '2026-06-15', '2026-06-05', '2026-08-15'])
+    );
+
+    await service.updateRecurrence({ id: 'r1', frequency: FixedExpenseFrequency.BIWEEKLY });
+
+    expect(updatedDates(expensesService.planUpdate)).toEqual({ e4: '2026-06-28' });
+  });
+});
+
+describe('RecurrenceService concurrency', () => {
+  it('locks the series before deleting and reads it inside the transaction', async () => {
+    const { service, expenseRepository, recurrenceRepository } = setup();
+
+    await service.deleteExpense('e3', RecurrenceScope.FOLLOWING);
+
+    expect(recurrenceRepository.lock).toHaveBeenCalledWith('r1', transaction);
+    expect(expenseRepository.getSeriesStates).toHaveBeenCalledWith('r1', { transaction });
+  });
+
+  it('rejects a scoped edit when the series changed after it was planned', async () => {
+    const { service, expenseRepository, expensesService } = setup();
+    expenseRepository.getSeriesStates
+      .mockResolvedValueOnce(monthly)
+      .mockResolvedValueOnce(monthly.slice(0, 4));
+
+    await expect(
+      service.updateExpense('e2', { payBefore: day('2026-06-17') }, RecurrenceScope.FOLLOWING)
+    ).rejects.toThrow('The series changed, try again');
+    expect(expensesService.applyUpdate).not.toHaveBeenCalled();
+  });
+
+  it('plans conversions before opening the transaction', async () => {
+    const { service, expensesService } = setup();
+    const order: string[] = [];
+    expensesService.planUpdate.mockImplementation((id, input) => {
+      order.push('plan');
+      return { id, payBefore: input.payBefore, fields: input };
+    });
+    expensesService.applyUpdate.mockImplementation((plan) => {
+      order.push('apply');
+      return plan;
+    });
+
+    await service.updateExpense('e2', { payBefore: day('2026-06-17') }, RecurrenceScope.FOLLOWING);
+
+    expect(order).toEqual(['plan', 'plan', 'plan', 'apply', 'apply', 'apply']);
   });
 });

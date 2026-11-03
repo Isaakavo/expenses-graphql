@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import { Sequelize, Transaction } from 'sequelize';
 import { ExpenseDTO, RecurringSeriesDTO } from '../dto';
 import {
@@ -18,7 +19,12 @@ import {
   seriesDates,
 } from '../utils/recurrence-utils.js';
 import { validationError } from '../utils/validation-error.js';
-import { ExpenseInput, ExpensesService, SeriesTemplate } from './expenses-service.js';
+import {
+  ExpenseInput,
+  ExpensesService,
+  SeriesTemplate,
+  UpdatePlan,
+} from './expenses-service.js';
 
 export type ExpenseUpdate = Partial<ExpenseInput> & { payBefore: Date };
 
@@ -27,6 +33,11 @@ export type RecurrenceUpdate = {
   frequency?: FixedExpenseFrequency | null;
   count?: number | null;
 };
+
+const versionOf = (series: Expense[]) =>
+  series
+    .map((expense) => `${expense.id}:${expense.recurrenceIndex}:${expense.updatedAt?.getTime()}`)
+    .join(',');
 
 const templateOf = (expense: Expense): SeriesTemplate => ({
   concept: expense.concept,
@@ -115,15 +126,14 @@ export class RecurrenceService {
       );
     };
 
-    return this.sequelize.transaction((transaction) =>
-      sequential(inScope(series, selected, scope), (target) =>
-        this.expensesService.updateExpense(
-          target.id,
-          { ...input, payBefore: dateFor(target) },
-          { transaction }
-        )
-      )
+    const plans = await sequential(inScope(series, selected, scope), (target) =>
+      this.expensesService.planUpdate(target.id, { ...input, payBefore: dateFor(target) })
     );
+
+    return this.sequelize.transaction(async (transaction) => {
+      await this.lockUnchanged(selected.recurrenceId, series, transaction);
+      return sequential(plans, (plan) => this.expensesService.applyUpdate(plan, transaction));
+    });
   }
 
   async deleteExpense(id: string, scope: RecurrenceScope): Promise<number> {
@@ -133,10 +143,9 @@ export class RecurrenceService {
       return 1;
     }
 
-    const series = await this.expenseRepository.getSeriesStates(selected.recurrenceId);
-    const targets = inScope(series, selected, scope);
-
     return this.sequelize.transaction(async (transaction) => {
+      const series = await this.lockSeries(selected.recurrenceId, transaction);
+      const targets = inScope(series, selected, scope);
       const deleted = await this.expenseRepository.deleteExpenses(
         targets.map((target) => target.id),
         { transaction }
@@ -155,32 +164,38 @@ export class RecurrenceService {
     }
     const series = await this.expenseRepository.getSeriesStates(id);
     const today = this.today();
-    const pastCount = series.filter((expense) => isPast(expense.payBefore, today)).length;
+    const past = series.filter((expense) => isPast(expense.payBefore, today));
+    const upcoming = series.filter((expense) => !isPast(expense.payBefore, today));
     const nextFrequency = frequency ?? recurrence.frequency;
     const targetCount = count ?? series.length;
-    const minimum = Math.max(pastCount, 1);
+    const minimum = Math.max(past.length, 1);
     if (series.length === 0 || targetCount < minimum) {
       throw validationError(`count must be at least ${minimum}`, 'count');
     }
 
-    const kept = series.slice(0, targetCount);
-    const removed = series.slice(targetCount);
+    const keptUpcoming = upcoming.slice(0, targetCount - past.length);
+    const removed = upcoming.slice(targetCount - past.length);
     const frequencyChanged = nextFrequency !== recurrence.frequency;
-    const upcoming = kept.slice(pastCount);
-    const redated = frequencyChanged && upcoming.length > 0
-      ? seriesDates(upcoming[0].payBefore, nextFrequency, upcoming.length)
-      : upcoming.map((expense) => expense.payBefore);
-    const last = kept[kept.length - 1];
-    const lastDate = redated.length > 0 ? redated[redated.length - 1] : last.payBefore;
+    const redated = frequencyChanged && keptUpcoming.length > 0
+      ? seriesDates(keptUpcoming[0].payBefore, nextFrequency, keptUpcoming.length)
+      : keptUpcoming.map((expense) => expense.payBefore);
+    const kept = [...past, ...keptUpcoming];
+    const last = kept.reduce((latest, expense) =>
+      expense.recurrenceIndex > latest.recurrenceIndex ? expense : latest
+    );
+    const lastDate = [...past.map((expense) => expense.payBefore), ...redated]
+      .reduce((latest, date) => (date > latest ? date : latest));
+    const moves = await this.planMoves(keptUpcoming, redated);
     const planned = await this.expensesService.planSeries(
       templateOf(last),
       seriesDates(lastDate, nextFrequency, targetCount - kept.length, 1)
     );
 
     await this.sequelize.transaction(async (transaction) => {
+      await this.lockUnchanged(id, series, transaction);
       if (frequencyChanged) {
         await this.recurrenceRepository.updateFrequency(id, nextFrequency, { transaction });
-        await this.redate(upcoming, redated, transaction);
+        await sequential(moves, (plan) => this.expensesService.applyUpdate(plan, transaction));
       }
       if (removed.length > 0) {
         await this.expenseRepository.deleteExpenses(
@@ -201,13 +216,27 @@ export class RecurrenceService {
     return this.getSeries(id);
   }
 
-  private async redate(expenses: Expense[], dates: Date[], transaction: Transaction) {
+  private async planMoves(expenses: Expense[], dates: Date[]): Promise<UpdatePlan[]> {
     const moves = expenses
       .map((expense, i) => ({ expense, payBefore: dates[i] }))
       .filter(({ expense, payBefore }) => isoDay(expense.payBefore) !== isoDay(payBefore));
-    await sequential(moves, ({ expense, payBefore }) =>
-      this.expensesService.updateExpense(expense.id, { payBefore }, { transaction })
+    return sequential(moves, ({ expense, payBefore }) =>
+      this.expensesService.planUpdate(expense.id, { payBefore })
     );
+  }
+
+  private async lockSeries(recurrenceId: string, transaction: Transaction) {
+    await this.recurrenceRepository.lock(recurrenceId, transaction);
+    return this.expenseRepository.getSeriesStates(recurrenceId, { transaction });
+  }
+
+  private async lockUnchanged(recurrenceId: string, read: Expense[], transaction: Transaction) {
+    const locked = await this.lockSeries(recurrenceId, transaction);
+    if (versionOf(locked) !== versionOf(read)) {
+      throw new GraphQLError('The series changed, try again', {
+        extensions: { code: 'CONFLICT', http: { status: 409 } },
+      });
+    }
   }
 
   private async requireExpense(id: string) {

@@ -70,9 +70,15 @@ export type PlannedExpense = { payBefore: Date; conversion?: Conversion };
 
 type SeriesLink = { recurrenceId: string; firstIndex: number };
 
-type TransactionOptions = { transaction?: Transaction };
-
 type GoalLink = { goalId?: string | null; goalRole?: GoalRole | null };
+
+export type UpdatePlan = {
+  id: string;
+  current: Expense;
+  fields: Partial<ExpenseInput & { payBefore: Date }>;
+  payBefore: Date;
+  foreignPatch: ForeignPlan['patch'];
+};
 
 type ForeignPlan = {
   patch: Partial<ForeignColumns> & { total?: number; currency?: CurrencyCode };
@@ -268,8 +274,7 @@ export class ExpensesService {
     current: Expense,
     payBefore: Date,
     total: number | undefined,
-    foreign: ForeignAmountParams | null | undefined,
-    options: TransactionOptions = {}
+    foreign: ForeignAmountParams | null | undefined
   ): Promise<ForeignPlan> {
     const isForeign = current.originalCurrency != null;
     if (foreign === null) {
@@ -279,10 +284,7 @@ export class ExpensesService {
       return { patch: {}, keepStoredTotal: false };
     }
 
-    const destination = await this.periodRepository.getPeriodBy(
-      { date: payBefore },
-      options
-    );
+    const destination = await this.periodRepository.getPeriodBy({ date: payBefore });
     const periodChanges = destination?.id !== current.periodId;
     const bookCurrency = periodChanges
       ? await this.currencyFor({ periodId: destination?.id })
@@ -433,9 +435,25 @@ export class ExpensesService {
 
   async updateExpense(
     id: string,
-    input: Partial<ExpenseInput & { payBefore: Date }>,
-    options: TransactionOptions = {}
+    input: Partial<ExpenseInput & { payBefore: Date }>
   ) {
+    const plan = await this.planUpdate(id, input);
+    const transaction = await this.sequelize.transaction();
+    try {
+      const updated = await this.applyUpdate(plan, transaction);
+      await transaction.commit();
+      return updated;
+    } catch (error) {
+      logger.error('Error updating expense: ' + error.message);
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  async planUpdate(
+    id: string,
+    input: Partial<ExpenseInput & { payBefore: Date }>
+  ): Promise<UpdatePlan> {
     const goalKeys = (['goalId', 'goalRole'] as const).filter(
       (key) => key in input && input[key] !== undefined
     );
@@ -451,7 +469,7 @@ export class ExpensesService {
 
     const { foreignAmount, ...sentFields } = input;
     const fields = { ...sentFields };
-    const current = await this.expenseRepository.getExpenseState(id, options);
+    const current = await this.expenseRepository.getExpenseState(id);
     if (!current) {
       throw new Error('Expense id not found');
     }
@@ -459,53 +477,41 @@ export class ExpensesService {
       current,
       input.payBefore,
       input.total,
-      foreignAmount,
-      options
+      foreignAmount
     );
 
     if (keepStoredTotal) {
       delete fields.total;
     }
+    return { id, current, fields, payBefore: input.payBefore, foreignPatch };
+  }
 
-    const write = async (transaction: Transaction) => {
-      const periodId = await this.resolvePeriodId(input.payBefore, {
+  async applyUpdate(
+    { id, current, fields, payBefore, foreignPatch }: UpdatePlan,
+    transaction: Transaction
+  ): Promise<ExpenseDTO> {
+    const periodId = await this.resolvePeriodId(payBefore, {
+      transaction,
+    });
+
+    const currentPeriodId = current.periodId;
+    const currency =
+      currentPeriodId && currentPeriodId !== periodId
+        ? await this.resolveCurrency(periodId, { transaction })
+        : undefined;
+
+    return this.expenseRepository.updateExpense(
+      id,
+      {
+        ...fields,
+        periodId,
+        ...(currency && { currency }),
+        ...foreignPatch,
+      },
+      {
         transaction,
-      });
-
-      const currentPeriodId = current.periodId;
-      const currency =
-        currentPeriodId && currentPeriodId !== periodId
-          ? await this.resolveCurrency(periodId, { transaction })
-          : undefined;
-
-      return this.expenseRepository.updateExpense(
-        id,
-        {
-          ...fields,
-          periodId,
-          ...(currency && { currency }),
-          ...foreignPatch,
-        },
-        {
-          transaction,
-        }
-      );
-    };
-
-    if (options.transaction) {
-      return write(options.transaction);
-    }
-
-    const transaction = await this.sequelize.transaction();
-    try {
-      const updated = await write(transaction);
-      await transaction.commit();
-      return updated;
-    } catch (error) {
-      logger.error('Error updating expense: ' + error.message);
-      await transaction.rollback();
-      throw error;
-    }
+      }
+    );
   }
 
   async deleteExpense(id: string) {
