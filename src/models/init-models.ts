@@ -5,6 +5,7 @@ import {
 } from './category-settings.js';
 import { initCategoryModel } from './category.js';
 import { initExpenseModel } from './expense.js';
+import { initExpenseRecurrenceModel } from './expense-recurrence.js';
 import {
   initIncomeCategoryAllocationModel
 } from './income-category-allocation.js';
@@ -18,6 +19,7 @@ import { initInvestmentRecordModel } from './investment-record.js';
 import { initInvestmentFeeRecordModel } from './investment-fee-record.js';
 
 export const initModels = (sequelize: Sequelize) => {
+  initExpenseRecurrenceModel(sequelize);
   initExpenseModel(sequelize);
   initCardModel(sequelize);
   initIncomeModel(sequelize);

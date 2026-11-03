@@ -1,8 +1,8 @@
-import { addDays, addMonths } from 'date-fns';
-import { formatInTimeZone } from 'date-fns-tz';
 import { FindOptions, Sequelize, Transaction } from 'sequelize';
-import { ExpenseDTO, ForeignColumns, PeriodDTO } from '../dto';
+import { ExpenseDTO, ForeignColumns } from '../dto';
 import { CurrencyCode, FixedExpenseFrequency, GoalRole } from '../generated/graphql.js';
+import { RecurrenceRepository } from '../repository/recurrence-repository.js';
+import { isoDay, sequential, seriesDates } from '../utils/recurrence-utils.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
 import { GoalService } from './goal-service.js';
 import { IncomeRepository } from '../repository/income-repository.js';
@@ -17,16 +17,14 @@ import {
   parseDecimal,
   RATE_SCALE,
 } from '../utils/decimal.js';
+import { conflictError } from '../utils/conflict-error.js';
 import { validationError } from '../utils/validation-error.js';
 import {
   BANXICO_FIX_SOURCE,
   ExchangeRateService,
   exchangeRateService,
 } from './exchange-rate-service.js';
-import {
-  FORTNIGHTLY_NUMBER_OF_DAYS,
-  PeriodRepository,
-} from '../repository/period-repository.js';
+import { PeriodRepository } from '../repository/period-repository.js';
 
 export type ForeignAmountParams = {
   amount: number;
@@ -64,14 +62,31 @@ export type FixedExpenseInput = {
   foreignAmount?: ForeignAmountParams | null;
 };
 
+export type SeriesTemplate = Omit<
+  FixedExpenseInput,
+  'payBefore' | 'numberOfRepetitions' | 'frequency'
+>;
+
+export type PlannedExpense = { payBefore: Date; conversion?: Conversion };
+
+type SeriesLink = { recurrenceId: string; firstIndex: number };
+
 type GoalLink = { goalId?: string | null; goalRole?: GoalRole | null };
+
+export type UpdatePlan = {
+  id: string;
+  current: Expense;
+  fields: Partial<ExpenseInput & { payBefore: Date }>;
+  payBefore: Date;
+  foreignPatch: ForeignPlan['patch'];
+};
 
 type ForeignPlan = {
   patch: Partial<ForeignColumns> & { total?: number; currency?: CurrencyCode };
   keepStoredTotal: boolean;
 };
 
-type Conversion = { total: number; columns: ForeignColumns };
+export type Conversion = { total: number; columns: ForeignColumns };
 
 const MANUAL_SOURCE = 'MANUAL';
 const MAX_AMOUNT = 9999999999.99;
@@ -96,14 +111,13 @@ const parseAmount = (value: number | null | undefined, argumentName: string) => 
   return parseDecimal(value, AMOUNT_SCALE);
 };
 
-const isoDay = (date: Date) => formatInTimeZone(date, 'UTC', 'yyyy-MM-dd');
-
 export class ExpensesService {
   private expenseRepository: ExpenseRepository;
   private periodRepository: PeriodRepository;
   private goalService: GoalService;
   private incomeRepository: IncomeRepository;
   private userSettingsService: UserSettingsService;
+  private recurrenceRepository: RecurrenceRepository;
   private exchangeRates: ExchangeRateService = exchangeRateService;
   userId: string;
   sequelize: Sequelize;
@@ -114,6 +128,7 @@ export class ExpensesService {
     this.goalService = new GoalService(userId, sequelize);
     this.incomeRepository = new IncomeRepository(userId, sequelize);
     this.userSettingsService = new UserSettingsService(userId, sequelize);
+    this.recurrenceRepository = new RecurrenceRepository(userId, sequelize);
     this.userId = userId;
     this.sequelize = sequelize;
   }
@@ -331,21 +346,19 @@ export class ExpensesService {
   }
 
   private async convertSeries(
-    input: FixedExpenseInput,
+    template: SeriesTemplate,
     dates: Date[]
   ): Promise<Conversion[]> {
-    if (!input.foreignAmount) {
+    if (!template.foreignAmount) {
       return [];
     }
-    return dates.reduce<Promise<Conversion[]>>(async (previous, payBefore) => {
-      const done = await previous;
-      const converted = await this.convert(input.foreignAmount, {
-        total: input.total,
+    return sequential(dates, async (payBefore) =>
+      this.convert(template.foreignAmount, {
+        total: template.total,
         payBefore,
         bookCurrency: await this.currencyFor({ date: payBefore }),
-      });
-      return [...done, converted];
-    }, Promise.resolve([]));
+      })
+    );
   }
 
   private requirePayBefore(payBefore: Date | undefined) {
@@ -425,6 +438,23 @@ export class ExpensesService {
     id: string,
     input: Partial<ExpenseInput & { payBefore: Date }>
   ) {
+    const plan = await this.planUpdate(id, input);
+    const transaction = await this.sequelize.transaction();
+    try {
+      const updated = await this.applyUpdate(plan, transaction);
+      await transaction.commit();
+      return updated;
+    } catch (error) {
+      logger.error('Error updating expense: ' + error.message);
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  async planUpdate(
+    id: string,
+    input: Partial<ExpenseInput & { payBefore: Date }>
+  ): Promise<UpdatePlan> {
     const goalKeys = (['goalId', 'goalRole'] as const).filter(
       (key) => key in input && input[key] !== undefined
     );
@@ -454,38 +484,39 @@ export class ExpensesService {
     if (keepStoredTotal) {
       delete fields.total;
     }
+    return { id, current, fields, payBefore: input.payBefore, foreignPatch };
+  }
 
-    const transaction = await this.sequelize.transaction();
-    try {
-      const periodId = await this.resolvePeriodId(input.payBefore, {
-        transaction,
-      });
-
-      const currentPeriodId = current.periodId;
-      const currency =
-        currentPeriodId && currentPeriodId !== periodId
-          ? await this.resolveCurrency(periodId, { transaction })
-          : undefined;
-
-      const updated = await this.expenseRepository.updateExpense(
-        id,
-        {
-          ...fields,
-          periodId,
-          ...(currency && { currency }),
-          ...foreignPatch,
-        },
-        {
-          transaction,
-        }
-      );
-      await transaction.commit();
-      return updated;
-    } catch (error) {
-      logger.error('Error updating expense: ' + error.message);
-      await transaction.rollback();
-      throw error;
+  async applyUpdate(
+    { id, current, fields, payBefore, foreignPatch }: UpdatePlan,
+    transaction: Transaction
+  ): Promise<ExpenseDTO> {
+    const locked = await this.expenseRepository.getExpenseState(id, { transaction, lock: true });
+    if (!locked || locked.updatedAt?.getTime() !== current.updatedAt?.getTime()) {
+      throw conflictError('The expense changed, try again');
     }
+    const periodId = await this.resolvePeriodId(payBefore, {
+      transaction,
+    });
+
+    const currentPeriodId = current.periodId;
+    const currency =
+      currentPeriodId && currentPeriodId !== periodId
+        ? await this.resolveCurrency(periodId, { transaction })
+        : undefined;
+
+    return this.expenseRepository.updateExpense(
+      id,
+      {
+        ...fields,
+        periodId,
+        ...(currency && { currency }),
+        ...foreignPatch,
+      },
+      {
+        transaction,
+      }
+    );
   }
 
   async deleteExpense(id: string) {
@@ -571,58 +602,22 @@ export class ExpensesService {
   async createFixedExpenses(input: FixedExpenseInput) {
     await this.assertGoalLink(input);
 
-    const baseDate = input.payBefore;
-    const targetDates = [...Array(input.numberOfRepetitions).keys()].map((i) =>
-      input.frequency === FixedExpenseFrequency.MONTHLY
-        ? addMonths(baseDate, i)
-        : addDays(baseDate, FORTNIGHTLY_NUMBER_OF_DAYS * i)
+    const planned = await this.planSeries(
+      input,
+      seriesDates(input.payBefore, input.frequency, input.numberOfRepetitions)
     );
-    const conversions = await this.convertSeries(input, targetDates);
 
     const transaction = await this.sequelize.transaction();
     try {
-      const expenses: ExpenseDTO[] = [];
-
-      for (let i = 0; i < input.numberOfRepetitions; i++) {
-        const targetDate = targetDates[i];
-
-        let period: Pick<PeriodDTO, 'id'> | null =
-          await this.periodRepository.getPeriodBy(
-            { date: targetDate },
-            { transaction }
-          );
-
-        if (!period) {
-          const created = await this.periodRepository.createPeriod(
-            targetDate,
-            { transaction }
-          );
-          period = { id: created.id };
-        }
-
-        const expense = await this.expenseRepository.createExpense(
-          {
-            concept: input.concept,
-            total: input.total,
-            ...(conversions[i] && {
-              total: conversions[i].total,
-              ...conversions[i].columns,
-            }),
-            currency: await this.resolveCurrency(period.id, { transaction }),
-            cardId: input.cardId,
-            periodId: period.id,
-            categoryId: input.categoryId,
-            subCategoryId: input.subCategoryId,
-            comments: input.comment,
-            goalId: input.goalId ?? null,
-            goalRole: input.goalRole ?? null,
-            payBefore: targetDate,
-          },
-          { transaction }
-        );
-
-        expenses.push(expense);
-      }
+      const recurrence = await this.recurrenceRepository.create(input.frequency, {
+        transaction,
+      });
+      const expenses = await this.createSeriesExpenses(
+        input,
+        planned,
+        { recurrenceId: recurrence.id, firstIndex: 0 },
+        transaction
+      );
 
       await transaction.commit();
       logger.info(
@@ -634,6 +629,47 @@ export class ExpensesService {
       logger.error('Error creating fixed expenses: ' + error.message);
       throw error;
     }
+  }
+
+  async planSeries(
+    template: SeriesTemplate,
+    dates: Date[]
+  ): Promise<PlannedExpense[]> {
+    const conversions = await this.convertSeries(template, dates);
+    return dates.map((payBefore, i) => ({ payBefore, conversion: conversions[i] }));
+  }
+
+  async createSeriesExpenses(
+    template: SeriesTemplate,
+    planned: PlannedExpense[],
+    { recurrenceId, firstIndex }: SeriesLink,
+    transaction: Transaction
+  ): Promise<ExpenseDTO[]> {
+    return sequential(planned, async ({ payBefore, conversion }, i) => {
+      const periodId = await this.resolvePeriodId(payBefore, { transaction });
+      return this.expenseRepository.createExpense(
+        {
+          concept: template.concept,
+          total: template.total,
+          ...(conversion && {
+            total: conversion.total,
+            ...conversion.columns,
+          }),
+          currency: await this.resolveCurrency(periodId, { transaction }),
+          cardId: template.cardId,
+          periodId,
+          categoryId: template.categoryId,
+          subCategoryId: template.subCategoryId,
+          comments: template.comment,
+          goalId: template.goalId ?? null,
+          goalRole: template.goalRole ?? null,
+          payBefore,
+          recurrenceId,
+          recurrenceIndex: firstIndex + i,
+        },
+        { transaction }
+      );
+    });
   }
 
   calculateTotal(expenses: ExpenseDTO[]) {

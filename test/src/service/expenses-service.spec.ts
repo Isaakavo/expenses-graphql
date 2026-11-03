@@ -49,6 +49,7 @@ beforeEach(() => {
       getDefaultCurrency: vi.fn().mockResolvedValue(CurrencyCode.USD),
     },
     incomeRepository: { getCurrencyByPeriod: vi.fn().mockResolvedValue(null) },
+    recurrenceRepository: { create: vi.fn().mockResolvedValue({ id: 'recurrence-1' }) },
   });
 });
 
@@ -77,6 +78,13 @@ describe('createFixedExpenses', () => {
 
     expect(result).toHaveLength(3);
     expect(mockCreateExpense).toHaveBeenCalledTimes(3);
+    expect(
+      mockCreateExpense.mock.calls.map(([input]) => [input.recurrenceId, input.recurrenceIndex])
+    ).toEqual([
+      ['recurrence-1', 0],
+      ['recurrence-1', 1],
+      ['recurrence-1', 2],
+    ]);
     expect(mockTransaction.commit).toHaveBeenCalled();
     expect(mockTransaction.rollback).not.toHaveBeenCalled();
   });
@@ -543,6 +551,23 @@ describe('goal link on expenses', () => {
       await service.updateExpense('e-1', baseUpdate);
       expect(mockCreatePeriod).toHaveBeenCalledTimes(1);
       expect(mockUpdateExpense.mock.calls[0][1].periodId).toBe('new-period');
+    });
+
+    it('rejects with CONFLICT and writes nothing when the expense changed after it was read', async () => {
+      const internals = service as unknown as { expenseRepository: { getExpenseState: ReturnType<typeof vi.fn> } };
+      internals.expenseRepository.getExpenseState
+        .mockResolvedValueOnce({ periodId: null, originalCurrency: null, updatedAt: new Date(1) })
+        .mockResolvedValueOnce({ periodId: null, originalCurrency: null, updatedAt: new Date(2) });
+
+      await expect(service.updateExpense('e-1', baseUpdate)).rejects.toMatchObject({
+        extensions: { code: 'CONFLICT' },
+      });
+      expect(internals.expenseRepository.getExpenseState).toHaveBeenLastCalledWith('e-1', {
+        transaction: mockTransaction,
+        lock: true,
+      });
+      expect(mockUpdateExpense).not.toHaveBeenCalled();
+      expect(mockTransaction.rollback).toHaveBeenCalled();
     });
   });
 });

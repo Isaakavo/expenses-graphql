@@ -198,10 +198,19 @@ export type Expense = {
   id: Scalars['ID']['output'];
   payBefore: Scalars['String']['output'];
   periodId?: Maybe<Scalars['String']['output']>;
+  recurrence?: Maybe<ExpenseRecurrence>;
   subCategory: SubCategory;
   total: Scalars['String']['output'];
   updatedAt?: Maybe<Scalars['Date']['output']>;
   userId?: Maybe<Scalars['String']['output']>;
+};
+
+export type ExpenseRecurrence = {
+  __typename?: 'ExpenseRecurrence';
+  count: Scalars['Int']['output'];
+  frequency: FixedExpenseFrequency;
+  id: Scalars['ID']['output'];
+  position: Scalars['Int']['output'];
 };
 
 export type ExpensesBy = {
@@ -369,12 +378,15 @@ export type Mutation = {
   deleteExpense: Scalars['Boolean']['output'];
   deleteGoal: Scalars['Boolean']['output'];
   deleteIncomeById: Scalars['Boolean']['output'];
+  deleteRecurringExpense: Scalars['Int']['output'];
   updateCard: Card;
   updateCategoryAllocation: CategorySetting;
   updateCategorySetting: CategorySettings;
   updateExpense: Expense;
   updateGoal: Goal;
   updateIncome?: Maybe<Income>;
+  updateRecurrence: RecurringSeries;
+  updateRecurringExpense: Array<Expense>;
   updateUserSettings: UserSettings;
 };
 
@@ -444,6 +456,12 @@ export type MutationDeleteIncomeByIdArgs = {
 };
 
 
+export type MutationDeleteRecurringExpenseArgs = {
+  id: Scalars['ID']['input'];
+  scope: RecurrenceScope;
+};
+
+
 export type MutationUpdateCardArgs = {
   input?: InputMaybe<UpdateCardInput>;
 };
@@ -471,6 +489,17 @@ export type MutationUpdateGoalArgs = {
 
 export type MutationUpdateIncomeArgs = {
   input?: InputMaybe<UpdateIncomeInput>;
+};
+
+
+export type MutationUpdateRecurrenceArgs = {
+  input: UpdateRecurrenceInput;
+};
+
+
+export type MutationUpdateRecurringExpenseArgs = {
+  input: UpdateExpenseInput;
+  scope: RecurrenceScope;
 };
 
 
@@ -517,6 +546,7 @@ export type Query = {
   login: LoginResponse;
   period?: Maybe<Period>;
   periodsList?: Maybe<Array<Period>>;
+  recurringSeries?: Maybe<RecurringSeries>;
   udiValue: UdiValue;
   userSettings: UserSettings;
 };
@@ -573,6 +603,24 @@ export type QueryLatestExchangeRateArgs = {
 
 export type QueryPeriodArgs = {
   input: FilterInput;
+};
+
+
+export type QueryRecurringSeriesArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export enum RecurrenceScope {
+  ALL = 'ALL',
+  FOLLOWING = 'FOLLOWING',
+  THIS = 'THIS'
+}
+
+export type RecurringSeries = {
+  __typename?: 'RecurringSeries';
+  expenses: Array<Expense>;
+  frequency: FixedExpenseFrequency;
+  id: Scalars['ID']['output'];
 };
 
 export type SubCategory = {
@@ -666,6 +714,12 @@ export type UpdateIncomeInput = {
   incomeId: Scalars['ID']['input'];
   paymentDate: Scalars['Date']['input'];
   total: Scalars['Float']['input'];
+};
+
+export type UpdateRecurrenceInput = {
+  count?: InputMaybe<Scalars['Int']['input']>;
+  frequency?: InputMaybe<FixedExpenseFrequency>;
+  id: Scalars['ID']['input'];
 };
 
 export type UpdateUserSettingsInput = {
@@ -793,6 +847,7 @@ export type ResolversTypes = ResolversObject<{
   Date: ResolverTypeWrapper<Scalars['Date']['output']>;
   ExchangeRate: ResolverTypeWrapper<ExchangeRate>;
   Expense: ResolverTypeWrapper<Expense>;
+  ExpenseRecurrence: ResolverTypeWrapper<ExpenseRecurrence>;
   ExpensesBy: ResolverTypeWrapper<ExpensesBy>;
   ExpensesByCategory: ResolverTypeWrapper<ExpensesByCategory>;
   ExpensesBySubCategory: ResolverTypeWrapper<ExpensesBySubCategory>;
@@ -819,6 +874,8 @@ export type ResolversTypes = ResolversObject<{
   PaymentDate: ResolverTypeWrapper<PaymentDate>;
   Period: ResolverTypeWrapper<Period>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  RecurrenceScope: RecurrenceScope;
+  RecurringSeries: ResolverTypeWrapper<RecurringSeries>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   SubCategory: ResolverTypeWrapper<SubCategory>;
   Total: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Total']>;
@@ -832,6 +889,7 @@ export type ResolversTypes = ResolversObject<{
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateGoalInput: UpdateGoalInput;
   UpdateIncomeInput: UpdateIncomeInput;
+  UpdateRecurrenceInput: UpdateRecurrenceInput;
   UpdateUserSettingsInput: UpdateUserSettingsInput;
   UserSettings: ResolverTypeWrapper<UserSettings>;
   endDate: EndDate;
@@ -860,6 +918,7 @@ export type ResolversParentTypes = ResolversObject<{
   Date: Scalars['Date']['output'];
   ExchangeRate: ExchangeRate;
   Expense: Expense;
+  ExpenseRecurrence: ExpenseRecurrence;
   ExpensesBy: ExpensesBy;
   ExpensesByCategory: ExpensesByCategory;
   ExpensesBySubCategory: ExpensesBySubCategory;
@@ -883,6 +942,7 @@ export type ResolversParentTypes = ResolversObject<{
   PaymentDate: PaymentDate;
   Period: Period;
   Query: Record<PropertyKey, never>;
+  RecurringSeries: RecurringSeries;
   String: Scalars['String']['output'];
   SubCategory: SubCategory;
   Total: ResolversInterfaceTypes<ResolversParentTypes>['Total'];
@@ -896,6 +956,7 @@ export type ResolversParentTypes = ResolversObject<{
   UpdateExpenseInput: UpdateExpenseInput;
   UpdateGoalInput: UpdateGoalInput;
   UpdateIncomeInput: UpdateIncomeInput;
+  UpdateRecurrenceInput: UpdateRecurrenceInput;
   UpdateUserSettingsInput: UpdateUserSettingsInput;
   UserSettings: UserSettings;
   endDate: EndDate;
@@ -977,10 +1038,18 @@ export type ExpenseResolvers<ContextType = Context, ParentType extends Resolvers
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   payBefore?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   periodId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  recurrence?: Resolver<Maybe<ResolversTypes['ExpenseRecurrence']>, ParentType, ContextType>;
   subCategory?: Resolver<ResolversTypes['SubCategory'], ParentType, ContextType>;
   total?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   updatedAt?: Resolver<Maybe<ResolversTypes['Date']>, ParentType, ContextType>;
   userId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+}>;
+
+export type ExpenseRecurrenceResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ExpenseRecurrence'] = ResolversParentTypes['ExpenseRecurrence']> = ResolversObject<{
+  count?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  frequency?: Resolver<ResolversTypes['FixedExpenseFrequency'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  position?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
 }>;
 
 export type ExpensesByResolvers<ContextType = Context, ParentType extends ResolversParentTypes['ExpensesBy'] = ResolversParentTypes['ExpensesBy']> = ResolversObject<{
@@ -1097,12 +1166,15 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;
   deleteGoal?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteGoalArgs, 'id'>>;
   deleteIncomeById?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteIncomeByIdArgs, 'id'>>;
+  deleteRecurringExpense?: Resolver<ResolversTypes['Int'], ParentType, ContextType, RequireFields<MutationDeleteRecurringExpenseArgs, 'id' | 'scope'>>;
   updateCard?: Resolver<ResolversTypes['Card'], ParentType, ContextType, Partial<MutationUpdateCardArgs>>;
   updateCategoryAllocation?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, Partial<MutationUpdateCategoryAllocationArgs>>;
   updateCategorySetting?: Resolver<ResolversTypes['CategorySettings'], ParentType, ContextType, RequireFields<MutationUpdateCategorySettingArgs, 'input'>>;
   updateExpense?: Resolver<ResolversTypes['Expense'], ParentType, ContextType, RequireFields<MutationUpdateExpenseArgs, 'input'>>;
   updateGoal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<MutationUpdateGoalArgs, 'input'>>;
   updateIncome?: Resolver<Maybe<ResolversTypes['Income']>, ParentType, ContextType, Partial<MutationUpdateIncomeArgs>>;
+  updateRecurrence?: Resolver<ResolversTypes['RecurringSeries'], ParentType, ContextType, RequireFields<MutationUpdateRecurrenceArgs, 'input'>>;
+  updateRecurringExpense?: Resolver<Array<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationUpdateRecurringExpenseArgs, 'input' | 'scope'>>;
   updateUserSettings?: Resolver<ResolversTypes['UserSettings'], ParentType, ContextType, RequireFields<MutationUpdateUserSettingsArgs, 'input'>>;
 }>;
 
@@ -1142,8 +1214,15 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
   login?: Resolver<ResolversTypes['LoginResponse'], ParentType, ContextType>;
   period?: Resolver<Maybe<ResolversTypes['Period']>, ParentType, ContextType, RequireFields<QueryPeriodArgs, 'input'>>;
   periodsList?: Resolver<Maybe<Array<ResolversTypes['Period']>>, ParentType, ContextType>;
+  recurringSeries?: Resolver<Maybe<ResolversTypes['RecurringSeries']>, ParentType, ContextType, RequireFields<QueryRecurringSeriesArgs, 'id'>>;
   udiValue?: Resolver<ResolversTypes['UdiValue'], ParentType, ContextType>;
   userSettings?: Resolver<ResolversTypes['UserSettings'], ParentType, ContextType>;
+}>;
+
+export type RecurringSeriesResolvers<ContextType = Context, ParentType extends ResolversParentTypes['RecurringSeries'] = ResolversParentTypes['RecurringSeries']> = ResolversObject<{
+  expenses?: Resolver<Array<ResolversTypes['Expense']>, ParentType, ContextType>;
+  frequency?: Resolver<ResolversTypes['FixedExpenseFrequency'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 }>;
 
 export type SubCategoryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['SubCategory'] = ResolversParentTypes['SubCategory']> = ResolversObject<{
@@ -1198,6 +1277,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   Date?: GraphQLScalarType;
   ExchangeRate?: ExchangeRateResolvers<ContextType>;
   Expense?: ExpenseResolvers<ContextType>;
+  ExpenseRecurrence?: ExpenseRecurrenceResolvers<ContextType>;
   ExpensesBy?: ExpensesByResolvers<ContextType>;
   ExpensesByCategory?: ExpensesByCategoryResolvers<ContextType>;
   ExpensesBySubCategory?: ExpensesBySubCategoryResolvers<ContextType>;
@@ -1215,6 +1295,7 @@ export type Resolvers<ContextType = Context> = ResolversObject<{
   PaymentDate?: PaymentDateResolvers<ContextType>;
   Period?: PeriodResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  RecurringSeries?: RecurringSeriesResolvers<ContextType>;
   SubCategory?: SubCategoryResolvers<ContextType>;
   Total?: TotalResolvers<ContextType>;
   TotalByCardId?: TotalByCardIdResolvers<ContextType>;
