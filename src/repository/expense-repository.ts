@@ -1,4 +1,4 @@
-import {ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, ForeignColumns, GroupedExpensesDTO,} from '../dto';
+import {ExpenseDTO, ExpenseWithCategoryAllocationDTO, ExpenseWithCategoryRaw, ForeignColumns, GroupedExpensesDTO, RecurrencePositionDTO,} from '../dto';
 import {FindOptions, Op, QueryTypes, Sequelize, Transaction} from 'sequelize';
 import {
   adaptExpenseWithCategoryAllocationDTO,
@@ -13,7 +13,10 @@ import {logger} from '../logger.js';
 import {excludeGoalSpending} from '../utils/expenses-utils.js';
 
 export type ExpenseWrite = Omit<ExpenseInput, 'foreignAmount'> &
-  Partial<ForeignColumns>;
+  Partial<ForeignColumns> & {
+    recurrenceId?: string;
+    recurrenceIndex?: number;
+  };
 
 export class ExpenseRepository {
   userId: string;
@@ -320,11 +323,12 @@ export class ExpenseRepository {
 
   async getExpenseState(
     id: string,
-    options: { transaction?: Transaction } = {}
+    options: { transaction?: Transaction; lock?: boolean } = {}
   ): Promise<Expense | null> {
     return Expense.findOne({
       where: { id, userId: this.userId },
       transaction: options.transaction,
+      lock: options.lock ? Transaction.LOCK.UPDATE : undefined,
     });
   }
 
@@ -337,27 +341,88 @@ export class ExpenseRepository {
         id,
         userId: this.userId,
       },
-      include: [
-        {
-          model: SubCategory,
-          as: 'sub_category',
-          include: [
-            {
-              model: Category,
-              as: 'category',
-              where: {
-                [Op.or]: [{ userId: null }, { userId: this.userId }],
-              },
-            },
-          ],
-        },
-        {
-          model: Card,
-          as: 'card',
-        },
-      ],
+      include: this.relations(),
       transaction: options.transaction,
     });
     return adaptSingleRawExpenseDTO(expense);
+  }
+
+  async getSeriesExpenses(recurrenceId: string): Promise<ExpenseDTO[]> {
+    const expenses = await Expense.findAll({
+      where: { recurrenceId, userId: this.userId },
+      include: this.relations(),
+      order: [['recurrenceIndex', 'ASC']],
+    });
+    return adaptRawListExpense(expenses as ExpenseWithCategoryRaw[]);
+  }
+
+  async getSeriesStates(
+    recurrenceId: string,
+    options: { transaction?: Transaction } = {}
+  ): Promise<Expense[]> {
+    return Expense.findAll({
+      where: { recurrenceId, userId: this.userId },
+      order: [['recurrenceIndex', 'ASC']],
+      transaction: options.transaction,
+    });
+  }
+
+  async deleteExpenses(
+    ids: string[],
+    options: { transaction?: Transaction } = {}
+  ) {
+    const deletedCount = await Expense.destroy({
+      where: { id: { [Op.in]: ids }, userId: this.userId },
+      transaction: options.transaction,
+    });
+    logger.info(`Deleted ${deletedCount} expenses for user ${this.userId}`);
+    return deletedCount;
+  }
+
+  async getRecurrencePositions(
+    expenseIds: readonly string[]
+  ): Promise<RecurrencePositionDTO[]> {
+    return this.sequelizeClient.query<RecurrencePositionDTO>(
+      `SELECT e.id AS "expenseId",
+              r.id AS "recurrenceId",
+              r.frequency,
+              s.position::int AS position,
+              s.count::int AS count
+       FROM expenses e
+       JOIN expense_recurrences r ON r.id = e.recurrence_id
+       JOIN LATERAL (
+         SELECT COUNT(*) FILTER (WHERE x.recurrence_index <= e.recurrence_index) AS position,
+                COUNT(*) AS count
+         FROM expenses x
+         WHERE x.recurrence_id = e.recurrence_id
+       ) s ON true
+       WHERE e.id IN (:expenseIds) AND e.user_id = :userId`,
+      {
+        replacements: { expenseIds, userId: this.userId },
+        type: QueryTypes.SELECT,
+      }
+    );
+  }
+
+  private relations() {
+    return [
+      {
+        model: SubCategory,
+        as: 'sub_category',
+        include: [
+          {
+            model: Category,
+            as: 'category',
+            where: {
+              [Op.or]: [{ userId: null }, { userId: this.userId }],
+            },
+          },
+        ],
+      },
+      {
+        model: Card,
+        as: 'card',
+      },
+    ];
   }
 }

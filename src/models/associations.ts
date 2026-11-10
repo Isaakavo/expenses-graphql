@@ -4,6 +4,7 @@ import {
 } from './category-settings.js';
 import { Category } from './category.js';
 import { Expense } from './expense.js';
+import { ExpenseRecurrence } from './expense-recurrence.js';
 import {
   IncomeCategoryAllocation
 } from './income-category-allocation.js';
@@ -26,6 +27,11 @@ export const associateModels = () => {
   Expense.belongsTo(Goal, {
     foreignKey: 'goalId',
     as: 'goal',
+  });
+
+  ExpenseRecurrence.hasMany(Expense, {
+    foreignKey: 'recurrenceId',
+    as: 'expenses',
   });
 
   Income.associate();
