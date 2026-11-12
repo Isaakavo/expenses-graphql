@@ -104,16 +104,16 @@ describe.skipIf(!url)('add-stadium-category migration', () => {
 
   const afterUp = [
     { category: 'HEALTH_WELLNESS', sub_category: 'GYM_FITNESS', n: 1 },
+    { category: 'HEALTH_WELLNESS', sub_category: 'SPORTS', n: 1 },
     { category: 'HOUSEHOLD', sub_category: 'RENT', n: 0 },
     { category: 'LIFESTYLE', sub_category: 'CLOTHES', n: 1 },
     { category: 'STADIUM', sub_category: 'BASEBALL', n: 2 },
     { category: 'STADIUM', sub_category: 'HOCKEY', n: 0 },
     { category: 'STADIUM', sub_category: 'NFL', n: 0 },
     { category: 'STADIUM', sub_category: 'SOCCER', n: 0 },
-    { category: 'STADIUM', sub_category: 'SPORTS', n: 1 },
   ];
 
-  it('moves stadium expenses to BASEBALL and SPORTS under STADIUM', async () => {
+  it('moves stadium expenses to BASEBALL and leaves SPORTS in HEALTH_WELLNESS', async () => {
     await up();
 
     expect(await expensesBySubCategory()).toEqual(afterUp);

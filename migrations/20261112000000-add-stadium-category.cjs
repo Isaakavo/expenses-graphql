@@ -2,8 +2,6 @@
 
 const STADIUM = 'STADIUM';
 const NEW_SUB_CATEGORIES = ['BASEBALL', 'HOCKEY', 'NFL', 'SOCCER'];
-const MOVED_SUB_CATEGORY = 'SPORTS';
-const MOVED_FROM = 'HEALTH_WELLNESS';
 const LIFESTYLE = 'LIFESTYLE';
 const STADIUM_SHARE = 0.05;
 
@@ -55,7 +53,7 @@ module.exports = {
       const stadiumId = await findOrCreateCategory(sequelize, STADIUM, transaction);
 
       const subCategoryIds = {};
-      for (const name of [MOVED_SUB_CATEGORY, ...NEW_SUB_CATEGORIES]) {
+      for (const name of NEW_SUB_CATEGORIES) {
         subCategoryIds[name] = await placeSubCategory(sequelize, name, stadiumId, transaction);
       }
 
@@ -119,11 +117,6 @@ module.exports = {
       await sequelize.query(
         'DELETE FROM sub_categories WHERE category_id = :stadiumId AND name IN (:newNames)',
         { replacements, transaction }
-      );
-      await sequelize.query(
-        `UPDATE sub_categories SET category_id = (SELECT id FROM categories WHERE name = :movedFrom), updated_at = NOW()
-         WHERE name = :moved AND EXISTS (SELECT 1 FROM categories WHERE name = :movedFrom)`,
-        { replacements: { moved: MOVED_SUB_CATEGORY, movedFrom: MOVED_FROM }, transaction }
       );
 
       await sequelize.query(
