@@ -137,6 +137,12 @@ describe('RecurrenceService.deleteExpense', () => {
 });
 
 describe('RecurrenceService.updateRecurrence', () => {
+  it('rejects a count above 60', async () => {
+    const { service } = setup();
+
+    await expect(service.updateRecurrence({ id: 'r1', count: 61 })).rejects.toThrow('count must be at most 60');
+  });
+
   it('rejects a count below the expenses already in the past', async () => {
     const { service } = setup();
 

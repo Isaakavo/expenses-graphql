@@ -571,3 +571,41 @@ describe('goal link on expenses', () => {
     });
   });
 });
+
+describe('input limits', () => {
+  const validationOf = (argumentName: string) => ({
+    extensions: { code: 'VALIDATION_ERROR', argumentName },
+  });
+  const longComment = 'a'.repeat(256);
+
+  it('rejects a comment longer than 255 characters on create', async () => {
+    await expect(
+      service.createExpense({
+        concept: 'Flights',
+        total: 100,
+        periodId: 'period-1',
+        categoryId: 'cat-1',
+        subCategoryId: 'sub-1',
+        comments: longComment,
+      })
+    ).rejects.toMatchObject(validationOf('comment'));
+  });
+
+  it('rejects a comment longer than 255 characters on update', async () => {
+    await expect(
+      service.updateExpense('e-1', { comments: longComment })
+    ).rejects.toMatchObject(validationOf('comment'));
+  });
+
+  it('rejects a fixed expense with a comment longer than 255 characters', async () => {
+    await expect(
+      service.createFixedExpenses({ ...baseFixedInput, comment: longComment })
+    ).rejects.toMatchObject(validationOf('comment'));
+  });
+
+  it('rejects more than 60 repetitions', async () => {
+    await expect(
+      service.createFixedExpenses({ ...baseFixedInput, numberOfRepetitions: 61 })
+    ).rejects.toMatchObject(validationOf('numberOfRepetitions'));
+  });
+});

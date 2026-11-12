@@ -20,6 +20,7 @@ import {
 import { conflictError } from '../utils/conflict-error.js';
 import { validationError } from '../utils/validation-error.js';
 import {
+  assertRepetitions,
   ExpenseInput,
   ExpensesService,
   SeriesTemplate,
@@ -169,6 +170,7 @@ export class RecurrenceService {
     const upcoming = series.filter((expense) => !isPast(expense.payBefore, today));
     const nextFrequency = frequency ?? recurrence.frequency;
     const targetCount = count ?? series.length;
+    if (count != null) assertRepetitions(count, 'count');
     const minimum = Math.max(past.length, 1);
     if (series.length === 0 || targetCount < minimum) {
       throw validationError(`count must be at least ${minimum}`, 'count');
