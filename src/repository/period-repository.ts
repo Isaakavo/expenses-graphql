@@ -48,7 +48,7 @@ export class PeriodRepository {
     }
     if (date) {
       where['startDate'] = { [Op.lte]: date };
-      where['endDate'] = { [Op.gte]: date };
+      where['endDate'] = { [Op.gte]: startOfDay(date) };
     }
 
     const period = await Period.findOne({
