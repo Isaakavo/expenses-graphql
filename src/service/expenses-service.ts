@@ -91,6 +91,26 @@ export type Conversion = { total: number; columns: ForeignColumns };
 const MANUAL_SOURCE = 'MANUAL';
 const MAX_AMOUNT = 9999999999.99;
 const MAX_RATE = 10n ** BigInt(18);
+const MAX_COMMENT_LENGTH = 255;
+export const MAX_REPETITIONS = 60;
+
+const assertCommentLength = (comment: string | null | undefined) => {
+  if (comment != null && comment.length > MAX_COMMENT_LENGTH) {
+    throw validationError(
+      `comment must be at most ${MAX_COMMENT_LENGTH} characters`,
+      'comment'
+    );
+  }
+};
+
+export const assertRepetitions = (count: number, argumentName: string) => {
+  if (count > MAX_REPETITIONS) {
+    throw validationError(
+      `${argumentName} must be at most ${MAX_REPETITIONS}`,
+      argumentName
+    );
+  }
+};
 
 const DOMESTIC_COLUMNS: ForeignColumns = {
   originalTotal: null,
@@ -369,6 +389,7 @@ export class ExpensesService {
   }
 
   async createExpense(input: ExpenseInput) {
+    assertCommentLength(input.comments);
     await this.assertGoalLink(input);
     const needsPeriod = !input.periodId;
     if (needsPeriod) {
@@ -455,6 +476,7 @@ export class ExpensesService {
     id: string,
     input: Partial<ExpenseInput & { payBefore: Date }>
   ): Promise<UpdatePlan> {
+    assertCommentLength(input.comments);
     const goalKeys = (['goalId', 'goalRole'] as const).filter(
       (key) => key in input && input[key] !== undefined
     );
@@ -600,6 +622,8 @@ export class ExpensesService {
   }
 
   async createFixedExpenses(input: FixedExpenseInput) {
+    assertCommentLength(input.comment);
+    assertRepetitions(input.numberOfRepetitions, 'numberOfRepetitions');
     await this.assertGoalLink(input);
 
     const planned = await this.planSeries(
