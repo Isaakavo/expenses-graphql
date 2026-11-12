@@ -18,6 +18,7 @@ beforeEach(() => {
   mockRepo = {
     getCategorySettings: vi.fn(),
     createCategorySetting: vi.fn(),
+    updateCategorySetting: vi.fn(),
   } as unknown as CategorySettingsRepository;
   service = new CategorySettingsService(userId, sequelize);
   service.categorySettingsRepository = mockRepo;
@@ -91,5 +92,52 @@ describe('CategorySettingsService', () => {
     await expect(
       service.createCategorySetting({ categoryId: 'cat1', percentage: 0.5 })
     ).rejects.toThrow('Duplicate key');
+  });
+
+  describe('updateCategorySetting', () => {
+    const fullBudget = [
+      settingRow({ id: 'household', percentage: '0.60' }),
+      settingRow({ id: 'communication', percentage: '0.04' }),
+      settingRow({ id: 'health', percentage: '0.01' }),
+      settingRow({ id: 'lifestyle', percentage: '0.05' }),
+      settingRow({ id: 'food', percentage: '0.10' }),
+      settingRow({ id: 'education', percentage: '0.02' }),
+      settingRow({ id: 'others', percentage: '0.03' }),
+      settingRow({ id: 'financial', percentage: '0.15' }),
+    ];
+
+    beforeEach(() => {
+      vi.mocked(mockRepo.getCategorySettings).mockResolvedValue(fullBudget);
+    });
+
+    it('lets a user at 100% lower a setting', async () => {
+      await service.updateCategorySetting({ id: 'lifestyle', percentage: 0.03 });
+
+      expect(mockRepo.updateCategorySetting).toHaveBeenCalledWith('lifestyle', 0.03);
+    });
+
+    it('lets a user at 100% save a setting with the same value', async () => {
+      await service.updateCategorySetting({ id: 'household', percentage: 0.6 });
+
+      expect(mockRepo.updateCategorySetting).toHaveBeenCalledWith('household', 0.6);
+    });
+
+    it('rejects raising a setting past 100%', async () => {
+      await expect(service.updateCategorySetting({ id: 'lifestyle', percentage: 0.06 })).rejects.toThrow(
+        'Total percentage exceeds 100%'
+      );
+      expect(mockRepo.updateCategorySetting).not.toHaveBeenCalled();
+    });
+  });
+
+  it('accepts a new setting that brings the total to exactly 100%', async () => {
+    vi.mocked(mockRepo.getCategorySettings).mockResolvedValue([
+      settingRow({ id: '1', percentage: 0.7 }),
+      settingRow({ id: '2', percentage: 0.1 }),
+    ]);
+
+    await service.createCategorySetting({ categoryId: 'cat3', percentage: 0.2 });
+
+    expect(mockRepo.createCategorySetting).toHaveBeenCalled();
   });
 });
