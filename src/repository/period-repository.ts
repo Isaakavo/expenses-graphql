@@ -48,7 +48,6 @@ export class PeriodRepository {
     }
     if (date) {
       where['startDate'] = { [Op.lte]: date };
-      // endDate is midnight of the period's last day
       where['endDate'] = { [Op.gte]: startOfDay(date) };
     }
 
