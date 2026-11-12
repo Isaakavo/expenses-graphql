@@ -8,6 +8,18 @@ const migration = createRequire(import.meta.url)(
 const dbName = 'stadium_category_migration_test';
 const fullUser = '11111111-1111-4111-8111-111111111111';
 const roomyUser = '22222222-2222-4222-8222-222222222222';
+const nearlyFullUser = '33333333-3333-4333-8333-333333333333';
+const smallLifestyleUser = '44444444-4444-4444-8444-444444444444';
+const noLifestyleUser = '55555555-5555-4555-8555-555555555555';
+const overUser = '66666666-6666-4666-8666-666666666666';
+const initialSettings: [string, string, number][] = [
+  [fullUser, 'LIFESTYLE', 0.05], [fullUser, 'HOUSEHOLD', 0.95],
+  [roomyUser, 'LIFESTYLE', 0.1], [roomyUser, 'HOUSEHOLD', 0.7],
+  [nearlyFullUser, 'LIFESTYLE', 0.1], [nearlyFullUser, 'HOUSEHOLD', 0.87],
+  [smallLifestyleUser, 'LIFESTYLE', 0.02], [smallLifestyleUser, 'HOUSEHOLD', 0.98],
+  [noLifestyleUser, 'HOUSEHOLD', 1],
+  [overUser, 'LIFESTYLE', 0.1], [overUser, 'HOUSEHOLD', 1],
+];
 
 describe.skipIf(!url)('add-stadium-category migration', () => {
   let admin: Sequelize;
@@ -96,8 +108,7 @@ describe.skipIf(!url)('add-stadium-category migration', () => {
         ) AS e (concept, sub) JOIN sub_categories s ON s.name = e.sub;
       INSERT INTO category_settings (user_id, category_id, percentage)
         SELECT u.user_id::uuid, c.id, u.percentage FROM (VALUES
-          ('${fullUser}', 'LIFESTYLE', 0.05), ('${fullUser}', 'HOUSEHOLD', 0.95),
-          ('${roomyUser}', 'LIFESTYLE', 0.10), ('${roomyUser}', 'HOUSEHOLD', 0.70)
+          ${initialSettings.map(([user, category, percentage]) => `('${user}', '${category}', ${percentage})`).join(', ')}
         ) AS u (user_id, category, percentage) JOIN categories c ON c.name = u.category;
     `);
   });
@@ -120,17 +131,40 @@ describe.skipIf(!url)('add-stadium-category migration', () => {
     expect(await expensesBySubCategory()).toEqual(afterUp);
   });
 
-  it('takes the STADIUM share from LIFESTYLE only when the total would pass 100%', async () => {
+  const settingsAfterUp = [
+    { user_id: fullUser, name: 'HOUSEHOLD', percentage: 0.95 },
+    { user_id: fullUser, name: 'LIFESTYLE', percentage: 0 },
+    { user_id: fullUser, name: 'STADIUM', percentage: 0.05 },
+    { user_id: roomyUser, name: 'HOUSEHOLD', percentage: 0.7 },
+    { user_id: roomyUser, name: 'LIFESTYLE', percentage: 0.1 },
+    { user_id: roomyUser, name: 'STADIUM', percentage: 0.05 },
+    { user_id: nearlyFullUser, name: 'HOUSEHOLD', percentage: 0.87 },
+    { user_id: nearlyFullUser, name: 'LIFESTYLE', percentage: 0.08 },
+    { user_id: nearlyFullUser, name: 'STADIUM', percentage: 0.05 },
+    { user_id: smallLifestyleUser, name: 'HOUSEHOLD', percentage: 0.98 },
+    { user_id: smallLifestyleUser, name: 'LIFESTYLE', percentage: 0 },
+    { user_id: smallLifestyleUser, name: 'STADIUM', percentage: 0.02 },
+    { user_id: noLifestyleUser, name: 'HOUSEHOLD', percentage: 1 },
+    { user_id: noLifestyleUser, name: 'STADIUM', percentage: 0 },
+    { user_id: overUser, name: 'HOUSEHOLD', percentage: 1 },
+    { user_id: overUser, name: 'LIFESTYLE', percentage: 0.1 },
+    { user_id: overUser, name: 'STADIUM', percentage: 0 },
+  ];
+
+  it('gives STADIUM up to 5% without pushing any total past 100%, taking it from LIFESTYLE first', async () => {
     await up();
 
-    expect(await settings()).toEqual([
-      { user_id: fullUser, name: 'HOUSEHOLD', percentage: 0.95 },
-      { user_id: fullUser, name: 'LIFESTYLE', percentage: 0 },
-      { user_id: fullUser, name: 'STADIUM', percentage: 0.05 },
-      { user_id: roomyUser, name: 'HOUSEHOLD', percentage: 0.7 },
-      { user_id: roomyUser, name: 'LIFESTYLE', percentage: 0.1 },
-      { user_id: roomyUser, name: 'STADIUM', percentage: 0.05 },
-    ]);
+    expect(await settings()).toEqual(settingsAfterUp);
+  });
+
+  it('refuses to run when a sub-category sits under an unexpected category', async () => {
+    await db.query('INSERT INTO sub_categories (name, category_id) SELECT \'BASEBALL\', id FROM categories WHERE name = \'HOUSEHOLD\'');
+    const before = await expensesBySubCategory();
+
+    await expect(up()).rejects.toThrow('HOUSEHOLD > BASEBALL');
+
+    expect(await expensesBySubCategory()).toEqual(before);
+    expect(await rows('SELECT name FROM categories WHERE name = \'STADIUM\'')).toEqual([]);
   });
 
   it('can run twice without changing the result', async () => {
@@ -151,8 +185,7 @@ describe.skipIf(!url)('add-stadium-category migration', () => {
     expect(await rows('SELECT COUNT(*)::int AS n FROM sub_categories WHERE name = \'BASEBALL\'')).toEqual([{ n: 1 }]);
   });
 
-  it('rolls back the categories and budget, with every BASEBALL expense back in LIFESTYLE > STADIUM', async () => {
-    const beforeSettings = await settings();
+  it('rolls back the categories, folding STADIUM back into LIFESTYLE and BASEBALL into LIFESTYLE > STADIUM', async () => {
     await up();
     await db.query(`
       INSERT INTO income_category_allocation (category_id) SELECT id FROM categories WHERE name = 'STADIUM';
@@ -169,7 +202,19 @@ describe.skipIf(!url)('add-stadium-category migration', () => {
       { category: 'LIFESTYLE', sub_category: 'ENTERTAINMENT', n: 2 },
       { category: 'LIFESTYLE', sub_category: 'STADIUM', n: 3 },
     ]);
-    expect(await settings()).toEqual(beforeSettings);
+    expect(await settings()).toEqual([
+      { user_id: fullUser, name: 'HOUSEHOLD', percentage: 0.95 },
+      { user_id: fullUser, name: 'LIFESTYLE', percentage: 0.05 },
+      { user_id: roomyUser, name: 'HOUSEHOLD', percentage: 0.7 },
+      { user_id: roomyUser, name: 'LIFESTYLE', percentage: 0.15 },
+      { user_id: nearlyFullUser, name: 'HOUSEHOLD', percentage: 0.87 },
+      { user_id: nearlyFullUser, name: 'LIFESTYLE', percentage: 0.13 },
+      { user_id: smallLifestyleUser, name: 'HOUSEHOLD', percentage: 0.98 },
+      { user_id: smallLifestyleUser, name: 'LIFESTYLE', percentage: 0.02 },
+      { user_id: noLifestyleUser, name: 'HOUSEHOLD', percentage: 1 },
+      { user_id: overUser, name: 'HOUSEHOLD', percentage: 1 },
+      { user_id: overUser, name: 'LIFESTYLE', percentage: 0.1 },
+    ]);
     expect(await rows('SELECT name FROM categories WHERE name = \'STADIUM\'')).toEqual([]);
   });
 });

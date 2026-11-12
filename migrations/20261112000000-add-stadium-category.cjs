@@ -12,6 +12,12 @@ const RETIRED_INTO_BASEBALL = [
   { name: SPORTS, category: HEALTH_WELLNESS },
 ];
 const STADIUM_SHARE = 0.05;
+const EXPECTED_PARENTS = {
+  ...Object.fromEntries(NEW_SUB_CATEGORIES.map((name) => [name, STADIUM])),
+  [CONCERTS]: LIFESTYLE,
+  [STADIUM]: LIFESTYLE,
+  [SPORTS]: HEALTH_WELLNESS,
+};
 
 const queryRows = (sequelize, sql, replacements, transaction) =>
   sequelize.query(sql, { replacements, transaction, type: sequelize.QueryTypes.SELECT });
@@ -58,10 +64,25 @@ const findOrCreateSubCategoryIn = async (sequelize, name, category, transaction)
   (await subCategoryIdIn(sequelize, name, category, transaction)) ??
   placeSubCategory(sequelize, name, await findOrCreateCategory(sequelize, category, transaction), transaction);
 
+const assertExpectedParents = async (sequelize, transaction) => {
+  const found = await queryRows(
+    sequelize,
+    `SELECT s.name, c.name AS parent FROM sub_categories s JOIN categories c ON c.id = s.category_id
+     WHERE s.name IN (:names)`,
+    { names: Object.keys(EXPECTED_PARENTS) },
+    transaction
+  );
+  const misplaced = found.filter(({ name, parent }) => parent !== EXPECTED_PARENTS[name]);
+  if (misplaced.length > 0) {
+    throw new Error(`Unexpected sub-categories: ${misplaced.map(({ name, parent }) => `${parent} > ${name}`).join(', ')}`);
+  }
+};
+
 module.exports = {
   up: async (queryInterface) => {
     const { sequelize } = queryInterface;
     await sequelize.transaction(async (transaction) => {
+      await assertExpectedParents(sequelize, transaction);
       const stadiumId = await findOrCreateCategory(sequelize, STADIUM, transaction);
 
       const subCategoryIds = {};
@@ -82,26 +103,31 @@ module.exports = {
         });
       }
 
-      await placeSubCategory(sequelize, CONCERTS, await findOrCreateCategory(sequelize, LIFESTYLE, transaction), transaction);
+      const lifestyleId = await findOrCreateCategory(sequelize, LIFESTYLE, transaction);
+      await placeSubCategory(sequelize, CONCERTS, lifestyleId, transaction);
 
-      // Users already at 100% would be locked out of editing their settings, so the share comes out of LIFESTYLE
+      // A total above 100% locks the user out of editing settings, so the share comes out of LIFESTYLE and shrinks if that is not enough
       await sequelize.query(
-        `UPDATE category_settings cs
-         SET percentage = GREATEST(cs.percentage - :share, 0), updated_at = NOW()
-         FROM categories c
-         WHERE c.id = cs.category_id AND c.name = :lifestyle
-           AND cs.user_id IN (
-             SELECT user_id FROM category_settings GROUP BY user_id
-             HAVING SUM(percentage) + :share > 1 AND NOT bool_or(category_id = :stadiumId)
-           )`,
-        { replacements: { share: STADIUM_SHARE, lifestyle: LIFESTYLE, stadiumId }, transaction }
-      );
-      await sequelize.query(
-        `INSERT INTO category_settings (id, user_id, category_id, percentage, created_at, updated_at)
-         SELECT gen_random_uuid(), user_id, :stadiumId, :share, NOW(), NOW()
-         FROM category_settings GROUP BY user_id
-         HAVING NOT bool_or(category_id = :stadiumId)`,
-        { replacements: { share: STADIUM_SHARE, stadiumId }, transaction }
+        `WITH totals AS (
+           SELECT user_id, SUM(percentage) AS total,
+             COALESCE(SUM(percentage) FILTER (WHERE category_id = :lifestyleId), 0) AS lifestyle
+           FROM category_settings GROUP BY user_id
+           HAVING NOT bool_or(category_id = :stadiumId)
+         ),
+         plan AS (
+           SELECT user_id, total,
+             CASE WHEN total > 1 THEN 0 ELSE LEAST(lifestyle, GREATEST(total + :share - 1, 0)) END AS cut
+           FROM totals
+         ),
+         cut_lifestyle AS (
+           UPDATE category_settings cs SET percentage = cs.percentage - plan.cut, updated_at = NOW()
+           FROM plan
+           WHERE cs.user_id = plan.user_id AND cs.category_id = :lifestyleId AND plan.cut > 0
+         )
+         INSERT INTO category_settings (id, user_id, category_id, percentage, created_at, updated_at)
+         SELECT gen_random_uuid(), user_id, :stadiumId, GREATEST(LEAST(:share, 1 - total + cut), 0), NOW(), NOW()
+         FROM plan`,
+        { replacements: { share: STADIUM_SHARE, lifestyleId, stadiumId }, transaction }
       );
     });
   },
@@ -139,11 +165,10 @@ module.exports = {
 
       await sequelize.query(
         `UPDATE category_settings lifestyle
-         SET percentage = LEAST(lifestyle.percentage + stadium.percentage, 1), updated_at = NOW()
+         SET percentage = lifestyle.percentage + stadium.percentage, updated_at = NOW()
          FROM category_settings stadium
          WHERE stadium.user_id = lifestyle.user_id AND stadium.category_id = :stadiumId
-           AND lifestyle.category_id = :lifestyleId
-           AND lifestyle.user_id IN (SELECT user_id FROM category_settings GROUP BY user_id HAVING SUM(percentage) >= 1)`,
+           AND lifestyle.category_id = :lifestyleId`,
         { replacements, transaction }
       );
       await sequelize.query('DELETE FROM category_settings WHERE category_id = :stadiumId', { replacements, transaction });
