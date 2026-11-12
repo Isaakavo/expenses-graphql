@@ -96,4 +96,37 @@ describe('Period Model', () => {
     expect(earlier.startDate.toISOString()).toBe('2025-07-10T00:00:00.000Z');
     expect(earlier.endDate.toISOString()).toBe('2025-07-23T00:00:00.000Z');
   });
+
+  describe('getPeriodBy', () => {
+    it('Finds the period at any time of its last day', async () => {
+      const period = await periodRepository.createPeriod(new Date('2026-10-30'));
+
+      const found = await periodRepository.getPeriodBy({
+        date: new Date('2026-11-12T21:31:00.000Z'),
+      });
+
+      expect(found?.id).toBe(period.id);
+    });
+
+    it('Finds the next period on its first day', async () => {
+      await periodRepository.createPeriod(new Date('2026-10-30'));
+      const next = await periodRepository.createPeriod(new Date('2026-11-13'));
+
+      const found = await periodRepository.getPeriodBy({
+        date: new Date('2026-11-13T00:00:00.000Z'),
+      });
+
+      expect(found?.id).toBe(next.id);
+    });
+
+    it('Returns null for a date after the last period', async () => {
+      await periodRepository.createPeriod(new Date('2026-10-30'));
+
+      const found = await periodRepository.getPeriodBy({
+        date: new Date('2026-11-13T06:00:00.000Z'),
+      });
+
+      expect(found).toBeNull();
+    });
+  });
 });
