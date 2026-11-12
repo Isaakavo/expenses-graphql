@@ -3,6 +3,14 @@
 const STADIUM = 'STADIUM';
 const NEW_SUB_CATEGORIES = ['BASEBALL', 'HOCKEY', 'NFL', 'SOCCER'];
 const LIFESTYLE = 'LIFESTYLE';
+const CONCERTS = 'CONCERTS';
+const ENTERTAINMENT = 'ENTERTAINMENT';
+const SPORTS = 'SPORTS';
+const HEALTH_WELLNESS = 'HEALTH_WELLNESS';
+const RETIRED_INTO_BASEBALL = [
+  { name: STADIUM, category: LIFESTYLE },
+  { name: SPORTS, category: HEALTH_WELLNESS },
+];
 const STADIUM_SHARE = 0.05;
 
 const queryRows = (sequelize, sql, replacements, transaction) =>
@@ -37,14 +45,18 @@ const placeSubCategory = async (sequelize, name, categoryId, transaction) =>
     transaction
   );
 
-const lifestyleStadiumId = (sequelize, transaction) =>
+const subCategoryIdIn = (sequelize, name, category, transaction) =>
   idOf(
     sequelize,
     `SELECT s.id FROM sub_categories s JOIN categories c ON c.id = s.category_id
-     WHERE s.name = :stadium AND c.name = :lifestyle`,
-    { stadium: STADIUM, lifestyle: LIFESTYLE },
+     WHERE s.name = :name AND c.name = :category`,
+    { name, category },
     transaction
   );
+
+const findOrCreateSubCategoryIn = async (sequelize, name, category, transaction) =>
+  (await subCategoryIdIn(sequelize, name, category, transaction)) ??
+  placeSubCategory(sequelize, name, await findOrCreateCategory(sequelize, category, transaction), transaction);
 
 module.exports = {
   up: async (queryInterface) => {
@@ -57,17 +69,20 @@ module.exports = {
         subCategoryIds[name] = await placeSubCategory(sequelize, name, stadiumId, transaction);
       }
 
-      const oldStadiumId = await lifestyleStadiumId(sequelize, transaction);
-      if (oldStadiumId) {
+      for (const { name, category } of RETIRED_INTO_BASEBALL) {
+        const retiredId = await subCategoryIdIn(sequelize, name, category, transaction);
+        if (!retiredId) continue;
         await sequelize.query(
-          'UPDATE expenses SET sub_category_id = :baseball WHERE sub_category_id = :oldStadiumId',
-          { replacements: { baseball: subCategoryIds.BASEBALL, oldStadiumId }, transaction }
+          'UPDATE expenses SET sub_category_id = :baseball WHERE sub_category_id = :retiredId',
+          { replacements: { baseball: subCategoryIds.BASEBALL, retiredId }, transaction }
         );
-        await sequelize.query('DELETE FROM sub_categories WHERE id = :oldStadiumId', {
-          replacements: { oldStadiumId },
+        await sequelize.query('DELETE FROM sub_categories WHERE id = :retiredId', {
+          replacements: { retiredId },
           transaction,
         });
       }
+
+      await placeSubCategory(sequelize, CONCERTS, await findOrCreateCategory(sequelize, LIFESTYLE, transaction), transaction);
 
       // Users already at 100% would be locked out of editing their settings, so the share comes out of LIFESTYLE
       await sequelize.query(
@@ -98,15 +113,18 @@ module.exports = {
       if (!stadiumId) return;
 
       const lifestyleId = await findOrCreateCategory(sequelize, LIFESTYLE, transaction);
-      const oldStadiumId =
-        (await lifestyleStadiumId(sequelize, transaction)) ??
-        (await idOf(
-          sequelize,
-          `INSERT INTO sub_categories (id, name, category_id, created_at, updated_at)
-           VALUES (gen_random_uuid(), :name, :lifestyleId, NOW(), NOW()) RETURNING id`,
-          { name: STADIUM, lifestyleId },
-          transaction
-        ));
+      const oldStadiumId = await findOrCreateSubCategoryIn(sequelize, STADIUM, LIFESTYLE, transaction);
+      await findOrCreateSubCategoryIn(sequelize, SPORTS, HEALTH_WELLNESS, transaction);
+
+      const concertsId = await subCategoryIdIn(sequelize, CONCERTS, LIFESTYLE, transaction);
+      const entertainmentId = await subCategoryIdIn(sequelize, ENTERTAINMENT, LIFESTYLE, transaction);
+      if (concertsId && entertainmentId) {
+        await sequelize.query('UPDATE expenses SET sub_category_id = :entertainmentId WHERE sub_category_id = :concertsId', {
+          replacements: { entertainmentId, concertsId },
+          transaction,
+        });
+        await sequelize.query('DELETE FROM sub_categories WHERE id = :concertsId', { replacements: { concertsId }, transaction });
+      }
 
       const replacements = { stadiumId, lifestyleId, oldStadiumId, newNames: NEW_SUB_CATEGORIES };
       await sequelize.query(

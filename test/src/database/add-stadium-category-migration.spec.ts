@@ -86,12 +86,12 @@ describe.skipIf(!url)('add-stadium-category migration', () => {
       INSERT INTO categories (name) VALUES ('LIFESTYLE'), ('HEALTH_WELLNESS'), ('HOUSEHOLD');
       INSERT INTO sub_categories (name, category_id)
         SELECT s.name, c.id FROM (VALUES
-          ('STADIUM', 'LIFESTYLE'), ('CLOTHES', 'LIFESTYLE'), ('SPORTS', 'HEALTH_WELLNESS'),
+          ('STADIUM', 'LIFESTYLE'), ('CLOTHES', 'LIFESTYLE'), ('ENTERTAINMENT', 'LIFESTYLE'), ('SPORTS', 'HEALTH_WELLNESS'),
           ('GYM_FITNESS', 'HEALTH_WELLNESS'), ('RENT', 'HOUSEHOLD')
         ) AS s (name, category) JOIN categories c ON c.name = s.category;
       INSERT INTO expenses (concept, sub_category_id)
         SELECT e.concept, s.id FROM (VALUES
-          ('Diablos', 'STADIUM'), ('Yankees', 'STADIUM'), ('Shirt', 'CLOTHES'),
+          ('Diablos', 'STADIUM'), ('Yankees', 'STADIUM'), ('Shirt', 'CLOTHES'), ('Movie', 'ENTERTAINMENT'),
           ('Padel', 'SPORTS'), ('Gym', 'GYM_FITNESS')
         ) AS e (concept, sub) JOIN sub_categories s ON s.name = e.sub;
       INSERT INTO category_settings (user_id, category_id, percentage)
@@ -104,16 +104,17 @@ describe.skipIf(!url)('add-stadium-category migration', () => {
 
   const afterUp = [
     { category: 'HEALTH_WELLNESS', sub_category: 'GYM_FITNESS', n: 1 },
-    { category: 'HEALTH_WELLNESS', sub_category: 'SPORTS', n: 1 },
     { category: 'HOUSEHOLD', sub_category: 'RENT', n: 0 },
     { category: 'LIFESTYLE', sub_category: 'CLOTHES', n: 1 },
-    { category: 'STADIUM', sub_category: 'BASEBALL', n: 2 },
+    { category: 'LIFESTYLE', sub_category: 'CONCERTS', n: 0 },
+    { category: 'LIFESTYLE', sub_category: 'ENTERTAINMENT', n: 1 },
+    { category: 'STADIUM', sub_category: 'BASEBALL', n: 3 },
     { category: 'STADIUM', sub_category: 'HOCKEY', n: 0 },
     { category: 'STADIUM', sub_category: 'NFL', n: 0 },
     { category: 'STADIUM', sub_category: 'SOCCER', n: 0 },
   ];
 
-  it('moves stadium expenses to BASEBALL and leaves SPORTS in HEALTH_WELLNESS', async () => {
+  it('moves stadium and sports expenses to BASEBALL and adds CONCERTS to LIFESTYLE', async () => {
     await up();
 
     expect(await expensesBySubCategory()).toEqual(afterUp);
@@ -150,15 +151,24 @@ describe.skipIf(!url)('add-stadium-category migration', () => {
     expect(await rows('SELECT COUNT(*)::int AS n FROM sub_categories WHERE name = \'BASEBALL\'')).toEqual([{ n: 1 }]);
   });
 
-  it('rolls back to the original categories and budget', async () => {
-    const before = await expensesBySubCategory();
+  it('rolls back the categories and budget, with every BASEBALL expense back in LIFESTYLE > STADIUM', async () => {
     const beforeSettings = await settings();
     await up();
-    await db.query('INSERT INTO income_category_allocation (category_id) SELECT id FROM categories WHERE name = \'STADIUM\'');
+    await db.query(`
+      INSERT INTO income_category_allocation (category_id) SELECT id FROM categories WHERE name = 'STADIUM';
+      INSERT INTO expenses (concept, sub_category_id) SELECT 'Concert', id FROM sub_categories WHERE name = 'CONCERTS';
+    `);
 
     await down();
 
-    expect(await expensesBySubCategory()).toEqual(before);
+    expect(await expensesBySubCategory()).toEqual([
+      { category: 'HEALTH_WELLNESS', sub_category: 'GYM_FITNESS', n: 1 },
+      { category: 'HEALTH_WELLNESS', sub_category: 'SPORTS', n: 0 },
+      { category: 'HOUSEHOLD', sub_category: 'RENT', n: 0 },
+      { category: 'LIFESTYLE', sub_category: 'CLOTHES', n: 1 },
+      { category: 'LIFESTYLE', sub_category: 'ENTERTAINMENT', n: 2 },
+      { category: 'LIFESTYLE', sub_category: 'STADIUM', n: 3 },
+    ]);
     expect(await settings()).toEqual(beforeSettings);
     expect(await rows('SELECT name FROM categories WHERE name = \'STADIUM\'')).toEqual([]);
   });
