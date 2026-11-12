@@ -18,15 +18,15 @@ export class CategorySettingsService {
     return this.categorySettingsRepository.getCategorySettings();
   }
 
-  async calculateTotalPercentage(percentage: number) {
+  async calculateTotalPercentage(percentage: number, replacedSettingId?: string) {
     const allSettings = await this.getCategorySettings();
 
-    // Sum of percentage validation
-    const percentageTotal = allSettings.reduce((total, setting) => {
-      return total + Number(setting.percentage);
-    }, 0);
+    const toBasisPoints = (value: number) => Math.round(value * 10000);
+    const otherSettingsTotal = allSettings
+      .filter((setting) => setting.id !== replacedSettingId)
+      .reduce((total, setting) => total + toBasisPoints(Number(setting.percentage)), 0);
 
-    if (percentageTotal + percentage > 1) {
+    if (otherSettingsTotal + toBasisPoints(percentage) > toBasisPoints(1)) {
       throw new GraphQLError('Total percentage exceeds 100%',
         {
           extensions: {
@@ -67,7 +67,7 @@ export class CategorySettingsService {
   ) {
     const {id, percentage} = input;
 
-    await this.calculateTotalPercentage(percentage);
+    await this.calculateTotalPercentage(percentage, id);
 
     return this.categorySettingsRepository.updateCategorySetting(id, percentage)
   }
