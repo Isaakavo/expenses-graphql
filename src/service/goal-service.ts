@@ -4,11 +4,17 @@ import { isValid, parseISO } from 'date-fns';
 import {
   GoalInput,
   GoalLinkedExpenseRow,
+  GoalReimbursementInput,
   GoalRepository,
 } from '../repository/goal-repository.js';
-import { GoalDTO } from '../dto/goal-dto.js';
+import { SavingsFundRepository } from '../repository/savings-fund-repository.js';
+import {
+  GoalDTO,
+  GoalReimbursementDTO,
+  SavingsFundDTO,
+} from '../dto/goal-dto.js';
 import { ExpenseDTO } from '../dto/expense-dto.js';
-import { CurrencyCode } from '../generated/graphql.js';
+import { CurrencyCode, GoalKind } from '../generated/graphql.js';
 import { logger } from '../logger.js';
 import {
   AMOUNT_SCALE,
@@ -26,14 +32,25 @@ import { UserSettingsService } from './user-settings-service.js';
 
 const MAX_NAME_LENGTH = 100;
 const MAX_TARGET_AMOUNT = 9999999999.99;
+const MAX_COMMENT_LENGTH = 255;
+const DEFAULT_FUND_NAME = 'Ahorros';
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 export type GoalServiceInput = {
   name: string;
-  targetAmount: number;
+  kind?: GoalKind | null;
+  targetAmount?: number | null;
   startDate: string;
   endDate?: string | null;
   currency?: CurrencyCode | null;
+  fundId?: string | null;
+  defaultCardId?: string | null;
+};
+
+export type GoalReimbursementServiceInput = {
+  amount: number;
+  receivedOn: string;
+  comment?: string | null;
 };
 
 const validationError = (message: string, argumentName: string) =>
@@ -63,8 +80,12 @@ const assertIsoDate = (value: unknown, argumentName: string): string => {
   return value;
 };
 
+const isValidAmount = (amount: number) =>
+  Number.isFinite(amount) && amount > 0 && amount <= MAX_TARGET_AMOUNT;
+
 export class GoalService {
   goalRepository: GoalRepository;
+  savingsFundRepository: SavingsFundRepository;
   userSettingsService: UserSettingsService;
   exchangeRates: ExchangeRateService = exchangeRateService;
   userId: string;
@@ -73,6 +94,7 @@ export class GoalService {
     this.userId = userId;
     this.userSettingsService = new UserSettingsService(userId, sequelize);
     this.goalRepository = new GoalRepository(userId, sequelize);
+    this.savingsFundRepository = new SavingsFundRepository(userId, sequelize);
   }
 
   private validateEndDate(startDate: string, endDate?: string | null) {
@@ -84,7 +106,29 @@ export class GoalService {
     }
   }
 
-  private validateAndNormalize(input: GoalServiceInput): GoalInput {
+  private validateTarget(kind: GoalKind, targetAmount?: number | null) {
+    if (kind === GoalKind.REIMBURSABLE) {
+      if (targetAmount != null) {
+        throw validationError(
+          'Reimbursable goals do not have a target amount',
+          'targetAmount'
+        );
+      }
+      return null;
+    }
+    if (targetAmount == null || !isValidAmount(targetAmount)) {
+      throw validationError(
+        `Target amount must be greater than 0 and at most ${MAX_TARGET_AMOUNT}`,
+        'targetAmount'
+      );
+    }
+    return targetAmount;
+  }
+
+  private validateAndNormalize(
+    input: GoalServiceInput,
+    kind: GoalKind
+  ): GoalInput {
     const name = (input.name ?? '').trim();
     if (name.length < 1 || name.length > MAX_NAME_LENGTH) {
       throw validationError(
@@ -93,18 +137,7 @@ export class GoalService {
       );
     }
 
-    const { targetAmount } = input;
-    if (
-      !Number.isFinite(targetAmount) ||
-      targetAmount <= 0 ||
-      targetAmount > MAX_TARGET_AMOUNT
-    ) {
-      throw validationError(
-        `Target amount must be greater than 0 and at most ${MAX_TARGET_AMOUNT}`,
-        'targetAmount'
-      );
-    }
-
+    const targetAmount = this.validateTarget(kind, input.targetAmount);
     const startDate = assertIsoDate(input.startDate, 'startDate');
     const endDate =
       input.endDate == null ? null : assertIsoDate(input.endDate, 'endDate');
@@ -117,6 +150,69 @@ export class GoalService {
       endDate,
       ...(input.currency ? { currency: input.currency } : {}),
     };
+  }
+
+  private async resolveFundId(
+    kind: GoalKind,
+    fundId?: string | null
+  ): Promise<string | null> {
+    if (kind === GoalKind.SAVINGS) {
+      if (fundId != null) {
+        throw validationError(
+          'Only reimbursable goals belong to a savings fund',
+          'fundId'
+        );
+      }
+      return null;
+    }
+    if (fundId == null) {
+      return (await this.getDefaultFund()).id;
+    }
+    if (!(await this.savingsFundRepository.getFundByPk(fundId))) {
+      throw validationError('Savings fund not found', 'fundId');
+    }
+    return fundId;
+  }
+
+  private async assertCardOwned(cardId?: string | null) {
+    if (cardId != null && !(await this.goalRepository.cardExists(cardId))) {
+      throw validationError('Card not found', 'defaultCardId');
+    }
+  }
+
+  private validateReimbursement(
+    input: GoalReimbursementServiceInput
+  ): GoalReimbursementInput {
+    if (!isValidAmount(input.amount)) {
+      throw validationError(
+        `Amount must be greater than 0 and at most ${MAX_TARGET_AMOUNT}`,
+        'amount'
+      );
+    }
+    const comment = input.comment?.trim() || null;
+    if (comment != null && comment.length > MAX_COMMENT_LENGTH) {
+      throw validationError(
+        `comment must be at most ${MAX_COMMENT_LENGTH} characters`,
+        'comment'
+      );
+    }
+
+    return {
+      amount: input.amount,
+      receivedOn: assertIsoDate(input.receivedOn, 'receivedOn'),
+      comment,
+    };
+  }
+
+  private async assertReimbursable(goalId: string): Promise<GoalDTO> {
+    const goal = await this.assertGoalLinkable(goalId);
+    if (goal.kind !== GoalKind.REIMBURSABLE) {
+      throw validationError(
+        'Reimbursements can only be added to reimbursable goals',
+        'goalId'
+      );
+    }
+    return goal;
   }
 
   async getGoalAmountsByExpenseIds(
@@ -201,10 +297,16 @@ export class GoalService {
   }
 
   async createGoal(input: GoalServiceInput): Promise<GoalDTO> {
-    const data = this.validateAndNormalize(input);
+    const kind = input.kind ?? GoalKind.SAVINGS;
+    const data = this.validateAndNormalize(input, kind);
+    const fundId = await this.resolveFundId(kind, input.fundId);
+    await this.assertCardOwned(input.defaultCardId);
 
     return this.goalRepository.createGoal({
       ...data,
+      kind,
+      fundId,
+      defaultCardId: input.defaultCardId ?? null,
       currency:
         data.currency ?? (await this.userSettingsService.getDefaultCurrency()),
     });
@@ -213,10 +315,30 @@ export class GoalService {
   async updateGoal(
     input: GoalServiceInput & { id: string }
   ): Promise<GoalDTO> {
-    const data = this.validateAndNormalize(input);
-    await this.assertGoalLinkable(input.id);
+    const goal = await this.assertGoalLinkable(input.id);
+    const data = this.validateAndNormalize(input, goal.kind);
+    await this.assertCardOwned(input.defaultCardId);
+    if (
+      goal.kind === GoalKind.REIMBURSABLE &&
+      data.currency &&
+      data.currency !== goal.currency &&
+      (await this.goalRepository.countReimbursements(goal.id)) > 0
+    ) {
+      throw validationError(
+        'The currency of a goal with reimbursements cannot change',
+        'currency'
+      );
+    }
 
-    return this.goalRepository.updateGoal(input.id, data);
+    return this.goalRepository.updateGoal(input.id, {
+      ...data,
+      ...(input.fundId != null && {
+        fundId: await this.resolveFundId(goal.kind, input.fundId),
+      }),
+      ...('defaultCardId' in input && {
+        defaultCardId: input.defaultCardId ?? null,
+      }),
+    });
   }
 
   async closeGoal(input: { id: string; endDate: string }): Promise<GoalDTO> {
@@ -245,5 +367,53 @@ export class GoalService {
     }
 
     return goal;
+  }
+
+  async getDefaultFund(): Promise<SavingsFundDTO> {
+    return (await this.getSavingsFunds())[0];
+  }
+
+  async getSavingsFunds(): Promise<SavingsFundDTO[]> {
+    const funds = await this.savingsFundRepository.getFunds();
+    if (funds.length > 0) {
+      return funds;
+    }
+    return [
+      await this.savingsFundRepository.createFund(
+        DEFAULT_FUND_NAME,
+        await this.userSettingsService.getDefaultCurrency()
+      ),
+    ];
+  }
+
+  async getReimbursementsGroupedByGoalIds(
+    goalIds: readonly string[]
+  ): Promise<GoalReimbursementDTO[][]> {
+    const reimbursements =
+      await this.goalRepository.getReimbursementsByGoalIds(goalIds);
+    return goalIds.map((id) =>
+      reimbursements.filter((reimbursement) => reimbursement.goalId === id)
+    );
+  }
+
+  async addReimbursement(
+    input: GoalReimbursementServiceInput & { goalId: string }
+  ): Promise<GoalReimbursementDTO> {
+    const data = this.validateReimbursement(input);
+    await this.assertReimbursable(input.goalId);
+
+    return this.goalRepository.addReimbursement(input.goalId, data);
+  }
+
+  async updateReimbursement(
+    input: GoalReimbursementServiceInput & { id: string }
+  ): Promise<GoalReimbursementDTO> {
+    const data = this.validateReimbursement(input);
+
+    return this.goalRepository.updateReimbursement(input.id, data);
+  }
+
+  async deleteReimbursement(id: string): Promise<boolean> {
+    return this.goalRepository.deleteReimbursement(id);
   }
 }

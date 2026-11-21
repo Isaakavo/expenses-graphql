@@ -1,24 +1,59 @@
 import { GraphQLError } from 'graphql';
 import { Op, Sequelize, Transaction } from 'sequelize';
 import { logger } from '../logger.js';
-import { adaptGoalDTO } from '../adapters/goal-adapter.js';
+import {
+  adaptGoalDTO,
+  adaptGoalReimbursementDTO,
+} from '../adapters/goal-adapter.js';
 import { adaptRawListExpense } from '../adapters/expense-adapter.js';
-import { ExpenseDTO, ExpenseWithCategoryRaw, GoalDTO } from '../dto/index.js';
-import { CurrencyCode } from '../generated/graphql.js';
-import { Card, Category, Expense, Goal, SubCategory } from '../models/index.js';
+import {
+  ExpenseDTO,
+  ExpenseWithCategoryRaw,
+  GoalDTO,
+  GoalReimbursementDTO,
+} from '../dto/index.js';
+import { CurrencyCode, GoalKind } from '../generated/graphql.js';
+import {
+  Card,
+  Category,
+  Expense,
+  Goal,
+  GoalReimbursement,
+  SavingsFund,
+  SubCategory,
+} from '../models/index.js';
 
 const goalNotFound = () =>
   new GraphQLError('Goal not found', {
     extensions: { code: 'GOAL_NOT_FOUND' },
   });
 
+const reimbursementNotFound = () =>
+  new GraphQLError('Reimbursement not found', {
+    extensions: { code: 'REIMBURSEMENT_NOT_FOUND' },
+  });
+
 export type GoalInput = {
   name: string;
-  targetAmount: number;
+  kind?: GoalKind;
+  targetAmount: number | null;
   startDate: string;
   endDate?: string | null;
   currency?: CurrencyCode;
+  fundId?: string | null;
+  defaultCardId?: string | null;
 };
+
+export type GoalReimbursementInput = {
+  amount: number;
+  receivedOn: string;
+  comment: string | null;
+};
+
+const goalIncludes = [
+  { model: SavingsFund, as: 'fund' },
+  { model: Card, as: 'defaultCard' },
+];
 
 export type GoalLinkedExpenseRow = {
   id: string;
@@ -42,6 +77,7 @@ export class GoalRepository {
   async getGoals(): Promise<GoalDTO[]> {
     const goals = await Goal.findAll({
       where: { userId: this.userId },
+      include: goalIncludes,
       order: [['startDate', 'DESC']],
     });
 
@@ -51,6 +87,7 @@ export class GoalRepository {
   async getGoalByPk(id: string): Promise<GoalDTO | null> {
     const goal = await Goal.findOne({
       where: { id, userId: this.userId },
+      include: goalIncludes,
     });
 
     return goal ? adaptGoalDTO(goal) : null;
@@ -64,7 +101,7 @@ export class GoalRepository {
 
     logger.info(`Created goal id ${goal.id} for user ${this.userId}`);
 
-    return adaptGoalDTO(goal);
+    return this.getGoalByPk(goal.id);
   }
 
   async updateGoal(id: string, input: Partial<GoalInput>): Promise<GoalDTO> {
@@ -161,5 +198,84 @@ export class GoalRepository {
       payBefore: expense.payBefore,
       goalCurrency: (expense as unknown as { goal: Goal }).goal.currency,
     }));
+  }
+
+  async getReimbursementsByGoalIds(
+    goalIds: readonly string[]
+  ): Promise<GoalReimbursementDTO[]> {
+    const reimbursements = await GoalReimbursement.findAll({
+      where: { userId: this.userId, goalId: { [Op.in]: [...goalIds] } },
+      order: [
+        ['receivedOn', 'ASC'],
+        ['createdAt', 'ASC'],
+      ],
+    });
+
+    return reimbursements.map(adaptGoalReimbursementDTO);
+  }
+
+  async getReimbursementByPk(id: string): Promise<GoalReimbursementDTO | null> {
+    const reimbursement = await GoalReimbursement.findOne({
+      where: { id, userId: this.userId },
+    });
+
+    return reimbursement ? adaptGoalReimbursementDTO(reimbursement) : null;
+  }
+
+  async countReimbursements(goalId: string): Promise<number> {
+    return GoalReimbursement.count({
+      where: { goalId, userId: this.userId },
+    });
+  }
+
+  async addReimbursement(
+    goalId: string,
+    input: GoalReimbursementInput
+  ): Promise<GoalReimbursementDTO> {
+    const reimbursement = await GoalReimbursement.create({
+      ...input,
+      goalId,
+      userId: this.userId,
+    });
+
+    logger.info(
+      `Created reimbursement id ${reimbursement.id} for goal ${goalId} and user ${this.userId}`
+    );
+
+    return adaptGoalReimbursementDTO(reimbursement);
+  }
+
+  async updateReimbursement(
+    id: string,
+    input: GoalReimbursementInput
+  ): Promise<GoalReimbursementDTO> {
+    const [affected] = await GoalReimbursement.update(input, {
+      where: { id, userId: this.userId },
+    });
+
+    if (affected === 0) {
+      throw reimbursementNotFound();
+    }
+
+    logger.info(`Updated reimbursement id ${id} for user ${this.userId}`);
+
+    return this.getReimbursementByPk(id);
+  }
+
+  async deleteReimbursement(id: string): Promise<boolean> {
+    const deleted = await GoalReimbursement.destroy({
+      where: { id, userId: this.userId },
+    });
+
+    if (deleted === 0) {
+      throw reimbursementNotFound();
+    }
+
+    logger.info(`Deleted reimbursement id ${id} for user ${this.userId}`);
+    return true;
+  }
+
+  async cardExists(cardId: string): Promise<boolean> {
+    return (await Card.count({ where: { id: cardId, userId: this.userId } })) > 0;
   }
 }

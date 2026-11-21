@@ -9,6 +9,8 @@ import {
   IncomeCategoryAllocation
 } from './income-category-allocation.js';
 import { Goal } from './goal.js';
+import { GoalReimbursement } from './goal-reimbursement.js';
+import { SavingsFund } from './savings-fund.js';
 import { Income } from './income.js';
 import { Period } from './periods.js';
 import { SubCategory } from './sub-category.js';
@@ -27,6 +29,21 @@ export const associateModels = () => {
   Expense.belongsTo(Goal, {
     foreignKey: 'goalId',
     as: 'goal',
+  });
+
+  Goal.belongsTo(SavingsFund, {
+    foreignKey: 'fundId',
+    as: 'fund',
+  });
+  Goal.belongsTo(Card, {
+    foreignKey: 'defaultCardId',
+    as: 'defaultCard',
+    onDelete: 'SET NULL',
+  });
+  Goal.hasMany(GoalReimbursement, {
+    foreignKey: 'goalId',
+    as: 'reimbursements',
+    onDelete: 'CASCADE',
   });
 
   ExpenseRecurrence.hasMany(Expense, {

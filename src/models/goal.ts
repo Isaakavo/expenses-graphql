@@ -1,15 +1,18 @@
 import { DataTypes, Model, Sequelize } from 'sequelize';
-import { CurrencyCode } from '../generated/graphql.js';
+import { CurrencyCode, GoalKind } from '../generated/graphql.js';
 
 export class Goal extends Model {
   public id!: string;
   public userId!: string;
   public name!: string;
-  public targetAmount!: number;
+  public kind!: GoalKind;
+  public targetAmount!: number | null;
   public currency!: CurrencyCode;
   // DATEONLY columns are returned as 'yyyy-MM-dd' strings
   public startDate!: string;
   public endDate!: string | null;
+  public fundId!: string | null;
+  public defaultCardId!: string | null;
   public createdAt!: Date;
   public updatedAt!: Date;
 }
@@ -31,9 +34,14 @@ export const initGoalModel = (sequelize: Sequelize) => {
         type: DataTypes.STRING(100),
         allowNull: false,
       },
+      kind: {
+        type: DataTypes.STRING(16),
+        allowNull: false,
+        defaultValue: GoalKind.SAVINGS,
+      },
       targetAmount: {
         type: DataTypes.DECIMAL(12, 2),
-        allowNull: false,
+        allowNull: true,
         field: 'target_amount',
       },
       currency: {
@@ -50,6 +58,16 @@ export const initGoalModel = (sequelize: Sequelize) => {
         type: DataTypes.DATEONLY,
         allowNull: true,
         field: 'end_date',
+      },
+      fundId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'fund_id',
+      },
+      defaultCardId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'default_card_id',
       },
     },
     {

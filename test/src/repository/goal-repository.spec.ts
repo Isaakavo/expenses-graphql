@@ -3,6 +3,7 @@ import { GoalRepository } from '../../../src/repository/goal-repository.js';
 import { initModels } from '../../../src/models/init-models.js';
 import { associateModels } from '../../../src/models/associations.js';
 import { Expense } from '../../../src/models/index.js';
+import { GoalKind } from '../../../src/generated/graphql.js';
 
 const userA = '11111111-1111-4111-8111-111111111111';
 const userB = '22222222-2222-4222-8222-222222222222';
@@ -161,6 +162,66 @@ describe('GoalRepository', () => {
       expect(expenses.map((e) => e.goalId).sort()).toEqual(
         [g1.id, g2.id].sort()
       );
+    });
+  });
+
+  describe('reimbursable goals', () => {
+    const newEvent = async (repo: GoalRepository, userId: string) => {
+      const { SavingsFund, Card } = await import('../../../src/models/index.js');
+      const fund = await SavingsFund.create({ userId, name: 'Ahorros', currency: 'MXN' });
+      const card = await Card.create({ userId, bank: 'BBVA', alias: 'Oro' });
+      return repo.createGoal({
+        name: 'Viaje',
+        kind: GoalKind.REIMBURSABLE,
+        targetAmount: null,
+        startDate: '2026-11-25',
+        fundId: fund.id,
+        defaultCardId: card.id,
+      });
+    };
+
+    it('returns the event with its fund and default card', async () => {
+      const event = await newEvent(repoA, userA);
+      expect(event.kind).toBe(GoalKind.REIMBURSABLE);
+      expect(event.targetAmount).toBeNull();
+      expect(event.fund).toMatchObject({ name: 'Ahorros', currency: 'MXN' });
+      expect(event.defaultCard).toMatchObject({ bank: 'BBVA', alias: 'Oro' });
+      expect((await repoA.getGoals())[0].fund?.id).toBe(event.fund?.id);
+    });
+
+    it('adds, updates and deletes reimbursements scoped by user', async () => {
+      const event = await newEvent(repoA, userA);
+      const input = { amount: 600.5, receivedOn: '2026-12-01', comment: null };
+      const added = await repoA.addReimbursement(event.id, input);
+      expect(added).toMatchObject({ goalId: event.id, amount: 600.5, receivedOn: '2026-12-01' });
+      expect(await repoA.countReimbursements(event.id)).toBe(1);
+
+      await expect(repoB.updateReimbursement(added.id, input)).rejects.toThrow(
+        'Reimbursement not found'
+      );
+      await expect(repoB.deleteReimbursement(added.id)).rejects.toThrow(
+        'Reimbursement not found'
+      );
+      expect(await repoB.getReimbursementsByGoalIds([event.id])).toEqual([]);
+
+      const updated = await repoA.updateReimbursement(added.id, { ...input, comment: 'Nómina' });
+      expect(updated.comment).toBe('Nómina');
+      await expect(repoA.deleteReimbursement(added.id)).resolves.toBe(true);
+      expect(await repoA.getReimbursementsByGoalIds([event.id])).toEqual([]);
+    });
+
+    it('orders reimbursements by receivedOn', async () => {
+      const event = await newEvent(repoA, userA);
+      await repoA.addReimbursement(event.id, { amount: 2, receivedOn: '2026-12-05', comment: null });
+      await repoA.addReimbursement(event.id, { amount: 1, receivedOn: '2026-12-01', comment: null });
+      const list = await repoA.getReimbursementsByGoalIds([event.id]);
+      expect(list.map((r) => r.amount)).toEqual([1, 2]);
+    });
+
+    it('checks card ownership', async () => {
+      const event = await newEvent(repoA, userA);
+      expect(await repoA.cardExists(event.defaultCard!.id)).toBe(true);
+      expect(await repoB.cardExists(event.defaultCard!.id)).toBe(false);
     });
   });
 });

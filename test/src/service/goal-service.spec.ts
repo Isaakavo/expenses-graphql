@@ -2,21 +2,28 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Sequelize } from 'sequelize';
 import { GoalService } from '../../../src/service/goal-service.js';
 import { ExpenseDTO } from '../../../src/dto/expense-dto.js';
-import { CurrencyCode } from '../../../src/generated/graphql.js';
+import { CurrencyCode, GoalKind } from '../../../src/generated/graphql.js';
 import { GoalRepository } from '../../../src/repository/goal-repository.js';
+import { SavingsFundRepository } from '../../../src/repository/savings-fund-repository.js';
 
 const userId = 'test-user';
 let service: GoalService;
 let mockRepo: GoalRepository;
+let mockFunds: SavingsFundRepository;
+
+const fund = { id: 'fund-1', name: 'Ahorros', currency: CurrencyCode.MXN };
 
 const goalDto = {
   id: 'goal-1',
   userId,
   name: 'Trip',
+  kind: GoalKind.SAVINGS,
   targetAmount: 1000,
   currency: CurrencyCode.USD,
   startDate: '2026-01-01',
   endDate: null,
+  fund: null,
+  defaultCard: null,
 };
 
 const validInput = {
@@ -45,12 +52,24 @@ beforeEach(() => {
     closeGoal: vi.fn(),
     deleteGoal: vi.fn(),
     getExpensesByGoalIds: vi.fn(),
+    cardExists: vi.fn().mockResolvedValue(true),
+    countReimbursements: vi.fn().mockResolvedValue(0),
+    getReimbursementsByGoalIds: vi.fn(),
+    addReimbursement: vi.fn(),
+    updateReimbursement: vi.fn(),
+    deleteReimbursement: vi.fn(),
   } as unknown as GoalRepository;
+  mockFunds = {
+    getFunds: vi.fn().mockResolvedValue([fund]),
+    getFundByPk: vi.fn().mockResolvedValue(fund),
+    createFund: vi.fn().mockResolvedValue(fund),
+  } as unknown as SavingsFundRepository;
   service = new GoalService(
     userId,
     new Sequelize('sqlite::memory:', { logging: false })
   );
   service.goalRepository = mockRepo;
+  service.savingsFundRepository = mockFunds;
   Object.assign(service, {
     userSettingsService: { getDefaultCurrency: vi.fn().mockResolvedValue(CurrencyCode.USD) },
   });
@@ -133,6 +152,9 @@ describe('GoalService', () => {
         startDate: '2026-01-01',
         endDate: '2026-06-01',
         currency: CurrencyCode.USD,
+        kind: GoalKind.SAVINGS,
+        fundId: null,
+        defaultCardId: null,
       });
       expect(result).toEqual(goalDto);
     });
@@ -159,6 +181,7 @@ describe('GoalService', () => {
     });
 
     it('validates before touching the repository', async () => {
+      vi.mocked(mockRepo.getGoalByPk).mockResolvedValue(goalDto);
       await expectCode(
         service.updateGoal({ id: 'goal-1', ...validInput, name: '' }),
         'VALIDATION_ERROR',
@@ -168,6 +191,7 @@ describe('GoalService', () => {
     });
 
     it('rejects endDate before startDate and malformed dates', async () => {
+      vi.mocked(mockRepo.getGoalByPk).mockResolvedValue(goalDto);
       await expectCode(
         service.updateGoal({
           id: 'goal-1',
@@ -304,6 +328,157 @@ describe('GoalService', () => {
         [],
         ['e1', 'e3'],
       ]);
+    });
+  });
+
+  describe('reimbursable goals', () => {
+    const event = {
+      ...goalDto,
+      id: 'event-1',
+      kind: GoalKind.REIMBURSABLE,
+      targetAmount: null,
+      fund,
+    };
+    const eventInput = {
+      name: 'Viaje CDMX',
+      kind: GoalKind.REIMBURSABLE,
+      startDate: '2026-11-25',
+    };
+
+    it('creates an event in the default fund without a target', async () => {
+      vi.mocked(mockRepo.createGoal).mockResolvedValue(event);
+      await service.createGoal({ ...eventInput, defaultCardId: 'card-1' });
+      expect(mockRepo.createGoal).toHaveBeenCalledWith({
+        name: 'Viaje CDMX',
+        kind: GoalKind.REIMBURSABLE,
+        targetAmount: null,
+        startDate: '2026-11-25',
+        endDate: null,
+        fundId: 'fund-1',
+        defaultCardId: 'card-1',
+        currency: CurrencyCode.USD,
+      });
+    });
+
+    it('creates the default fund on first use', async () => {
+      vi.mocked(mockFunds.getFunds).mockResolvedValue([]);
+      await expect(service.getSavingsFunds()).resolves.toEqual([fund]);
+      expect(mockFunds.createFund).toHaveBeenCalledWith('Ahorros', CurrencyCode.USD);
+    });
+
+    it('rejects a target on an event and a missing target on a savings goal', async () => {
+      await expectCode(
+        service.createGoal({ ...eventInput, targetAmount: 100 }),
+        'VALIDATION_ERROR',
+        'targetAmount'
+      );
+      await expectCode(
+        service.createGoal({ ...validInput, targetAmount: null }),
+        'VALIDATION_ERROR',
+        'targetAmount'
+      );
+    });
+
+    it('rejects a fund on a savings goal and an unknown fund on an event', async () => {
+      await expectCode(
+        service.createGoal({ ...validInput, fundId: 'fund-1' }),
+        'VALIDATION_ERROR',
+        'fundId'
+      );
+      vi.mocked(mockFunds.getFundByPk).mockResolvedValue(null);
+      await expectCode(
+        service.createGoal({ ...eventInput, fundId: 'other' }),
+        'VALIDATION_ERROR',
+        'fundId'
+      );
+      expect(mockRepo.createGoal).not.toHaveBeenCalled();
+    });
+
+    it('rejects a default card of another user', async () => {
+      vi.mocked(mockRepo.cardExists).mockResolvedValue(false);
+      await expectCode(
+        service.createGoal({ ...eventInput, defaultCardId: 'card-x' }),
+        'VALIDATION_ERROR',
+        'defaultCardId'
+      );
+    });
+
+    it('keeps the default card when omitted and clears it when null', async () => {
+      vi.mocked(mockRepo.getGoalByPk).mockResolvedValue(event);
+      vi.mocked(mockRepo.updateGoal).mockResolvedValue(event);
+      await service.updateGoal({ id: 'event-1', ...eventInput });
+      expect(mockRepo.updateGoal).toHaveBeenLastCalledWith(
+        'event-1',
+        expect.not.objectContaining({ defaultCardId: expect.anything() })
+      );
+      await service.updateGoal({ id: 'event-1', ...eventInput, defaultCardId: null });
+      expect(mockRepo.updateGoal).toHaveBeenLastCalledWith(
+        'event-1',
+        expect.objectContaining({ defaultCardId: null })
+      );
+    });
+
+    it('blocks a currency change once the event has reimbursements', async () => {
+      vi.mocked(mockRepo.getGoalByPk).mockResolvedValue(event);
+      vi.mocked(mockRepo.countReimbursements).mockResolvedValue(1);
+      await expectCode(
+        service.updateGoal({ id: 'event-1', ...eventInput, currency: CurrencyCode.MXN }),
+        'VALIDATION_ERROR',
+        'currency'
+      );
+      expect(mockRepo.updateGoal).not.toHaveBeenCalled();
+    });
+
+    it('adds a reimbursement with a trimmed comment', async () => {
+      vi.mocked(mockRepo.getGoalByPk).mockResolvedValue(event);
+      await service.addReimbursement({
+        goalId: 'event-1',
+        amount: 600,
+        receivedOn: '2026-12-01',
+        comment: '  ',
+      });
+      expect(mockRepo.addReimbursement).toHaveBeenCalledWith('event-1', {
+        amount: 600,
+        receivedOn: '2026-12-01',
+        comment: null,
+      });
+    });
+
+    it('only adds reimbursements to events', async () => {
+      vi.mocked(mockRepo.getGoalByPk).mockResolvedValue(goalDto);
+      await expectCode(
+        service.addReimbursement({ goalId: 'goal-1', amount: 1, receivedOn: '2026-12-01' }),
+        'VALIDATION_ERROR',
+        'goalId'
+      );
+    });
+
+    it.each([
+      [{ amount: 0 }, 'amount'],
+      [{ amount: NaN }, 'amount'],
+      [{ receivedOn: '2026-02-30' }, 'receivedOn'],
+      [{ comment: 'a'.repeat(256) }, 'comment'],
+    ])('rejects reimbursement %j', async (override, argumentName) => {
+      await expectCode(
+        service.updateReimbursement({
+          id: 'r-1',
+          amount: 10,
+          receivedOn: '2026-12-01',
+          ...override,
+        }),
+        'VALIDATION_ERROR',
+        argumentName
+      );
+      expect(mockRepo.updateReimbursement).not.toHaveBeenCalled();
+    });
+
+    it('groups reimbursements per goal in input order', async () => {
+      vi.mocked(mockRepo.getReimbursementsByGoalIds).mockResolvedValue([
+        { id: 'r1', goalId: 'b', amount: 1, receivedOn: '2026-12-01', comment: null },
+        { id: 'r2', goalId: 'a', amount: 2, receivedOn: '2026-12-02', comment: null },
+      ]);
+      const result = await service.getReimbursementsGroupedByGoalIds(['a', 'c', 'b']);
+      expect(result.map((list) => list.map((r) => r.id))).toEqual([['r2'], [], ['r1']]);
     });
   });
 });
