@@ -402,6 +402,7 @@ export type Mutation = {
   createGoal: Goal;
   createIncome: Income;
   createInvestmentRecord: InvestmentRecord;
+  createSplitExpense: Array<Expense>;
   deleteCard: Scalars['Boolean']['output'];
   deleteCategorySetting: CategorySetting;
   deleteExpense: Scalars['Boolean']['output'];
@@ -464,6 +465,12 @@ export type MutationCreateIncomeArgs = {
 
 export type MutationCreateInvestmentRecordArgs = {
   input?: InputMaybe<InvestmentRecordInput>;
+};
+
+
+export type MutationCreateSplitExpenseArgs = {
+  input: CreateExpenseInput;
+  reimbursable: ReimbursableShareInput;
 };
 
 
@@ -668,6 +675,11 @@ export type RecurringSeries = {
   expenses: Array<Expense>;
   frequency: FixedExpenseFrequency;
   id: Scalars['ID']['output'];
+};
+
+export type ReimbursableShareInput = {
+  amount: Scalars['Float']['input'];
+  goalId: Scalars['ID']['input'];
 };
 
 export type SavingsFund = {
@@ -942,6 +954,7 @@ export type ResolversTypes = ResolversObject<{
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   RecurrenceScope: RecurrenceScope;
   RecurringSeries: ResolverTypeWrapper<RecurringSeries>;
+  ReimbursableShareInput: ReimbursableShareInput;
   SavingsFund: ResolverTypeWrapper<SavingsFund>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   SubCategory: ResolverTypeWrapper<SubCategory>;
@@ -1013,6 +1026,7 @@ export type ResolversParentTypes = ResolversObject<{
   Period: Period;
   Query: Record<PropertyKey, never>;
   RecurringSeries: RecurringSeries;
+  ReimbursableShareInput: ReimbursableShareInput;
   SavingsFund: SavingsFund;
   String: Scalars['String']['output'];
   SubCategory: SubCategory;
@@ -1246,6 +1260,7 @@ export type MutationResolvers<ContextType = Context, ParentType extends Resolver
   createGoal?: Resolver<ResolversTypes['Goal'], ParentType, ContextType, RequireFields<MutationCreateGoalArgs, 'input'>>;
   createIncome?: Resolver<ResolversTypes['Income'], ParentType, ContextType, RequireFields<MutationCreateIncomeArgs, 'input'>>;
   createInvestmentRecord?: Resolver<ResolversTypes['InvestmentRecord'], ParentType, ContextType, Partial<MutationCreateInvestmentRecordArgs>>;
+  createSplitExpense?: Resolver<Array<ResolversTypes['Expense']>, ParentType, ContextType, RequireFields<MutationCreateSplitExpenseArgs, 'input' | 'reimbursable'>>;
   deleteCard?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteCardArgs, 'id'>>;
   deleteCategorySetting?: Resolver<ResolversTypes['CategorySetting'], ParentType, ContextType, RequireFields<MutationDeleteCategorySettingArgs, 'categoryId'>>;
   deleteExpense?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteExpenseArgs, 'id'>>;

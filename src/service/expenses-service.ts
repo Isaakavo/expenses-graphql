@@ -1,6 +1,6 @@
 import { FindOptions, Sequelize, Transaction } from 'sequelize';
 import { ExpenseDTO, ForeignColumns } from '../dto';
-import { CurrencyCode, FixedExpenseFrequency, GoalRole } from '../generated/graphql.js';
+import { CurrencyCode, FixedExpenseFrequency, GoalKind, GoalRole } from '../generated/graphql.js';
 import { RecurrenceRepository } from '../repository/recurrence-repository.js';
 import { isoDay, sequential, seriesDates } from '../utils/recurrence-utils.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
@@ -19,6 +19,7 @@ import {
 } from '../utils/decimal.js';
 import { conflictError } from '../utils/conflict-error.js';
 import { validationError } from '../utils/validation-error.js';
+import { ReimbursableShare, splitExpense } from '../utils/split-expense.js';
 import {
   BANXICO_FIX_SOURCE,
   ExchangeRateService,
@@ -388,7 +389,7 @@ export class ExpensesService {
     return payBefore;
   }
 
-  async createExpense(input: ExpenseInput) {
+  private async prepareCreate(input: ExpenseInput) {
     assertCommentLength(input.comments);
     await this.assertGoalLink(input);
     const needsPeriod = !input.periodId;
@@ -421,10 +422,15 @@ export class ExpensesService {
     }
 
     const converted = await this.convertNew(input);
-    const write = {
+    return {
       ...fields,
       ...(converted && { total: converted.total, ...converted.columns }),
     };
+  }
+
+  async createExpense(input: ExpenseInput) {
+    const write = await this.prepareCreate(input);
+    const needsPeriod = !input.periodId;
 
     if (!needsPeriod) {
       return await this.expenseRepository.createExpense({
@@ -446,6 +452,37 @@ export class ExpensesService {
           currency: await this.resolveCurrency(periodId, { transaction }),
         },
         { transaction }
+      );
+      await transaction.commit();
+      return created;
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  async createSplitExpense(input: ExpenseInput, share: ReimbursableShare) {
+    if (input.goalId != null || input.goalRole != null) {
+      throw validationError('A split expense cannot be linked to a goal', 'goalId');
+    }
+    if (!input.periodId) {
+      throw validationError('periodId is required', 'periodId');
+    }
+    const { own, reimbursable } = splitExpense(input, share);
+    const goal = await this.goalService.assertGoalLinkable(share.goalId);
+    if (goal.kind !== GoalKind.REIMBURSABLE) {
+      throw validationError('The goal must be reimbursable', 'reimbursable');
+    }
+    const writes = await sequential(
+      [own, reimbursable].filter((part) => part != null),
+      (part) => this.prepareCreate(part)
+    );
+    const currency = await this.resolveCurrency(input.periodId);
+
+    const transaction = await this.sequelize.transaction();
+    try {
+      const created = await sequential(writes, (write) =>
+        this.expenseRepository.createExpense({ ...write, currency }, { transaction })
       );
       await transaction.commit();
       return created;

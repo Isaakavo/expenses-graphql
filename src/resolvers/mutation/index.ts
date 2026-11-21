@@ -16,6 +16,7 @@ export { createGoal } from './goal/create-goal.js';
 export { updateGoal } from './goal/update-goal.js';
 export { closeGoal } from './goal/close-goal.js';
 export { deleteGoal } from './goal/delete-goal.js';
+export { createSplitExpense } from './expenses/create-split-expense.js';
 export { addGoalReimbursement } from './goal/add-goal-reimbursement.js';
 export { updateGoalReimbursement } from './goal/update-goal-reimbursement.js';
 export { deleteGoalReimbursement } from './goal/delete-goal-reimbursement.js';

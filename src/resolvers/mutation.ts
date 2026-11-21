@@ -4,6 +4,7 @@ import {
   createCard,
   createExpense,
   createFixedExpense,
+  createSplitExpense,
   createIncome,
   deleteCard,
   createGoal,
@@ -39,6 +40,7 @@ const mutations: MutationResolvers = {
   updateCategorySetting: withErrorHandling('updateCategorySetting', updateCategorySetting),
   // TODO add logic to handle weekly expenses
   createFixedExpense: withErrorHandling('createFixedExpense', createFixedExpense),
+  createSplitExpense: withErrorHandling('createSplitExpense', createSplitExpense),
   updateExpense: withErrorHandling('updateExpense', updateExpense),
   deleteExpense: withErrorHandling('deleteExpense', deleteExpense),
   updateRecurringExpense: withErrorHandling('updateRecurringExpense', updateRecurringExpense),

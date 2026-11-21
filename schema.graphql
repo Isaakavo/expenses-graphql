@@ -405,6 +405,11 @@ input CreateExpenseInput {
   foreignAmount: ForeignAmountInput
 }
 
+input ReimbursableShareInput {
+  goalId: ID!
+  amount: Float!
+}
+
 input CreateFixedExpenseInput {
   cardId: ID
   concept: String!
@@ -567,6 +572,7 @@ type Mutation {
   deleteIncomeById(id: ID!): Boolean!
   createExpense(input: CreateExpenseInput!): Expense
   createFixedExpense(input: CreateFixedExpenseInput): [Expense]
+  createSplitExpense(input: CreateExpenseInput!, reimbursable: ReimbursableShareInput!): [Expense!]!
   updateExpense(input: UpdateExpenseInput!): Expense!
   deleteExpense(id: ID!): Boolean!
   updateRecurringExpense(input: UpdateExpenseInput!, scope: RecurrenceScope!): [Expense!]!
