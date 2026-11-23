@@ -1,6 +1,12 @@
 import { FindOptions, Sequelize, Transaction } from 'sequelize';
 import { ExpenseDTO, ForeignColumns } from '../dto';
-import { CurrencyCode, FixedExpenseFrequency, GoalKind, GoalRole } from '../generated/graphql.js';
+import {
+  CurrencyCode,
+  FixedExpenseFrequency,
+  GoalKind,
+  GoalRole,
+  SeriesAmountMode,
+} from '../generated/graphql.js';
 import { RecurrenceRepository } from '../repository/recurrence-repository.js';
 import { isoDay, sequential, seriesDates } from '../utils/recurrence-utils.js';
 import { ExpenseRepository } from '../repository/expense-repository.js';
@@ -20,6 +26,7 @@ import {
 import { conflictError } from '../utils/conflict-error.js';
 import { validationError } from '../utils/validation-error.js';
 import { ReimbursableShare, splitExpense } from '../utils/split-expense.js';
+import { seriesAmount, splitSeriesTemplate } from '../utils/split-installments.js';
 import {
   BANXICO_FIX_SOURCE,
   ExchangeRateService,
@@ -61,14 +68,19 @@ export type FixedExpenseInput = {
   numberOfRepetitions: number;
   frequency: FixedExpenseFrequency;
   foreignAmount?: ForeignAmountParams | null;
+  amountMode?: SeriesAmountMode | null;
 };
 
 export type SeriesTemplate = Omit<
   FixedExpenseInput,
-  'payBefore' | 'numberOfRepetitions' | 'frequency'
+  'payBefore' | 'numberOfRepetitions' | 'frequency' | 'amountMode'
 >;
 
-export type PlannedExpense = { payBefore: Date; conversion?: Conversion };
+export type PlannedExpense = {
+  payBefore: Date;
+  template: SeriesTemplate;
+  conversion?: Conversion;
+};
 
 type SeriesLink = { recurrenceId: string; firstIndex: number };
 
@@ -105,9 +117,9 @@ const assertCommentLength = (comment: string | null | undefined) => {
 };
 
 export const assertRepetitions = (count: number, argumentName: string) => {
-  if (count > MAX_REPETITIONS) {
+  if (!Number.isInteger(count) || count < 1 || count > MAX_REPETITIONS) {
     throw validationError(
-      `${argumentName} must be at most ${MAX_REPETITIONS}`,
+      `${argumentName} must be between 1 and ${MAX_REPETITIONS}`,
       argumentName
     );
   }
@@ -367,19 +379,20 @@ export class ExpensesService {
   }
 
   private async convertSeries(
-    template: SeriesTemplate,
+    templates: SeriesTemplate[],
     dates: Date[]
-  ): Promise<Conversion[]> {
-    if (!template.foreignAmount) {
-      return [];
-    }
-    return sequential(dates, async (payBefore) =>
-      this.convert(template.foreignAmount, {
-        total: template.total,
+  ): Promise<(Conversion | undefined)[]> {
+    return sequential(dates, async (payBefore, i) => {
+      const { foreignAmount, total } = templates[i];
+      if (!foreignAmount) {
+        return undefined;
+      }
+      return this.convert(foreignAmount, {
+        total,
         payBefore,
         bookCurrency: await this.currencyFor({ date: payBefore }),
-      })
-    );
+      });
+    });
   }
 
   private requirePayBefore(payBefore: Date | undefined) {
@@ -663,18 +676,23 @@ export class ExpensesService {
     assertRepetitions(input.numberOfRepetitions, 'numberOfRepetitions');
     await this.assertGoalLink(input);
 
+    const splitsTotal = input.amountMode === SeriesAmountMode.TOTAL;
+    const templates = splitsTotal
+      ? splitSeriesTemplate(input, input.numberOfRepetitions)
+      : Array.from({ length: input.numberOfRepetitions }, () => input);
     const planned = await this.planSeries(
-      input,
+      templates,
       seriesDates(input.payBefore, input.frequency, input.numberOfRepetitions)
     );
 
     const transaction = await this.sequelize.transaction();
     try {
-      const recurrence = await this.recurrenceRepository.create(input.frequency, {
-        transaction,
-      });
+      const recurrence = await this.recurrenceRepository.create(
+        input.frequency,
+        splitsTotal ? seriesAmount(input) : null,
+        { transaction }
+      );
       const expenses = await this.createSeriesExpenses(
-        input,
         planned,
         { recurrenceId: recurrence.id, firstIndex: 0 },
         transaction
@@ -693,20 +711,23 @@ export class ExpensesService {
   }
 
   async planSeries(
-    template: SeriesTemplate,
+    templates: SeriesTemplate[],
     dates: Date[]
   ): Promise<PlannedExpense[]> {
-    const conversions = await this.convertSeries(template, dates);
-    return dates.map((payBefore, i) => ({ payBefore, conversion: conversions[i] }));
+    const conversions = await this.convertSeries(templates, dates);
+    return dates.map((payBefore, i) => ({
+      payBefore,
+      template: templates[i],
+      conversion: conversions[i],
+    }));
   }
 
   async createSeriesExpenses(
-    template: SeriesTemplate,
     planned: PlannedExpense[],
     { recurrenceId, firstIndex }: SeriesLink,
     transaction: Transaction
   ): Promise<ExpenseDTO[]> {
-    return sequential(planned, async ({ payBefore, conversion }, i) => {
+    return sequential(planned, async ({ payBefore, template, conversion }, i) => {
       const periodId = await this.resolvePeriodId(payBefore, { transaction });
       return this.expenseRepository.createExpense(
         {

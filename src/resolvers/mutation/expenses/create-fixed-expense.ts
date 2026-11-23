@@ -20,6 +20,7 @@ export const createFixedExpense: MutationResolvers['createFixedExpense'] =
       foreignAmount: input.foreignAmount,
       numberOfRepetitions: input.numberOfRepetitions,
       frequency: input.frequency,
+      amountMode: input.amountMode,
     });
 
     return expenses.map((expense) => adaptExpensesDTOInput(expense));

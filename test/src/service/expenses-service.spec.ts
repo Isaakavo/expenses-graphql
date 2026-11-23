@@ -3,7 +3,13 @@ import { Sequelize } from 'sequelize';
 import { PeriodRepository } from '../../../src/repository/period-repository.js';
 import { ExpenseRepository } from '../../../src/repository/expense-repository.js';
 import { ExpensesService } from '../../../src/service/expenses-service.js';
-import { CurrencyCode, FixedExpenseFrequency, GoalKind, GoalRole } from '../../../src/generated/graphql.js';
+import {
+  CurrencyCode,
+  FixedExpenseFrequency,
+  GoalKind,
+  GoalRole,
+  SeriesAmountMode,
+} from '../../../src/generated/graphql.js';
 
 type ServiceInternals = {
   periodRepository: Pick<PeriodRepository, 'getPeriodBy' | 'createPeriod'>;
@@ -236,6 +242,66 @@ describe('createFixedExpenses', () => {
     });
 
     expect(mockCreateExpense.mock.calls[0][0].cardId).toBe('card-123');
+  });
+});
+
+describe('createFixedExpenses with a total', () => {
+  const echoCreate = () =>
+    vi.fn().mockImplementation((input) => ({ id: crypto.randomUUID(), ...input, userId }));
+
+  beforeEach(() => {
+    internals(service).periodRepository = {
+      getPeriodBy: vi.fn().mockResolvedValue(basePeriod),
+      createPeriod: vi.fn(),
+    };
+  });
+
+  it('splits the total into exact installments and stores it on the series', async () => {
+    const createExpense = echoCreate();
+    internals(service).expenseRepository = { createExpense };
+
+    await service.createFixedExpenses({
+      ...baseFixedInput,
+      total: 610,
+      numberOfRepetitions: 12,
+      frequency: FixedExpenseFrequency.BIWEEKLY,
+      amountMode: SeriesAmountMode.TOTAL,
+    });
+
+    const totals = createExpense.mock.calls.map(([input]) => input.total);
+    expect(totals).toHaveLength(12);
+    expect(totals.reduce((acc, total) => acc + Math.round(total * 100), 0)).toBe(61000);
+    expect(new Set(totals)).toEqual(new Set([50.83, 50.84]));
+    const create = (service as unknown as { recurrenceRepository: { create: ReturnType<typeof vi.fn> } })
+      .recurrenceRepository.create;
+    expect(create).toHaveBeenCalledWith(FixedExpenseFrequency.BIWEEKLY, 610, { transaction: mockTransaction });
+  });
+
+  it('repeats the amount and stores no total per occurrence', async () => {
+    const createExpense = echoCreate();
+    internals(service).expenseRepository = { createExpense };
+
+    await service.createFixedExpenses(baseFixedInput);
+
+    expect(createExpense.mock.calls.map(([input]) => input.total)).toEqual([5000, 5000, 5000]);
+    const create = (service as unknown as { recurrenceRepository: { create: ReturnType<typeof vi.fn> } })
+      .recurrenceRepository.create;
+    expect(create).toHaveBeenCalledWith(FixedExpenseFrequency.MONTHLY, null, { transaction: mockTransaction });
+  });
+
+  it('rejects a total smaller than one cent per installment', async () => {
+    internals(service).expenseRepository = { createExpense: echoCreate() };
+
+    await expect(
+      service.createFixedExpenses({ ...baseFixedInput, total: 0.02, amountMode: SeriesAmountMode.TOTAL })
+    ).rejects.toMatchObject({ extensions: { code: 'VALIDATION_ERROR', argumentName: 'total' } });
+    expect(mockSequelize.transaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects zero repetitions', async () => {
+    await expect(
+      service.createFixedExpenses({ ...baseFixedInput, numberOfRepetitions: 0 })
+    ).rejects.toMatchObject({ extensions: { code: 'VALIDATION_ERROR', argumentName: 'numberOfRepetitions' } });
   });
 });
 

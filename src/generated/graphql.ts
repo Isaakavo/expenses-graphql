@@ -146,6 +146,7 @@ export type CreateExpenseInput = {
 };
 
 export type CreateFixedExpenseInput = {
+  amountMode?: InputMaybe<SeriesAmountMode>;
   cardId?: InputMaybe<Scalars['ID']['input']>;
   categoryId: Scalars['String']['input'];
   comment?: InputMaybe<Scalars['String']['input']>;
@@ -220,6 +221,7 @@ export type ExpenseRecurrence = {
   count: Scalars['Int']['output'];
   frequency: FixedExpenseFrequency;
   id: Scalars['ID']['output'];
+  plannedTotal?: Maybe<Scalars['String']['output']>;
   position: Scalars['Int']['output'];
 };
 
@@ -689,6 +691,11 @@ export type SavingsFund = {
   name: Scalars['String']['output'];
 };
 
+export enum SeriesAmountMode {
+  PER_OCCURRENCE = 'PER_OCCURRENCE',
+  TOTAL = 'TOTAL'
+}
+
 export type SubCategory = {
   __typename?: 'SubCategory';
   id: Scalars['ID']['output'];
@@ -956,6 +963,7 @@ export type ResolversTypes = ResolversObject<{
   RecurringSeries: ResolverTypeWrapper<RecurringSeries>;
   ReimbursableShareInput: ReimbursableShareInput;
   SavingsFund: ResolverTypeWrapper<SavingsFund>;
+  SeriesAmountMode: SeriesAmountMode;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   SubCategory: ResolverTypeWrapper<SubCategory>;
   Total: ResolverTypeWrapper<ResolversInterfaceTypes<ResolversTypes>['Total']>;
@@ -1135,6 +1143,7 @@ export type ExpenseRecurrenceResolvers<ContextType = Context, ParentType extends
   count?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   frequency?: Resolver<ResolversTypes['FixedExpenseFrequency'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  plannedTotal?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   position?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
 }>;
 
