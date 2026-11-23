@@ -3,7 +3,7 @@ import { Sequelize } from 'sequelize';
 import { PeriodRepository } from '../../../src/repository/period-repository.js';
 import { ExpenseRepository } from '../../../src/repository/expense-repository.js';
 import { ExpensesService } from '../../../src/service/expenses-service.js';
-import { CurrencyCode, FixedExpenseFrequency, GoalRole } from '../../../src/generated/graphql.js';
+import { CurrencyCode, FixedExpenseFrequency, GoalKind, GoalRole } from '../../../src/generated/graphql.js';
 
 type ServiceInternals = {
   periodRepository: Pick<PeriodRepository, 'getPeriodBy' | 'createPeriod'>;
@@ -417,6 +417,64 @@ describe('goal link on expenses', () => {
         goalRole: GoalRole.CONTRIBUTION,
       });
       expect(mockCreateExpense).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('createSplitExpense', () => {
+    const share = { goalId, amount: 60 };
+
+    beforeEach(() => {
+      mockAssertGoalLinkable.mockResolvedValue({ id: goalId, kind: GoalKind.REIMBURSABLE });
+      (service as unknown as Record<string, unknown>).incomeRepository = {
+        getCurrencyByPeriod: vi.fn().mockResolvedValue(CurrencyCode.MXN),
+      };
+    });
+
+    it('creates the own share and the goal share in one transaction', async () => {
+      const created = await service.createSplitExpense(baseCreateInput, share);
+
+      expect(created).toHaveLength(2);
+      expect(mockCreateExpense.mock.calls.map(([write]) => [write.total, write.goalRole ?? null])).toEqual([
+        [40, null],
+        [60, GoalRole.SPENDING],
+      ]);
+      expect(mockCreateExpense.mock.calls.every(([write, options]) =>
+        write.currency === CurrencyCode.MXN &&
+        write.periodId === 'period-1' &&
+        options.transaction === mockTransaction
+      )).toBe(true);
+      expect(mockTransaction.commit).toHaveBeenCalled();
+    });
+
+    it('rolls both back when one insert fails', async () => {
+      mockCreateExpense.mockImplementationOnce(echo).mockRejectedValueOnce(new Error('DB error'));
+
+      await expect(service.createSplitExpense(baseCreateInput, share)).rejects.toThrow('DB error');
+      expect(mockTransaction.rollback).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects a savings goal, a linked own share and a missing period', async () => {
+      mockAssertGoalLinkable.mockResolvedValue({ id: goalId, kind: GoalKind.SAVINGS });
+      await expect(service.createSplitExpense(baseCreateInput, share)).rejects.toMatchObject({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'reimbursable' },
+      });
+      await expect(
+        service.createSplitExpense({ ...baseCreateInput, goalId, goalRole: GoalRole.CONTRIBUTION }, share)
+      ).rejects.toMatchObject({ extensions: { code: 'VALIDATION_ERROR', argumentName: 'goalId' } });
+      await expect(
+        service.createSplitExpense(withoutPeriod(baseCreateInput), share)
+      ).rejects.toMatchObject({ extensions: { code: 'VALIDATION_ERROR', argumentName: 'periodId' } });
+      expect(mockCreateExpense).not.toHaveBeenCalled();
+    });
+
+    it('creates nothing when the goal belongs to another user', async () => {
+      mockAssertGoalLinkable.mockRejectedValue(
+        Object.assign(new Error('Goal not found'), { extensions: { code: 'GOAL_NOT_FOUND' } })
+      );
+      await expect(service.createSplitExpense(baseCreateInput, share)).rejects.toMatchObject({
+        extensions: { code: 'GOAL_NOT_FOUND' },
+      });
+      expect(mockCreateExpense).not.toHaveBeenCalled();
     });
   });
 

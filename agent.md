@@ -219,7 +219,8 @@ src/
 │   │   ├── category-tools.ts
 │   │   ├── card-tools.ts
 │   │   ├── period-tools.ts
-│   │   └── exchange-rate-tools.ts # get-exchange-rate
+│   │   ├── exchange-rate-tools.ts # get-exchange-rate
+│   │   └── goal-tools.ts       # list-goals, add-goal-reimbursement
 │   └── utils.ts                # textResponse, errorResponse helpers
 ├── clients/
 │   └── banxico/

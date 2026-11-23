@@ -1,6 +1,17 @@
-import { Goal } from '../generated/graphql.js';
-import { GoalDTO } from '../dto/goal-dto.js';
+import { Goal, GoalReimbursement } from '../generated/graphql.js';
+import {
+  GoalDTO,
+  GoalReimbursementDTO,
+  SavingsFundDTO,
+} from '../dto/goal-dto.js';
 import { formatCurrency } from './income-adapter.js';
+import { adaptCardDTO } from './card-adapter.js';
+
+export const adaptSavingsFundDTO = (fund): SavingsFundDTO => ({
+  id: fund.id,
+  name: fund.name,
+  currency: fund.currency,
+});
 
 // Sequelize Goal row -> GoalDTO
 export const adaptGoalDTO = (goal): GoalDTO => {
@@ -8,23 +19,47 @@ export const adaptGoalDTO = (goal): GoalDTO => {
     id: goal.id,
     userId: goal.userId,
     name: goal.name,
-    targetAmount: Number(goal.targetAmount),
+    kind: goal.kind,
+    targetAmount: goal.targetAmount == null ? null : Number(goal.targetAmount),
     currency: goal.currency,
     startDate: goal.startDate,
     endDate: goal.endDate ?? null,
+    fund: goal.fund ? adaptSavingsFundDTO(goal.fund) : null,
+    defaultCard: goal.defaultCard ? adaptCardDTO(goal.defaultCard) : null,
   };
 };
 
-// GoalDTO -> GraphQL Goal. `expenses` is resolved by the Goal.expenses field resolver
+export const adaptGoalReimbursementDTO = (
+  reimbursement
+): GoalReimbursementDTO => ({
+  id: reimbursement.id,
+  goalId: reimbursement.goalId,
+  amount: Number(reimbursement.amount),
+  receivedOn: reimbursement.receivedOn,
+  comment: reimbursement.comment ?? null,
+});
+
+export const adaptGoalReimbursement = (
+  reimbursement: GoalReimbursementDTO
+): GoalReimbursement => ({
+  ...reimbursement,
+  amount: formatCurrency(reimbursement.amount),
+});
+
 export const adaptGoal = (goal: GoalDTO): Goal => {
   return {
     id: goal.id,
     name: goal.name,
-    targetAmount: formatCurrency(goal.targetAmount),
+    kind: goal.kind,
+    targetAmount:
+      goal.targetAmount == null ? null : formatCurrency(goal.targetAmount),
     currency: goal.currency,
     startDate: goal.startDate,
     endDate: goal.endDate,
+    fund: goal.fund,
+    defaultCard: goal.defaultCard,
     expenses: [],
+    reimbursements: [],
   };
 };
 

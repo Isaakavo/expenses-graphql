@@ -1,6 +1,7 @@
 import DataLoader from 'dataloader';
 import { Sequelize } from 'sequelize';
 import { ExpenseDTO } from '../dto/expense-dto.js';
+import { GoalReimbursementDTO } from '../dto/goal-dto.js';
 import { ExpenseRecurrence } from '../generated/graphql.js';
 import { GoalService } from '../service/goal-service.js';
 import { RecurrenceService } from '../service/recurrence-service.js';
@@ -8,6 +9,7 @@ import { RecurrenceService } from '../service/recurrence-service.js';
 export interface Loaders {
   goalExpenses: DataLoader<string, ExpenseDTO[]>;
   goalAmounts: DataLoader<string, string | null>;
+  goalReimbursements: DataLoader<string, GoalReimbursementDTO[]>;
   expenseRecurrences: DataLoader<string, ExpenseRecurrence | null>;
 }
 
@@ -25,6 +27,10 @@ export const createLoaders = (
     ),
     goalAmounts: new DataLoader<string, string | null>((expenseIds) =>
       goalService.getGoalAmountsByExpenseIds(expenseIds)
+    ),
+    goalReimbursements: new DataLoader<string, GoalReimbursementDTO[]>(
+      (goalIds) => goalService.getReimbursementsGroupedByGoalIds(goalIds),
+      { cache: false }
     ),
     expenseRecurrences: new DataLoader<string, ExpenseRecurrence | null>(
       (expenseIds) => recurrenceService.getPositions(expenseIds),

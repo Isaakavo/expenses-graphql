@@ -66,12 +66,24 @@ export function registerExpenseTools(server: McpServer, userId: string) {
           .describe(
             'Expense paid in a currency other than the period currency. Without fixedRate, total is recomputed from the exchange rate of payBefore'
           ),
+        reimbursable: z
+          .object({
+            goalId: z.string().describe('ID of a REIMBURSABLE goal'),
+            amount: z
+              .number()
+              .positive()
+              .describe('Part that will be paid back, in the entered currency (foreignAmount.amount when foreign)'),
+          })
+          .optional()
+          .describe(
+            'Splits the expense: the rest stays in the period and this part goes to the reimbursable goal, outside the period totals'
+          ),
       },
     },
     async (input) => {
       try {
         const service = new ExpensesService(userId, sequelizeClient);
-        const expense = await service.createExpense({
+        const expense = {
           concept: input.concept,
           total: input.total,
           periodId: input.periodId,
@@ -81,8 +93,12 @@ export function registerExpenseTools(server: McpServer, userId: string) {
           comments: input.comment,
           payBefore: new Date(input.payBefore),
           foreignAmount: input.foreignAmount,
-        });
-        return textResponse(adaptExpensesDTOInput(expense));
+        };
+        if (input.reimbursable) {
+          const created = await service.createSplitExpense(expense, input.reimbursable);
+          return textResponse(created.map(adaptExpensesDTOInput));
+        }
+        return textResponse(adaptExpensesDTOInput(await service.createExpense(expense)));
       } catch (error) {
         return errorResponse(error.message);
       }

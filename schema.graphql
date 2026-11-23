@@ -216,20 +216,46 @@ enum GoalRole {
   SPENDING
 }
 
+enum GoalKind {
+  SAVINGS
+  REIMBURSABLE
+}
+
+type SavingsFund {
+  id: ID!
+  name: String!
+  currency: CurrencyCode!
+}
+
+type GoalReimbursement {
+  id: ID!
+  goalId: ID!
+  amount: String!
+  receivedOn: String!
+  comment: String
+}
+
 type Goal {
   id: ID!
   name: String!
-  targetAmount: String!
+  kind: GoalKind!
+  targetAmount: String
   currency: CurrencyCode!
   startDate: String!
   endDate: String
+  fund: SavingsFund
+  defaultCard: Card
   expenses: [Expense!]!
+  reimbursements: [GoalReimbursement!]!
 }
 
 # Goal dates are plain yyyy-MM-dd strings
 input CreateGoalInput {
   name: String!
-  targetAmount: Float!
+  kind: GoalKind
+  targetAmount: Float
+  fundId: ID
+  defaultCardId: ID
   # Omitted => the user's default currency
   currency: CurrencyCode
   startDate: String!
@@ -239,11 +265,27 @@ input CreateGoalInput {
 input UpdateGoalInput {
   id: ID!
   name: String!
-  targetAmount: Float!
+  targetAmount: Float
+  fundId: ID
+  defaultCardId: ID
   # Omitted or null => unchanged
   currency: CurrencyCode
   startDate: String!
   endDate: String
+}
+
+input AddGoalReimbursementInput {
+  goalId: ID!
+  amount: Float!
+  receivedOn: String!
+  comment: String
+}
+
+input UpdateGoalReimbursementInput {
+  id: ID!
+  amount: Float!
+  receivedOn: String!
+  comment: String
 }
 
 input CloseGoalInput {
@@ -361,6 +403,11 @@ input CreateExpenseInput {
   goalRole: GoalRole
   # Unless fixedRate, the backend recomputes total from the amount and the rate of payBefore
   foreignAmount: ForeignAmountInput
+}
+
+input ReimbursableShareInput {
+  goalId: ID!
+  amount: Float!
 }
 
 input CreateFixedExpenseInput {
@@ -502,6 +549,7 @@ type Query {
   categoryList: [Categories!]
   goals: [Goal!]!
   goal(id: ID!): Goal
+  savingsFunds: [SavingsFund!]!
   categorySettings: CategorySettings
   categoryAllocation(input: CategoryAllocationInput!): CategoryAllocation
   cardList: [Card]
@@ -524,6 +572,7 @@ type Mutation {
   deleteIncomeById(id: ID!): Boolean!
   createExpense(input: CreateExpenseInput!): Expense
   createFixedExpense(input: CreateFixedExpenseInput): [Expense]
+  createSplitExpense(input: CreateExpenseInput!, reimbursable: ReimbursableShareInput!): [Expense!]!
   updateExpense(input: UpdateExpenseInput!): Expense!
   deleteExpense(id: ID!): Boolean!
   updateRecurringExpense(input: UpdateExpenseInput!, scope: RecurrenceScope!): [Expense!]!
@@ -537,6 +586,9 @@ type Mutation {
   updateGoal(input: UpdateGoalInput!): Goal!
   closeGoal(input: CloseGoalInput!): Goal!
   deleteGoal(id: ID!): Boolean!
+  addGoalReimbursement(input: AddGoalReimbursementInput!): GoalReimbursement!
+  updateGoalReimbursement(input: UpdateGoalReimbursementInput!): GoalReimbursement!
+  deleteGoalReimbursement(id: ID!): Boolean!
   createCategorySetting(input: CreateCategorySettingInput!): CategorySetting!
   updateCategorySetting(input: UpdateCategorySettingInput!): CategorySettings!
   deleteCategorySetting(categoryId: ID!): CategorySetting!

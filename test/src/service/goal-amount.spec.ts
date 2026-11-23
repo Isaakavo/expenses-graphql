@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Sequelize } from 'sequelize';
 import { GoalService } from '../../../src/service/goal-service.js';
 import { GoalLinkedExpenseRow } from '../../../src/repository/goal-repository.js';
-import { CurrencyCode } from '../../../src/generated/graphql.js';
+import { CurrencyCode, GoalKind } from '../../../src/generated/graphql.js';
 
 const { MXN, USD } = CurrencyCode;
 
@@ -100,7 +100,7 @@ describe('GoalService.getGoalAmountsByExpenseIds', () => {
 
 describe('GoalService.createGoal currency', () => {
   const input = { name: 'Trip', targetAmount: 100, startDate: '2026-01-01' };
-  const goal = { id: 'g', userId: 'user', ...input, endDate: null, currency: USD };
+  const goal = { id: 'g', userId: 'user', ...input, kind: GoalKind.SAVINGS, endDate: null, currency: USD };
 
   it('defaults to the user default currency', async () => {
     const createGoal = vi.fn().mockResolvedValue(goal);
