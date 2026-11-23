@@ -1137,6 +1137,18 @@
         "fields": null,
         "inputFields": [
           {
+            "name": "amountMode",
+            "description": null,
+            "type": {
+              "kind": "ENUM",
+              "name": "SeriesAmountMode",
+              "ofType": null
+            },
+            "defaultValue": "PER_OCCURRENCE",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "cardId",
             "description": null,
             "type": {
@@ -1946,6 +1958,18 @@
                 "name": "ID",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "plannedTotal",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -5563,6 +5587,30 @@
         "inputFields": null,
         "interfaces": [],
         "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "ENUM",
+        "name": "SeriesAmountMode",
+        "description": null,
+        "isOneOf": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "PER_OCCURRENCE",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "TOTAL",
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
         "possibleTypes": null
       },
       {

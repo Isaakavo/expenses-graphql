@@ -18,6 +18,9 @@ import {
   seriesDates,
 } from '../utils/recurrence-utils.js';
 import { conflictError } from '../utils/conflict-error.js';
+import { splitSeriesTemplate } from '../utils/split-installments.js';
+import { AMOUNT_SCALE, formatDecimal, parseDecimal } from '../utils/decimal.js';
+import { formatCurrency } from '../adapters/income-adapter.js';
 import { validationError } from '../utils/validation-error.js';
 import {
   assertRepetitions,
@@ -34,6 +37,41 @@ export type RecurrenceUpdate = {
   frequency?: FixedExpenseFrequency | null;
   count?: number | null;
 };
+
+const centsOf = (value: string | number) => parseDecimal(value, AMOUNT_SCALE);
+
+const toNumber = (cents: bigint) => Number(formatDecimal(cents, AMOUNT_SCALE));
+
+const seriesAmountOf = (expense: Expense) =>
+  centsOf(expense.originalCurrency ? expense.originalTotal : expense.total);
+
+const withAmount = (template: SeriesTemplate, last: Expense, cents: bigint): SeriesTemplate => {
+  const foreign = template.foreignAmount;
+  if (!foreign) {
+    return { ...template, total: toNumber(cents) };
+  }
+  const original = centsOf(last.originalTotal);
+  const total = foreign.fixedRate
+    ? toNumber((2n * cents * centsOf(last.total) + original) / (2n * original))
+    : template.total;
+  return { ...template, total, foreignAmount: { ...foreign, amount: toNumber(cents) } };
+};
+
+const enteredAmount = (expense: Expense, input: ExpenseUpdate) => {
+  if (input.foreignAmount) return input.foreignAmount.amount;
+  if (input.foreignAmount === null || !expense.originalCurrency) return input.total;
+  return undefined;
+};
+
+const changesSeriesAmount = (expense: Expense, input: ExpenseUpdate) => {
+  const switchesCurrency =
+    input.foreignAmount !== undefined && Boolean(input.foreignAmount) !== Boolean(expense.originalCurrency);
+  const amount = enteredAmount(expense, input);
+  return switchesCurrency || (amount != null && centsOf(amount) !== seriesAmountOf(expense));
+};
+
+const templateAmount = (template: SeriesTemplate) =>
+  centsOf(template.foreignAmount?.amount ?? template.total);
 
 const versionOf = ({ recurrence, series }: { recurrence: ExpenseRecurrence; series: Expense[] }) =>
   [
@@ -94,7 +132,13 @@ export class RecurrenceService {
     return expenseIds.map((expenseId) => {
       const row = byExpense.get(expenseId);
       return row
-        ? { id: row.recurrenceId, frequency: row.frequency, position: row.position, count: row.count }
+        ? {
+          id: row.recurrenceId,
+          frequency: row.frequency,
+          position: row.position,
+          count: row.count,
+          plannedTotal: row.plannedTotal == null ? null : formatCurrency(Number(row.plannedTotal)),
+        }
         : null;
     });
   }
@@ -131,9 +175,13 @@ export class RecurrenceService {
     const plans = await sequential(inScope(series, selected, scope), (target) =>
       this.expensesService.planUpdate(target.id, { ...input, payBefore: dateFor(target) })
     );
+    const amountChanged = changesSeriesAmount(selected, input);
 
     return this.sequelize.transaction(async (transaction) => {
       await this.lockUnchanged({ recurrence, series }, transaction);
+      if (amountChanged && recurrence.plannedTotal != null) {
+        await this.recurrenceRepository.clearPlannedTotal(recurrence.id, { transaction });
+      }
       return sequential(plans, (plan) => this.expensesService.applyUpdate(plan, transaction));
     });
   }
@@ -188,9 +236,16 @@ export class RecurrenceService {
     );
     const lastDate = [...past.map((expense) => expense.payBefore), ...redated]
       .reduce((latest, date) => (date > latest ? date : latest));
-    const moves = await this.planMoves(keptUpcoming, redated);
+    const { templates: futureTemplates, resplit } = this.futureTemplates(
+      recurrence,
+      count != null,
+      past,
+      last,
+      targetCount - past.length
+    );
+    const moves = await this.planMoves(keptUpcoming, redated, resplit ? futureTemplates : null);
     const planned = await this.expensesService.planSeries(
-      templateOf(last),
+      futureTemplates.slice(keptUpcoming.length),
       seriesDates(lastDate, nextFrequency, targetCount - kept.length, 1)
     );
 
@@ -198,8 +253,8 @@ export class RecurrenceService {
       await this.lockUnchanged({ recurrence, series }, transaction);
       if (frequencyChanged) {
         await this.recurrenceRepository.updateFrequency(id, nextFrequency, { transaction });
-        await sequential(moves, (plan) => this.expensesService.applyUpdate(plan, transaction));
       }
+      await sequential(moves, (plan) => this.expensesService.applyUpdate(plan, transaction));
       if (removed.length > 0) {
         await this.expenseRepository.deleteExpenses(
           removed.map((expense) => expense.id),
@@ -208,7 +263,6 @@ export class RecurrenceService {
       }
       if (planned.length > 0) {
         await this.expensesService.createSeriesExpenses(
-          templateOf(last),
           planned,
           { recurrenceId: id, firstIndex: last.recurrenceIndex + 1 },
           transaction
@@ -219,12 +273,46 @@ export class RecurrenceService {
     return this.getSeries(id);
   }
 
-  private async planMoves(expenses: Expense[], dates: Date[]): Promise<UpdatePlan[]> {
+  private futureTemplates(
+    recurrence: ExpenseRecurrence,
+    countChanged: boolean,
+    past: Expense[],
+    last: Expense,
+    futureCount: number
+  ): { templates: SeriesTemplate[]; resplit: boolean } {
+    const template = templateOf(last);
+    if (recurrence.plannedTotal == null || !countChanged) {
+      return { templates: Array.from({ length: futureCount }, () => template), resplit: false };
+    }
+    const paid = past.reduce((acc, expense) => acc + seriesAmountOf(expense), 0n);
+    const remaining = centsOf(recurrence.plannedTotal) - paid;
+    if (remaining < BigInt(futureCount)) {
+      throw validationError('count leaves less than one cent per remaining occurrence', 'count');
+    }
+    return {
+      templates: splitSeriesTemplate(withAmount(template, last, remaining), futureCount),
+      resplit: true,
+    };
+  }
+
+  private async planMoves(
+    expenses: Expense[],
+    dates: Date[],
+    amounts: SeriesTemplate[] | null
+  ): Promise<UpdatePlan[]> {
     const moves = expenses
-      .map((expense, i) => ({ expense, payBefore: dates[i] }))
-      .filter(({ expense, payBefore }) => isoDay(expense.payBefore) !== isoDay(payBefore));
-    return sequential(moves, ({ expense, payBefore }) =>
-      this.expensesService.planUpdate(expense.id, { payBefore })
+      .map((expense, i) => {
+        const template = amounts?.[i];
+        const repriced = template != null && templateAmount(template) !== seriesAmountOf(expense);
+        return { expense, payBefore: dates[i], template: repriced ? template : null };
+      })
+      .filter(({ expense, payBefore, template }) =>
+        template != null || isoDay(expense.payBefore) !== isoDay(payBefore));
+    return sequential(moves, ({ expense, payBefore, template }) =>
+      this.expensesService.planUpdate(expense.id, {
+        payBefore,
+        ...(template && { total: template.total, foreignAmount: template.foreignAmount }),
+      })
     );
   }
 

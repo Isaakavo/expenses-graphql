@@ -1,6 +1,7 @@
 import { Sequelize } from 'sequelize';
 import { FixedExpenseFrequency, RecurrenceScope } from '../../../src/generated/graphql.js';
 import { ExpenseUpdate, RecurrenceService } from '../../../src/service/recurrence-service.js';
+import type { SeriesTemplate } from '../../../src/service/expenses-service.js';
 
 type PlanCall = (id: string, input: Partial<ExpenseUpdate>) => unknown;
 type ApplyCall = (plan: { id: string; payBefore: Date }, transaction: unknown) => unknown;
@@ -31,7 +32,11 @@ const seriesOf = (dates: string[]) =>
 
 const monthly = seriesOf(['2026-04-15', '2026-05-15', '2026-06-15', '2026-07-15', '2026-08-15']);
 
-const setup = (series = monthly, frequency = FixedExpenseFrequency.MONTHLY) => {
+const setup = (
+  series = monthly,
+  frequency = FixedExpenseFrequency.MONTHLY,
+  plannedTotal: string | null = null
+) => {
   const sequelize = { transaction: vi.fn((work) => work(transaction)) };
   const service = new RecurrenceService('user-1', sequelize as unknown as Sequelize, () => today);
   const expenseRepository = {
@@ -41,8 +46,9 @@ const setup = (series = monthly, frequency = FixedExpenseFrequency.MONTHLY) => {
     deleteExpenses: vi.fn((ids: string[]) => ids.length),
   };
   const recurrenceRepository = {
-    findById: vi.fn().mockResolvedValue({ id: 'r1', frequency }),
+    findById: vi.fn().mockResolvedValue({ id: 'r1', frequency, plannedTotal }),
     updateFrequency: vi.fn(),
+    clearPlannedTotal: vi.fn(),
     delete: vi.fn(),
   };
   const expensesService = {
@@ -50,7 +56,9 @@ const setup = (series = monthly, frequency = FixedExpenseFrequency.MONTHLY) => {
     planUpdate: vi.fn<PlanCall>((id, input) => ({ id, payBefore: input.payBefore, fields: input })),
     applyUpdate: vi.fn<ApplyCall>((plan) => ({ id: plan.id, payBefore: plan.payBefore })),
     deleteExpense: vi.fn().mockResolvedValue(true),
-    planSeries: vi.fn((_, dates: Date[]) => dates.map((payBefore) => ({ payBefore }))),
+    planSeries: vi.fn((templates: SeriesTemplate[], dates: Date[]) =>
+      dates.map((payBefore, i) => ({ payBefore, template: templates[i] }))
+    ),
     createSeriesExpenses: vi.fn().mockResolvedValue([]),
   };
   Object.assign(service, { expenseRepository, recurrenceRepository, expensesService });
@@ -62,6 +70,22 @@ const updatedDates = (planUpdate: ReturnType<typeof vi.fn<PlanCall>>) =>
 
 describe('RecurrenceService.updateExpense', () => {
   const edit = { concept: 'New rent', total: 120, subCategoryId: 'sub-1', payBefore: day('2026-06-17') };
+
+  it('turns a total series into a per-occurrence one when the amount changes', async () => {
+    const { service, recurrenceRepository } = setup(monthly, FixedExpenseFrequency.MONTHLY, '500.00');
+
+    await service.updateExpense('e3', edit, RecurrenceScope.FOLLOWING);
+
+    expect(recurrenceRepository.clearPlannedTotal).toHaveBeenCalledWith('r1', { transaction });
+  });
+
+  it('keeps the series total when only the concept changes', async () => {
+    const { service, recurrenceRepository } = setup(monthly, FixedExpenseFrequency.MONTHLY, '500.00');
+
+    await service.updateExpense('e3', { ...edit, total: 100 }, RecurrenceScope.FOLLOWING);
+
+    expect(recurrenceRepository.clearPlannedTotal).not.toHaveBeenCalled();
+  });
 
   it('updates only the selected expense for THIS', async () => {
     const { service, expensesService } = setup();
@@ -140,7 +164,7 @@ describe('RecurrenceService.updateRecurrence', () => {
   it('rejects a count above 60', async () => {
     const { service } = setup();
 
-    await expect(service.updateRecurrence({ id: 'r1', count: 61 })).rejects.toThrow('count must be at most 60');
+    await expect(service.updateRecurrence({ id: 'r1', count: 61 })).rejects.toThrow('count must be between 1 and 60');
   });
 
   it('rejects a count below the expenses already in the past', async () => {
@@ -154,14 +178,47 @@ describe('RecurrenceService.updateRecurrence', () => {
 
     await service.updateRecurrence({ id: 'r1', count: 7 });
 
-    const [, dates] = expensesService.planSeries.mock.calls[0];
+    const [templates, dates] = expensesService.planSeries.mock.calls[0];
     expect(dates.map(iso)).toEqual(['2026-09-15', '2026-10-15']);
-    expect(expensesService.createSeriesExpenses).toHaveBeenCalledWith(
+    expect(templates).toEqual([
       expect.objectContaining({ concept: 'Rent', total: 100 }),
+      expect.objectContaining({ concept: 'Rent', total: 100 }),
+    ]);
+    expect(expensesService.createSeriesExpenses).toHaveBeenCalledWith(
       expect.any(Array),
       { recurrenceId: 'r1', firstIndex: 5 },
       transaction
     );
+  });
+
+  it('keeps the amounts of a per-occurrence series when the count changes', async () => {
+    const { service, expensesService } = setup();
+
+    await service.updateRecurrence({ id: 'r1', count: 7 });
+
+    expect(expensesService.planUpdate).not.toHaveBeenCalled();
+  });
+
+  it('splits what is left of a total series across the remaining occurrences', async () => {
+    const { service, expensesService } = setup(monthly, FixedExpenseFrequency.MONTHLY, '500.01');
+
+    await service.updateRecurrence({ id: 'r1', count: 7 });
+
+    expect(expensesService.planUpdate.mock.calls.map(([id, input]) => [id, input.total])).toEqual([
+      ['e2', 60],
+      ['e3', 60],
+      ['e4', 60],
+    ]);
+    const [templates] = expensesService.planSeries.mock.calls[0];
+    expect(templates.map((template: SeriesTemplate) => template.total)).toEqual([60, 60.01]);
+  });
+
+  it('rejects a count that leaves less than a cent per remaining occurrence', async () => {
+    const { service } = setup(monthly, FixedExpenseFrequency.MONTHLY, '200.02');
+
+    await expect(service.updateRecurrence({ id: 'r1', count: 5 })).rejects.toMatchObject({
+      extensions: { code: 'VALIDATION_ERROR', argumentName: 'count' },
+    });
   });
 
   it('removes the last upcoming expenses when shortened', async () => {

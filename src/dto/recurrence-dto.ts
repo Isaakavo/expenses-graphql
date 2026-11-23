@@ -7,6 +7,7 @@ export type RecurrencePositionDTO = {
   frequency: FixedExpenseFrequency;
   position: number;
   count: number;
+  plannedTotal: string | null;
 };
 
 export type RecurringSeriesDTO = {

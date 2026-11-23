@@ -5,6 +5,7 @@ export class ExpenseRecurrence extends Model {
   public id!: string;
   public userId!: string;
   public frequency!: FixedExpenseFrequency;
+  public plannedTotal!: string | null;
   public createdAt!: Date;
   public updatedAt!: Date;
 }
@@ -25,6 +26,11 @@ export const initExpenseRecurrenceModel = (sequelize: Sequelize) => {
       frequency: {
         type: DataTypes.STRING(10),
         allowNull: false,
+      },
+      plannedTotal: {
+        type: DataTypes.DECIMAL(12, 2),
+        allowNull: true,
+        field: 'planned_total',
       },
     },
     {

@@ -15,10 +15,21 @@ export class RecurrenceRepository {
     this.sequelizeClient = sequelizeClient;
   }
 
-  async create(frequency: FixedExpenseFrequency, options: TransactionOptions = {}) {
+  async create(
+    frequency: FixedExpenseFrequency,
+    plannedTotal: number | null,
+    options: TransactionOptions = {}
+  ) {
     return ExpenseRecurrence.create(
-      { userId: this.userId, frequency },
+      { userId: this.userId, frequency, plannedTotal },
       { transaction: options.transaction }
+    );
+  }
+
+  async clearPlannedTotal(id: string, options: TransactionOptions = {}) {
+    await ExpenseRecurrence.update(
+      { plannedTotal: null },
+      { where: { id, userId: this.userId }, transaction: options.transaction }
     );
   }
 

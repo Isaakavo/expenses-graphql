@@ -387,7 +387,8 @@ export class ExpenseRepository {
               r.id AS "recurrenceId",
               r.frequency,
               s.position::int AS position,
-              s.count::int AS count
+              s.count::int AS count,
+              r.planned_total AS "plannedTotal"
        FROM expenses e
        JOIN expense_recurrences r ON r.id = e.recurrence_id
        JOIN LATERAL (

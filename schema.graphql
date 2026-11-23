@@ -39,6 +39,11 @@ enum FixedExpenseFrequency {
   Monthly
 }
 
+enum SeriesAmountMode {
+  PER_OCCURRENCE
+  TOTAL
+}
+
 enum RecurrenceScope {
   THIS
   FOLLOWING
@@ -51,6 +56,7 @@ type ExpenseRecurrence {
   # 1-based position among the expenses left in the series
   position: Int!
   count: Int!
+  plannedTotal: String
 }
 
 type RecurringSeries {
@@ -423,6 +429,7 @@ input CreateFixedExpenseInput {
   goalId: ID
   goalRole: GoalRole
   foreignAmount: ForeignAmountInput
+  amountMode: SeriesAmountMode = PER_OCCURRENCE
 }
 
 input UpdateExpenseInput {
