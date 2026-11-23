@@ -222,6 +222,10 @@ export class GoalRepository {
     return reimbursement ? adaptGoalReimbursementDTO(reimbursement) : null;
   }
 
+  async countExpenses(goalId: string): Promise<number> {
+    return Expense.count({ where: { goalId, userId: this.userId } });
+  }
+
   async countReimbursements(goalId: string): Promise<number> {
     return GoalReimbursement.count({
       where: { goalId, userId: this.userId },

@@ -7,6 +7,8 @@ const migration = createRequire(import.meta.url)(
 );
 const dbName = 'reimbursable_goals_migration_test';
 const userId = '11111111-1111-4111-8111-111111111111';
+const otherUserId = '22222222-2222-4222-8222-222222222222';
+const expensesOnlyUserId = '33333333-3333-4333-8333-333333333333';
 
 describe.skipIf(!url)('add-reimbursable-goals migration', () => {
   let admin: Sequelize;
@@ -38,15 +40,18 @@ describe.skipIf(!url)('add-reimbursable-goals migration', () => {
 
   beforeEach(async () => {
     await db.query(`
-      DROP TABLE IF EXISTS goal_reimbursements, goals, savings_funds, "Cards" CASCADE;
+      DROP TABLE IF EXISTS goal_reimbursements, goals, savings_funds, expenses, user_settings, "Cards" CASCADE;
       CREATE TABLE "Cards" (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
+      CREATE TABLE user_settings (user_id uuid PRIMARY KEY, default_currency char(3) NOT NULL);
+      CREATE TABLE expenses (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL);
       CREATE TABLE goals (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id uuid,
         name varchar(100) NOT NULL,
         target_amount numeric(12,2) NOT NULL,
         start_date date NOT NULL
       );
-      INSERT INTO goals (name, target_amount, start_date) VALUES ('Trip', 1000, '2026-01-01');
+      INSERT INTO goals (user_id, name, target_amount, start_date) VALUES ('${userId}', 'Trip', 1000, '2026-01-01');
     `);
   });
 
@@ -55,6 +60,23 @@ describe.skipIf(!url)('add-reimbursable-goals migration', () => {
 
     expect(await rows('SELECT kind, fund_id, default_card_id, target_amount FROM goals')).toEqual([
       { kind: 'SAVINGS', fund_id: null, default_card_id: null, target_amount: '1000.00' },
+    ]);
+  });
+
+  it('creates one default fund per existing user', async () => {
+    await db.query(`
+      INSERT INTO user_settings (user_id, default_currency) VALUES ('${userId}', 'MXN'), ('${otherUserId}', 'EUR');
+      INSERT INTO expenses (user_id) VALUES ('${expensesOnlyUserId}'), ('${expensesOnlyUserId}');
+    `);
+
+    await up();
+
+    expect(
+      await rows('SELECT user_id, name, currency FROM savings_funds ORDER BY currency')
+    ).toEqual([
+      { user_id: otherUserId, name: 'Ahorros', currency: 'EUR' },
+      { user_id: userId, name: 'Ahorros', currency: 'MXN' },
+      { user_id: expensesOnlyUserId, name: 'Ahorros', currency: 'USD' },
     ]);
   });
 

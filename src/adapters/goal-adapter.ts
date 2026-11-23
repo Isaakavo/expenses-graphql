@@ -1,4 +1,4 @@
-import { Goal, GoalReimbursement, SavingsFund } from '../generated/graphql.js';
+import { Goal, GoalReimbursement } from '../generated/graphql.js';
 import {
   GoalDTO,
   GoalReimbursementDTO,
@@ -39,10 +39,6 @@ export const adaptGoalReimbursementDTO = (
   comment: reimbursement.comment ?? null,
 });
 
-export const adaptSavingsFund = (fund: SavingsFundDTO): SavingsFund => ({
-  ...fund,
-});
-
 export const adaptGoalReimbursement = (
   reimbursement: GoalReimbursementDTO
 ): GoalReimbursement => ({
@@ -50,7 +46,6 @@ export const adaptGoalReimbursement = (
   amount: formatCurrency(reimbursement.amount),
 });
 
-// GoalDTO -> GraphQL Goal. `expenses` and `reimbursements` are resolved by Goal field resolvers
 export const adaptGoal = (goal: GoalDTO): Goal => {
   return {
     id: goal.id,
@@ -61,7 +56,7 @@ export const adaptGoal = (goal: GoalDTO): Goal => {
     currency: goal.currency,
     startDate: goal.startDate,
     endDate: goal.endDate,
-    fund: goal.fund ? adaptSavingsFund(goal.fund) : null,
+    fund: goal.fund,
     defaultCard: goal.defaultCard,
     expenses: [],
     reimbursements: [],

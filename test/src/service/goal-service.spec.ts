@@ -53,6 +53,7 @@ beforeEach(() => {
     deleteGoal: vi.fn(),
     getExpensesByGoalIds: vi.fn(),
     cardExists: vi.fn().mockResolvedValue(true),
+    countExpenses: vi.fn().mockResolvedValue(0),
     countReimbursements: vi.fn().mockResolvedValue(0),
     getReimbursementsByGoalIds: vi.fn(),
     addReimbursement: vi.fn(),
@@ -62,7 +63,7 @@ beforeEach(() => {
   mockFunds = {
     getFunds: vi.fn().mockResolvedValue([fund]),
     getFundByPk: vi.fn().mockResolvedValue(fund),
-    createFund: vi.fn().mockResolvedValue(fund),
+    getOrCreateFirstFund: vi.fn().mockResolvedValue(fund),
   } as unknown as SavingsFundRepository;
   service = new GoalService(
     userId,
@@ -360,10 +361,57 @@ describe('GoalService', () => {
       });
     });
 
-    it('creates the default fund on first use', async () => {
+    it('creates the default fund on first use in the default currency', async () => {
+      await expect(service.getDefaultFund()).resolves.toEqual(fund);
+      const [name, currency] = vi.mocked(mockFunds.getOrCreateFirstFund).mock.calls[0];
+      expect(name).toBe('Ahorros');
+      await expect(currency()).resolves.toBe(CurrencyCode.USD);
+    });
+
+    it('lists funds without creating one', async () => {
       vi.mocked(mockFunds.getFunds).mockResolvedValue([]);
-      await expect(service.getSavingsFunds()).resolves.toEqual([fund]);
-      expect(mockFunds.createFund).toHaveBeenCalledWith('Ahorros', CurrencyCode.USD);
+      await expect(service.getSavingsFunds()).resolves.toEqual([]);
+      expect(mockFunds.getOrCreateFirstFund).not.toHaveBeenCalled();
+    });
+
+    it('only accepts a default card on events', async () => {
+      await expectCode(
+        service.createGoal({ ...validInput, defaultCardId: 'card-1' }),
+        'VALIDATION_ERROR',
+        'defaultCardId'
+      );
+      vi.mocked(mockRepo.getGoalByPk).mockResolvedValue(goalDto);
+      await expectCode(
+        service.updateGoal({ id: 'goal-1', ...validInput, defaultCardId: 'card-1' }),
+        'VALIDATION_ERROR',
+        'defaultCardId'
+      );
+      expect(mockRepo.createGoal).not.toHaveBeenCalled();
+      expect(mockRepo.updateGoal).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['expenses', 'countExpenses'],
+      ['reimbursements', 'countReimbursements'],
+    ] as const)('refuses to delete an event with %s', async (_, counter) => {
+      vi.mocked(mockRepo.getGoalByPk).mockResolvedValue(event);
+      vi.mocked(mockRepo[counter]).mockResolvedValue(1);
+      await expectCode(service.deleteGoal('event-1'), 'REIMBURSABLE_GOAL_IN_USE');
+      expect(mockRepo.deleteGoal).not.toHaveBeenCalled();
+    });
+
+    it('deletes an event without expenses or reimbursements', async () => {
+      vi.mocked(mockRepo.getGoalByPk).mockResolvedValue(event);
+      vi.mocked(mockRepo.deleteGoal).mockResolvedValue(true);
+      await expect(service.deleteGoal('event-1')).resolves.toBe(true);
+    });
+
+    it('stores the reimbursement amount rounded to cents', async () => {
+      await service.updateReimbursement({ id: 'r-1', amount: 10.005, receivedOn: '2026-12-01' });
+      expect(mockRepo.updateReimbursement).toHaveBeenCalledWith(
+        'r-1',
+        expect.objectContaining({ amount: 10.01 })
+      );
     });
 
     it('rejects a target on an event and a missing target on a savings goal', async () => {
@@ -456,6 +504,8 @@ describe('GoalService', () => {
     it.each([
       [{ amount: 0 }, 'amount'],
       [{ amount: NaN }, 'amount'],
+      [{ amount: -5 }, 'amount'],
+      [{ amount: 0.004 }, 'amount'],
       [{ receivedOn: '2026-02-30' }, 'receivedOn'],
       [{ comment: 'a'.repeat(256) }, 'comment'],
     ])('rejects reimbursement %j', async (override, argumentName) => {

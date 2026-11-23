@@ -40,6 +40,18 @@ module.exports = {
         name: 'savings_funds_user_id_idx',
         transaction,
       });
+      await queryInterface.sequelize.query(
+        `INSERT INTO savings_funds (user_id, name, currency)
+           SELECT users.user_id, 'Ahorros', COALESCE(settings.default_currency, 'USD')
+           FROM (
+             SELECT user_id FROM user_settings
+             UNION SELECT user_id FROM goals
+             UNION SELECT user_id FROM expenses
+           ) users
+           LEFT JOIN user_settings settings USING (user_id)
+           WHERE users.user_id IS NOT NULL`,
+        { transaction }
+      );
 
       await queryInterface.addColumn(
         'goals',

@@ -210,6 +210,24 @@ describe('GoalRepository', () => {
       expect(await repoA.getReimbursementsByGoalIds([event.id])).toEqual([]);
     });
 
+    it('rejects updating or deleting a reimbursement that does not exist', async () => {
+      const input = { amount: 1, receivedOn: '2026-12-01', comment: null };
+      await expect(repoA.updateReimbursement(anyId, input)).rejects.toMatchObject({
+        extensions: { code: 'REIMBURSEMENT_NOT_FOUND' },
+      });
+      await expect(repoA.deleteReimbursement(anyId)).rejects.toMatchObject({
+        extensions: { code: 'REIMBURSEMENT_NOT_FOUND' },
+      });
+    });
+
+    it('counts only the expenses of the user linked to the event', async () => {
+      const event = await newEvent(repoA, userA);
+      await newExpense(userA, event.id, 'SPENDING');
+      await newExpense(userA, event.id, 'SPENDING');
+      await newExpense(userB, event.id, 'SPENDING');
+      expect(await repoA.countExpenses(event.id)).toBe(2);
+    });
+
     it('orders reimbursements by receivedOn', async () => {
       const event = await newEvent(repoA, userA);
       await repoA.addReimbursement(event.id, { amount: 2, receivedOn: '2026-12-05', comment: null });

@@ -71,4 +71,15 @@ describe('splitExpense', () => {
       })
     );
   });
+
+  it('limits the reimbursable amount to the foreign amount entered', () => {
+    const foreignAmount = { amount: 100, currency: CurrencyCode.USD, fixedRate: false };
+    expect(() =>
+      splitExpense({ ...input, total: 1800, foreignAmount }, { goalId: 'event-1', amount: 100.01 })
+    ).toThrow(
+      expect.objectContaining({
+        extensions: { code: 'VALIDATION_ERROR', argumentName: 'reimbursable' },
+      })
+    );
+  });
 });

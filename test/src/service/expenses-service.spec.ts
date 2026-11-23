@@ -466,6 +466,16 @@ describe('goal link on expenses', () => {
       ).rejects.toMatchObject({ extensions: { code: 'VALIDATION_ERROR', argumentName: 'periodId' } });
       expect(mockCreateExpense).not.toHaveBeenCalled();
     });
+
+    it('creates nothing when the goal belongs to another user', async () => {
+      mockAssertGoalLinkable.mockRejectedValue(
+        Object.assign(new Error('Goal not found'), { extensions: { code: 'GOAL_NOT_FOUND' } })
+      );
+      await expect(service.createSplitExpense(baseCreateInput, share)).rejects.toMatchObject({
+        extensions: { code: 'GOAL_NOT_FOUND' },
+      });
+      expect(mockCreateExpense).not.toHaveBeenCalled();
+    });
   });
 
   describe('createFixedExpenses', () => {

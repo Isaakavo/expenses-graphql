@@ -1,4 +1,4 @@
-import { Sequelize } from 'sequelize';
+import { QueryTypes, Sequelize, Transaction } from 'sequelize';
 import { logger } from '../logger.js';
 import { adaptSavingsFundDTO } from '../adapters/goal-adapter.js';
 import { SavingsFundDTO } from '../dto/index.js';
@@ -31,15 +31,34 @@ export class SavingsFundRepository {
     return fund ? adaptSavingsFundDTO(fund) : null;
   }
 
-  async createFund(name: string, currency: CurrencyCode): Promise<SavingsFundDTO> {
-    const fund = await SavingsFund.create({
-      name,
-      currency,
-      userId: this.userId,
+  async getOrCreateFirstFund(
+    name: string,
+    currency: () => Promise<CurrencyCode>
+  ): Promise<SavingsFundDTO> {
+    return this.sequelize.transaction(async (transaction: Transaction) => {
+      await this.sequelize.query('SELECT pg_advisory_xact_lock(hashtext(:userId))', {
+        replacements: { userId: this.userId },
+        type: QueryTypes.SELECT,
+        transaction,
+      });
+
+      const existing = await SavingsFund.findOne({
+        where: { userId: this.userId },
+        order: [['createdAt', 'ASC']],
+        transaction,
+      });
+      if (existing) {
+        return adaptSavingsFundDTO(existing);
+      }
+
+      const fund = await SavingsFund.create(
+        { name, currency: await currency(), userId: this.userId },
+        { transaction }
+      );
+
+      logger.info(`Created savings fund id ${fund.id} for user ${this.userId}`);
+
+      return adaptSavingsFundDTO(fund);
     });
-
-    logger.info(`Created savings fund id ${fund.id} for user ${this.userId}`);
-
-    return adaptSavingsFundDTO(fund);
   }
 }
