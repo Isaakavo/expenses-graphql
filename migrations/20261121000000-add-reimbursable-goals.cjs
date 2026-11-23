@@ -42,14 +42,14 @@ module.exports = {
       });
       await queryInterface.sequelize.query(
         `INSERT INTO savings_funds (user_id, name, currency)
-           SELECT users.user_id, 'Ahorros', COALESCE(settings.default_currency, 'USD')
+           SELECT users.user_id::uuid, 'Ahorros', COALESCE(settings.default_currency, 'USD')
            FROM (
-             SELECT user_id FROM user_settings
-             UNION SELECT user_id FROM goals
-             UNION SELECT user_id FROM expenses
+             SELECT user_id::text FROM user_settings
+             UNION SELECT user_id::text FROM goals
+             UNION SELECT user_id::text FROM expenses
            ) users
-           LEFT JOIN user_settings settings USING (user_id)
-           WHERE users.user_id IS NOT NULL`,
+           LEFT JOIN user_settings settings ON settings.user_id::text = users.user_id
+           WHERE users.user_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'`,
         { transaction }
       );
 

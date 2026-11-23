@@ -43,7 +43,7 @@ describe.skipIf(!url)('add-reimbursable-goals migration', () => {
       DROP TABLE IF EXISTS goal_reimbursements, goals, savings_funds, expenses, user_settings, "Cards" CASCADE;
       CREATE TABLE "Cards" (id uuid PRIMARY KEY DEFAULT gen_random_uuid());
       CREATE TABLE user_settings (user_id uuid PRIMARY KEY, default_currency char(3) NOT NULL);
-      CREATE TABLE expenses (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id uuid NOT NULL);
+      CREATE TABLE expenses (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id varchar(255) NOT NULL);
       CREATE TABLE goals (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id uuid,
