@@ -80,10 +80,6 @@ const assertIsoDate = (value: unknown, argumentName: string): string => {
   return value;
 };
 
-const assertNever = (value: never): never => {
-  throw new Error(`Unexpected goal kind ${value}`);
-};
-
 const isValidAmount = (amount: number) =>
   Number.isFinite(amount) && amount > 0 && amount <= MAX_TARGET_AMOUNT;
 
@@ -110,7 +106,10 @@ export class GoalService {
     }
   }
 
-  private validateTarget(kind: GoalKind, targetAmount?: number | null) {
+  private validateTarget(
+    kind: GoalKind,
+    targetAmount?: number | null
+  ): number | null {
     switch (kind) {
     case GoalKind.REIMBURSABLE:
       if (targetAmount != null) {
@@ -128,8 +127,6 @@ export class GoalService {
         );
       }
       return targetAmount;
-    default:
-      return assertNever(kind);
     }
   }
 
@@ -181,8 +178,6 @@ export class GoalService {
         throw validationError('Savings fund not found', 'fundId');
       }
       return fundId;
-    default:
-      return assertNever(kind);
     }
   }
 
